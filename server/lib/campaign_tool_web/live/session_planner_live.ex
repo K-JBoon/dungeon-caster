@@ -1,22 +1,27 @@
 defmodule CampaignToolWeb.SessionPlannerLive do
   use CampaignToolWeb, :live_view
-  alias CampaignTool.{Entities, Session.Server}
+  alias CampaignTool.{Entities, Session.Server, Audio}
 
   def mount(%{"id" => id}, _session, socket) do
     session = Entities.get_entity!("session", id)
     scenes = decode_scenes(session.scenes)
+    music = Audio.list_music()
+
     {:ok,
      assign(socket,
        session: session,
        scenes: scenes,
-       selected_scene_id: nil,
+       selected_scene_id: (List.first(scenes) || %{})["id"],
        entity_search: "",
        search_results: [],
+       popover_ref: nil,
+       popover_entity: nil,
+       music: music,
        page_title: "Plan: #{session.title}"
      )}
   end
 
-  # ── Events ──────────────────────────────────────────────────────────────────
+  # ── Scene CRUD ──────────────────────────────────────────────────────────────
 
   def handle_event("add_scene", _, socket) do
     new_scene = %{
@@ -31,7 +36,25 @@ defmodule CampaignToolWeb.SessionPlannerLive do
   end
 
   def handle_event("select_scene", %{"id" => id}, socket) do
-    {:noreply, assign(socket, selected_scene_id: id)}
+    {:noreply, assign(socket, selected_scene_id: id, entity_search: "", search_results: [], popover_ref: nil)}
+  end
+
+  def handle_event("delete_scene", %{"id" => id}, socket) do
+    scenes = Enum.reject(socket.assigns.scenes, &(&1["id"] == id))
+    save_scenes(socket.assigns.session, scenes)
+    new_selected =
+      if socket.assigns.selected_scene_id == id,
+        do: (List.first(scenes) || %{})["id"],
+        else: socket.assigns.selected_scene_id
+    {:noreply, assign(socket, scenes: scenes, selected_scene_id: new_selected)}
+  end
+
+  def handle_event("reorder_scenes", %{"ids" => ids}, socket) do
+    scenes = socket.assigns.scenes
+    ordered = Enum.map(ids, fn id -> Enum.find(scenes, &(&1["id"] == id)) end)
+              |> Enum.reject(&is_nil/1)
+    save_scenes(socket.assigns.session, ordered)
+    {:noreply, assign(socket, scenes: ordered)}
   end
 
   def handle_event("update_scene", %{"title" => title, "notes" => notes}, socket) do
@@ -44,6 +67,8 @@ defmodule CampaignToolWeb.SessionPlannerLive do
     save_scenes(socket.assigns.session, scenes)
     {:noreply, assign(socket, scenes: scenes)}
   end
+
+  # ── Entity search / link ────────────────────────────────────────────────────
 
   def handle_event("search_entities", %{"q" => q}, socket) when byte_size(q) > 1 do
     results = Entities.search(q) |> Enum.take(8)
@@ -70,14 +95,21 @@ defmodule CampaignToolWeb.SessionPlannerLive do
   def handle_event("unlink_entity", %{"ref" => ref}, socket) do
     scenes =
       Enum.map(socket.assigns.scenes, fn s ->
-        if s["id"] == socket.assigns.selected_scene_id do
-          Map.put(s, "entity_ids", List.delete(s["entity_ids"] || [], ref))
-        else
-          s
-        end
+        if s["id"] == socket.assigns.selected_scene_id,
+          do: Map.put(s, "entity_ids", List.delete(s["entity_ids"] || [], ref)),
+          else: s
       end)
     save_scenes(socket.assigns.session, scenes)
-    {:noreply, assign(socket, scenes: scenes)}
+    {:noreply, assign(socket, scenes: scenes, popover_ref: nil, popover_entity: nil)}
+  end
+
+  def handle_event("show_popover", %{"ref" => ref}, socket) do
+    if socket.assigns.popover_ref == ref do
+      {:noreply, assign(socket, popover_ref: nil, popover_entity: nil)}
+    else
+      entity = load_entity_from_ref(ref)
+      {:noreply, assign(socket, popover_ref: ref, popover_entity: entity)}
+    end
   end
 
   def handle_event("go_live", _, socket) do
@@ -90,6 +122,33 @@ defmodule CampaignToolWeb.SessionPlannerLive do
   end
 
   # ── Helpers ──────────────────────────────────────────────────────────────────
+
+  defp load_entity_from_ref(ref) do
+    case String.split(ref, ":", parts: 2) do
+      [type, id] ->
+        case Entities.get_entity(type, id) do
+          nil -> nil
+          entity -> {type, entity}
+        end
+      _ -> nil
+    end
+  end
+
+  defp entity_label(nil), do: "Unknown"
+  defp entity_label({_, entity}) do
+    Map.get(entity, :name) || Map.get(entity, :title) || entity.id
+  end
+
+  defp entity_icon("npc"), do: "hero-user"
+  defp entity_icon("location"), do: "hero-map-pin"
+  defp entity_icon("faction"), do: "hero-shield-check"
+  defp entity_icon("stat-block"), do: "hero-book-open"
+  defp entity_icon("map"), do: "hero-map"
+  defp entity_icon(_), do: "hero-document"
+
+  defp asset_exists?(campaign_dir, %{path: path}) when is_binary(path),
+    do: File.exists?(Path.join(campaign_dir, path))
+  defp asset_exists?(_, _), do: false
 
   defp decode_scenes(nil), do: []
   defp decode_scenes(json) when is_binary(json) do
@@ -104,29 +163,24 @@ defmodule CampaignToolWeb.SessionPlannerLive do
     case File.read(session.file_path) do
       {:ok, content} ->
         encoded = Jason.encode!(scenes)
-        updated = replace_frontmatter_field(content, "scenes", encoded)
-        File.write!(session.file_path, updated)
-      {:error, _} ->
-        :ok
+        File.write!(session.file_path, replace_frontmatter_field(content, "scenes", encoded))
+      {:error, _} -> :ok
     end
   end
 
   defp replace_frontmatter_field("---\n" <> rest, field, value) do
     case String.split(rest, "\n---\n", parts: 2) do
       [fm, body] ->
-        lines = String.split(fm, "\n")
         key = field <> ":"
-        updated_lines =
+        lines = String.split(fm, "\n")
+        updated =
           if Enum.any?(lines, &String.starts_with?(&1, key)) do
-            Enum.map(lines, fn line ->
-              if String.starts_with?(line, key), do: "#{field}: #{Jason.encode!(value)}", else: line
-            end)
+            Enum.map(lines, fn l -> if String.starts_with?(l, key), do: "#{field}: #{value}", else: l end)
           else
-            lines ++ ["#{field}: #{Jason.encode!(value)}"]
+            lines ++ ["#{field}: #{value}"]
           end
-        "---\n" <> Enum.join(updated_lines, "\n") <> "\n---\n" <> body
-      _ ->
-        "---\n" <> rest
+        "---\n" <> Enum.join(updated, "\n") <> "\n---\n" <> body
+      _ -> "---\n" <> rest
     end
   end
   defp replace_frontmatter_field(content, _, _), do: content
@@ -135,96 +189,202 @@ defmodule CampaignToolWeb.SessionPlannerLive do
 
   def render(assigns) do
     ~H"""
-    <div style="display:flex; height:100vh; font-family:sans-serif; overflow:hidden">
+    <div class="flex overflow-hidden" style="height: 100%">
 
       <%!-- Left: scene list --%>
-      <div style="width:220px; border-right:1px solid #ddd; display:flex; flex-direction:column; padding:1rem; overflow-y:auto">
-        <h3 style="font-size:1rem; font-weight:bold; margin-bottom:0.5rem"><%= @session.title %></h3>
-        <div style="margin-bottom:0.75rem; display:flex; gap:0.5rem; flex-wrap:wrap">
-          <button phx-click="go_live"
-                  style="padding:6px 10px; background:#16a34a; color:white; border:none; border-radius:4px; cursor:pointer; font-size:0.8rem">
-            ▶ Go Live
-          </button>
+      <div class="w-60 shrink-0 border-r border-base-300 flex flex-col overflow-hidden">
+        <div class="p-3 border-b border-base-300 flex items-center justify-between gap-2">
+          <div class="min-w-0">
+            <p class="font-semibold text-sm truncate"><%= @session.title %></p>
+            <p class="text-xs text-base-content/50">#<%= @session.session_number %></p>
+          </div>
+          <button phx-click="go_live" class="btn btn-success btn-xs shrink-0">▶ Live</button>
         </div>
-        <button phx-click="add_scene"
-                style="width:100%; padding:6px; background:#3b82f6; color:white; border:none; border-radius:4px; cursor:pointer; margin-bottom:0.5rem; font-size:0.85rem">
-          + Add Scene
-        </button>
-        <ul style="list-style:none; padding:0; margin:0">
+        <div class="p-2">
+          <button phx-click="add_scene" class="btn btn-primary btn-sm w-full">+ Add Scene</button>
+        </div>
+        <ul id="scene-list" phx-hook="SortableScenes"
+            class="flex-1 overflow-y-auto p-2 space-y-1">
           <%= for scene <- @scenes do %>
-            <li phx-click="select_scene" phx-value-id={scene["id"]}
-                style={"padding:6px 8px; border-radius:4px; cursor:pointer; font-size:0.85rem; margin-bottom:2px; #{if @selected_scene_id == scene["id"], do: "background:#dbeafe; font-weight:600", else: "hover:background:#f3f4f6"}"}>
-              <%= scene["title"] %>
+            <li data-scene-id={scene["id"]} draggable="true"
+                class={["group flex items-center gap-1 rounded-lg cursor-grab transition-colors",
+                        if(@selected_scene_id == scene["id"],
+                          do: "bg-primary/10 text-primary",
+                          else: "hover:bg-base-200")]}>
+              <button phx-click="select_scene" phx-value-id={scene["id"]}
+                      class="flex-1 text-left px-3 py-2 text-sm truncate">
+                <%= scene["title"] %>
+              </button>
+              <button phx-click="delete_scene" phx-value-id={scene["id"]}
+                      class="px-2 py-2 opacity-0 group-hover:opacity-100 text-error text-xs rounded hover:bg-error/10 transition-opacity">
+                ✕
+              </button>
             </li>
           <% end %>
         </ul>
       </div>
 
       <%!-- Center: scene editor --%>
-      <div style="flex:1; padding:1rem; overflow-y:auto; display:flex; flex-direction:column">
+      <div class="flex-1 flex flex-col overflow-hidden min-w-0">
         <%= if scene = Enum.find(@scenes, &(&1["id"] == @selected_scene_id)) do %>
-          <form phx-change="update_scene" style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1rem">
-            <input name="title" value={scene["title"]}
-                   phx-debounce="500"
-                   style="font-size:1.1rem; font-weight:bold; padding:6px; border:1px solid #ddd; border-radius:4px" />
-            <textarea name="notes" rows="16" phx-debounce="800"
-                      style="font-family:monospace; font-size:0.9rem; padding:8px; border:1px solid #ddd; border-radius:4px; resize:vertical"><%= scene["notes"] %></textarea>
+          <form phx-change="update_scene" class="flex flex-col flex-1 overflow-hidden">
+            <div class="p-3 border-b border-base-300 shrink-0">
+              <input name="title" value={scene["title"]} phx-debounce="500"
+                     class="input input-ghost w-full text-lg font-semibold focus:bg-base-200" />
+            </div>
+            <textarea name="notes" phx-debounce="800"
+                      class="flex-1 w-full font-mono text-sm p-3 resize-none bg-transparent focus:outline-none"
+                      placeholder="Scene notes (Markdown)..."><%= scene["notes"] %></textarea>
           </form>
 
-          <%!-- Entity link search --%>
-          <div style="margin-bottom:0.75rem">
-            <form phx-change="search_entities">
-              <input name="q" value={@entity_search} phx-debounce="300"
-                     placeholder="Link entity (search)..."
-                     style="width:100%; padding:6px; border:1px solid #ddd; border-radius:4px; font-size:0.85rem" />
+          <%!-- Entity linking --%>
+          <div class="p-3 border-t border-base-300 shrink-0">
+            <form phx-change="search_entities" class="mb-2">
+              <label class="input input-bordered input-sm flex items-center gap-2">
+                <.icon name="hero-magnifying-glass" class="size-3 opacity-50" />
+                <input name="q" value={@entity_search} phx-debounce="300"
+                       placeholder="Link entity..." class="grow text-sm" />
+              </label>
             </form>
+
             <%= if @search_results != [] do %>
-              <ul style="margin-top:4px; border:1px solid #ddd; border-radius:4px; list-style:none; padding:0">
+              <ul class="border border-base-300 rounded-lg overflow-hidden shadow-md mb-2 max-h-48 overflow-y-auto">
                 <%= for r <- @search_results do %>
-                  <li style="padding:6px 8px; border-bottom:1px solid #f3f4f6; display:flex; justify-content:space-between; align-items:center">
-                    <span style="font-size:0.85rem"><strong><%= r.type %></strong>: <%= r.name %></span>
+                  <li class="flex items-center justify-between px-3 py-2 hover:bg-base-200 text-sm">
+                    <span class="flex items-center gap-2 min-w-0">
+                      <.icon name={entity_icon(r.type)} class="size-3.5 opacity-60 shrink-0" />
+                      <span class="truncate"><%= r.name %></span>
+                      <span class="text-base-content/40 text-xs shrink-0"><%= r.type %></span>
+                    </span>
                     <button phx-click="link_entity" phx-value-ref={"#{r.type}:#{r.id}"}
-                            style="font-size:0.75rem; padding:2px 8px; background:#3b82f6; color:white; border:none; border-radius:3px; cursor:pointer">
-                      Link
-                    </button>
+                            class="btn btn-xs btn-primary ml-2 shrink-0">Link</button>
                   </li>
                 <% end %>
               </ul>
             <% end %>
+
+            <%!-- Linked entity pills --%>
+            <%= if scene["entity_ids"] && scene["entity_ids"] != [] do %>
+              <div class="flex flex-wrap gap-1">
+                <%= for ref <- scene["entity_ids"] do %>
+                  <% loaded = load_entity_from_ref(ref) %>
+                  <div class="relative">
+                    <span class={["badge badge-outline gap-1 cursor-pointer hover:badge-primary transition-colors",
+                                  if(@popover_ref == ref, do: "badge-primary", else: "")]}>
+                      <%= if loaded do %>
+                        <% {type, _} = loaded %>
+                        <.icon name={entity_icon(type)} class="size-3" />
+                      <% end %>
+                      <button phx-click="show_popover" phx-value-ref={ref} class="text-xs">
+                        <%= entity_label(loaded) %>
+                      </button>
+                      <button phx-click="unlink_entity" phx-value-ref={ref}
+                              class="ml-0.5 opacity-60 hover:opacity-100">✕</button>
+                    </span>
+                    <%!-- Popover --%>
+                    <%= if @popover_ref == ref && @popover_entity do %>
+                      <% {_t, ent} = @popover_entity %>
+                      <div class="absolute bottom-full left-0 mb-2 w-64 bg-base-100 border border-base-300 rounded-xl shadow-xl p-3 z-50">
+                        <button phx-click="show_popover" phx-value-ref={ref}
+                                class="absolute top-2 right-2 btn btn-ghost btn-xs">✕</button>
+                        <p class="font-semibold text-sm mb-1 pr-6">
+                          <%= Map.get(ent, :name) || Map.get(ent, :title) %>
+                        </p>
+                        <%= if ent.body_html && ent.body_html != "" do %>
+                          <div class="prose prose-xs max-w-none text-xs max-h-32 overflow-y-auto">
+                            <%= Phoenix.HTML.raw(ent.body_html) %>
+                          </div>
+                        <% end %>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
           </div>
 
-          <%!-- Linked entities --%>
-          <%= if scene["entity_ids"] && scene["entity_ids"] != [] do %>
-            <div style="display:flex; flex-wrap:wrap; gap:4px">
-              <%= for ref <- scene["entity_ids"] do %>
-                <span style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:12px; padding:2px 10px; font-size:0.8rem; display:flex; align-items:center; gap:4px">
-                  <%= ref %>
-                  <button phx-click="unlink_entity" phx-value-ref={ref}
-                          style="background:none; border:none; cursor:pointer; color:#64748b; font-size:0.8rem">x</button>
-                </span>
-              <% end %>
-            </div>
-          <% end %>
         <% else %>
-          <p style="color:#94a3b8; margin-top:2rem; text-align:center">
-            <%= if @scenes == [] do %>
-              No scenes yet. Click "Add Scene" to start planning.
-            <% else %>
-              Select a scene from the left to edit it.
-            <% end %>
-          </p>
+          <div class="flex-1 flex items-center justify-center text-base-content/40">
+            <div class="text-center">
+              <.icon name="hero-document-text" class="size-12 mx-auto mb-3 opacity-30" />
+              <p><%= if @scenes == [], do: "Click 'Add Scene' to start.", else: "Select a scene." %></p>
+            </div>
+          </div>
         <% end %>
       </div>
 
-      <%!-- Right: sidebar --%>
-      <div style="width:180px; border-left:1px solid #ddd; padding:1rem; overflow-y:auto">
-        <h4 style="font-size:0.85rem; font-weight:bold; margin-bottom:0.5rem">Session Info</h4>
-        <p style="font-size:0.8rem; color:#64748b">
-          #<%= @session.session_number %> · <%= @session.status %>
-        </p>
-        <p style="font-size:0.8rem; color:#64748b; margin-top:0.5rem">
-          <%= length(@scenes) %> scene(s)
-        </p>
+      <%!-- Right: session assets sidebar --%>
+      <div class="w-64 shrink-0 border-l border-base-300 overflow-y-auto p-3 space-y-5">
+        <% campaign_dir = Application.get_env(:campaign_tool, :campaign_dir) |> Path.expand() %>
+
+        <%!-- Maps --%>
+        <div>
+          <h4 class="text-xs uppercase tracking-wider text-base-content/50 mb-2">Maps</h4>
+          <% map_ids = @session.map_ids || [] %>
+          <%= if map_ids == [] do %>
+            <p class="text-xs text-base-content/40">No maps linked.</p>
+          <% else %>
+            <div class="grid grid-cols-2 gap-2">
+              <%= for map_id <- map_ids do %>
+                <% map = Entities.get_entity("map", map_id) %>
+                <%= if map do %>
+                  <.link navigate={"/entities/map/#{map.id}"}
+                         class="rounded overflow-hidden border border-base-300 hover:border-primary transition-colors">
+                    <%= if map.asset_path && map.asset_path != "" do %>
+                      <img src={"/maps/assets/#{Path.basename(map.asset_path)}"}
+                           class="w-full h-14 object-cover" />
+                    <% else %>
+                      <div class="w-full h-14 bg-base-300 flex items-center justify-center">
+                        <.icon name="hero-map" class="size-5 opacity-30" />
+                      </div>
+                    <% end %>
+                    <p class="text-xs px-1 py-0.5 truncate"><%= map.name %></p>
+                  </.link>
+                <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <%!-- Stat blocks --%>
+        <div>
+          <h4 class="text-xs uppercase tracking-wider text-base-content/50 mb-2">Stat Blocks</h4>
+          <% sb_ids = @session.stat_block_ids || [] %>
+          <%= if sb_ids == [] do %>
+            <p class="text-xs text-base-content/40">No stat blocks linked.</p>
+          <% else %>
+            <ul class="space-y-1">
+              <%= for sb_id <- sb_ids do %>
+                <% sb = Entities.get_entity("stat-block", sb_id) %>
+                <%= if sb do %>
+                  <li class="flex items-center gap-2 text-sm">
+                    <span class="badge badge-error badge-xs">CR <%= sb.cr %></span>
+                    <span class="truncate text-xs"><%= sb.name %></span>
+                  </li>
+                <% end %>
+              <% end %>
+            </ul>
+          <% end %>
+        </div>
+
+        <%!-- Audio --%>
+        <div>
+          <h4 class="text-xs uppercase tracking-wider text-base-content/50 mb-2">Audio</h4>
+          <%= if @music == [] do %>
+            <p class="text-xs text-base-content/40">No music files found.</p>
+          <% else %>
+            <ul class="space-y-1">
+              <%= for track <- @music do %>
+                <li class="flex items-center gap-2 text-xs">
+                  <span class={if asset_exists?(campaign_dir, track), do: "text-success", else: "text-error"}>
+                    <%= if asset_exists?(campaign_dir, track), do: "✓", else: "✗" %>
+                  </span>
+                  <span class="truncate"><%= track.name %></span>
+                </li>
+              <% end %>
+            </ul>
+          <% end %>
+        </div>
       </div>
 
     </div>

@@ -24,13 +24,14 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/campaign_tool"
 import {FogEditor} from "./hooks/fog_editor"
+import {SortableScenes} from "./hooks/sortable_scenes"
 import topbar from "../vendor/topbar"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks, FogEditor},
+  hooks: {...colocatedHooks, FogEditor, SortableScenes},
 })
 
 // Show progress bar on live navigation and form submits
