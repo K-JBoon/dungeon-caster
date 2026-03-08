@@ -1,0 +1,54 @@
+defmodule CampaignToolWeb.SessionPlannerLiveTest do
+  use CampaignToolWeb.ConnCase
+  import Phoenix.LiveViewTest
+  alias CampaignTool.Entities
+
+  @test_file "/tmp/campaign_test/session-planner-01.md"
+
+  setup do
+    File.mkdir_p!("/tmp/campaign_test")
+    File.write!(@test_file, "---\ntype: session\nid: session-planner-01\ntitle: The Heist\nsession_number: 1\nstatus: planned\nscenes: \"[]\"\ntags: []\nnpc_ids: []\nlocation_ids: []\nmap_ids: []\nstat_block_ids: []\nfaction_ids: []\n---\n\nSession notes.")
+    Entities.upsert_entity("session", %{
+      "id" => "session-planner-01",
+      "title" => "The Heist",
+      "session_number" => 1,
+      "status" => "planned",
+      "scenes" => "[]",
+      "tags" => [],
+      "npc_ids" => [],
+      "location_ids" => [],
+      "map_ids" => [],
+      "stat_block_ids" => [],
+      "faction_ids" => [],
+      "body_raw" => "Session notes.",
+      "body_html" => "<p>Session notes.</p>",
+      "file_path" => @test_file
+    })
+    on_exit(fn -> File.rm(@test_file) end)
+    :ok
+  end
+
+  test "renders session title", %{conn: conn} do
+    {:ok, _view, html} = live(conn, "/sessions/session-planner-01/plan")
+    assert html =~ "The Heist"
+  end
+
+  test "add scene button adds a new scene", %{conn: conn} do
+    {:ok, view, _html} = live(conn, "/sessions/session-planner-01/plan")
+    html = view |> element("button", "Add Scene") |> render_click()
+    assert html =~ "New Scene"
+  end
+
+  test "Go Live button starts session and redirects to runner", %{conn: conn} do
+    {:ok, view, _html} = live(conn, "/sessions/session-planner-01/plan")
+    assert {:error, {:live_redirect, %{to: path}}} =
+      view |> element("button", "Go Live") |> render_click()
+    assert path == "/sessions/session-planner-01/run"
+    # Clean up
+    try do
+      CampaignTool.Session.Server.stop("session-planner-01")
+    catch
+      :exit, _ -> :ok
+    end
+  end
+end
