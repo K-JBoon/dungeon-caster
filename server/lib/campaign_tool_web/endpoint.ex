@@ -27,6 +27,9 @@ defmodule CampaignToolWeb.Endpoint do
     only: CampaignToolWeb.static_paths(),
     raise_on_missing_only: code_reloading?
 
+  # Serve campaign map assets from the campaign directory at runtime
+  plug CampaignToolWeb.Plugs.CampaignStatic
+
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do
