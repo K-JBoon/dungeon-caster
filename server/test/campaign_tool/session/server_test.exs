@@ -97,4 +97,17 @@ defmodule CampaignTool.Session.ServerTest do
     state = CampaignTool.Session.Server.get_state(sid)
     assert Enum.at(state.initiative, 0).hp == 3
   end
+
+  test "reveal_cells on :all_revealed state is a no-op and does not crash", %{sid: sid} do
+    :ok = CampaignTool.Session.Server.reveal_all(sid)
+    assert :ok = CampaignTool.Session.Server.reveal_cells(sid, ["0,0", "1,1"])
+    state = CampaignTool.Session.Server.get_state(sid)
+    assert state.fog_grid == :all_revealed
+  end
+
+  test "set_volume with 0 for master sets master to 0", %{sid: sid} do
+    :ok = CampaignTool.Session.Server.set_volume(sid, %{master: 0})
+    state = CampaignTool.Session.Server.get_state(sid)
+    assert state.audio_state.volume.master == 0
+  end
 end

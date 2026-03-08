@@ -48,6 +48,10 @@ defmodule CampaignTool.Session.Server do
     {:reply, state, state}
   end
 
+  def handle_call({:reveal_cells, _cells}, _from, %{fog_grid: :all_revealed} = state) do
+    {:reply, :ok, state}
+  end
+
   def handle_call({:reveal_cells, cells}, _from, state) do
     fog = Enum.reduce(cells, state.fog_grid, fn cell, acc ->
       Map.put(acc, cell, true)
@@ -55,6 +59,10 @@ defmodule CampaignTool.Session.Server do
     new_state = %{state | fog_grid: fog}
     broadcast(state.session_id, "fog_update", %{fog_grid: fog})
     {:reply, :ok, new_state}
+  end
+
+  def handle_call({:hide_cells, _cells}, _from, %{fog_grid: :all_revealed} = state) do
+    {:reply, :ok, state}
   end
 
   def handle_call({:hide_cells, cells}, _from, state) do
@@ -113,9 +121,9 @@ defmodule CampaignTool.Session.Server do
 
   def handle_call({:set_volume, vol}, _from, state) do
     current = state.audio_state.volume
-    new_vol = %{current | master: vol[:master] || current.master,
-                          ambient: vol[:ambient] || current.ambient,
-                          sfx: vol[:sfx] || current.sfx}
+    new_vol = %{master: Map.get(vol, :master, current.master),
+                ambient: Map.get(vol, :ambient, current.ambient),
+                sfx: Map.get(vol, :sfx, current.sfx)}
     audio = %{state.audio_state | volume: new_vol}
     new_state = %{state | audio_state: audio}
     broadcast(state.session_id, "volume_update", %{volume: new_vol})
@@ -123,6 +131,7 @@ defmodule CampaignTool.Session.Server do
   end
 
   def handle_call({:set_initiative, list}, _from, state) do
+    broadcast(state.session_id, "initiative_update", %{initiative: list})
     {:reply, :ok, %{state | initiative: list}}
   end
 
@@ -130,6 +139,7 @@ defmodule CampaignTool.Session.Server do
     initiative = Enum.map(state.initiative, fn c ->
       if c.id == combatant_id, do: %{c | hp: hp}, else: c
     end)
+    broadcast(state.session_id, "initiative_update", %{initiative: initiative})
     {:reply, :ok, %{state | initiative: initiative}}
   end
 
