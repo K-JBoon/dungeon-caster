@@ -1,0 +1,51 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+def localProps = new Properties()
+def localPropsFile = rootProject.file('local.properties')
+if (localPropsFile.exists()) {
+    localProps.load(new FileInputStream(localPropsFile))
+}
+
+android {
+    namespace 'com.campaigntool'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.campaigntool"
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName "1.0"
+
+        buildConfigField "String", "CAST_APP_ID", "\"${localProps.getProperty('CAST_APP_ID', 'YOUR_APP_ID_HERE')}\""
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+    buildFeatures {
+        buildConfig true
+    }
+}
+
+dependencies {
+    implementation 'androidx.core:core-ktx:1.12.0'
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.mediarouter:mediarouter:1.7.0'
+    implementation 'com.google.android.gms:play-services-cast-framework:21.5.0'
+}
