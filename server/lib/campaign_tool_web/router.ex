@@ -17,7 +17,17 @@ defmodule CampaignToolWeb.Router do
   scope "/", CampaignToolWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live "/", DashboardLive
+    live "/entities/:type", EntityBrowserLive
+    live "/entities/:type/:id", EntityDetailLive
+    live "/entities/:type/:id/edit", EntityEditorLive
+    live "/maps/:id", MapViewerLive
+    live "/sessions/:id/plan", SessionPlannerLive
+    live "/sessions/:id/run", SessionRunnerLive
+
+    get "/health", HealthController, :index
+    get "/receiver", ReceiverController, :index
+    get "/audio/*path", AudioController, :stream
   end
 
   # Other scopes may use custom stacks.
