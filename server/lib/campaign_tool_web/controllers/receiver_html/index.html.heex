@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Campaign Receiver</title>
+  <script src="/assets/app.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100vw; height: 100vh; overflow: hidden; background: #000; }
+    #map-container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    #map-img {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: contain;
+    }
+    #fog-canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+    }
+    #status {
+      position: absolute;
+      top: 1rem; right: 1rem;
+      color: rgba(255,255,255,0.4);
+      font-family: monospace;
+      font-size: 0.75rem;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <div id="map-container">
+    <img id="map-img" src="" alt="" />
+    <canvas id="fog-canvas"></canvas>
+    <div id="status">connecting...</div>
+  </div>
+
+  <script>
+    // ── Configuration ──────────────────────────────────────────────────────────
+    const params = new URLSearchParams(location.search);
+    const sessionId = params.get('session_id');
+    const CELL_SIZE = 20; // px per fog grid cell
+
+    // ── DOM refs ────────────────────────────────────────────────────────────────
+    const mapImg = document.getElementById('map-img');
+    const canvas = document.getElementById('fog-canvas');
+    const ctx = canvas.getContext('2d');
+    const statusEl = document.getElementById('status');
+
+    // ── State ───────────────────────────────────────────────────────────────────
+    let fogGrid = {};      // "row,col" => true  (revealed)
+    let fogAll = false;    // true when :all_revealed
+    let ambientAudio = null;
+    let volume = { master: 80, ambient: 80, sfx: 80 };
+
+    // ── Canvas sizing ───────────────────────────────────────────────────────────
+    function resizeCanvas() {
+      canvas.width  = window.innerWidth;
+      canvas.height = window.innerHeight;
+      drawFog();
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    // ── Fog rendering ────────────────────────────────────────────────────────────
+    function drawFog() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (fogAll) return; // all revealed → no fog
+
+      const cols = Math.ceil(canvas.width  / CELL_SIZE);
+      const rows = Math.ceil(canvas.height / CELL_SIZE);
+      ctx.fillStyle = 'rgba(0,0,0,1)';
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (!fogGrid[r + ',' + c]) {
+            ctx.fillRect(c * CELL_SIZE, r * CELL_SIZE, CELL_SIZE, CELL_SIZE);
+          }
+        }
+      }
+    }
+
+    // ── Audio helpers ────────────────────────────────────────────────────────────
+    function ambientVolume() {
+      return (volume.master / 100) * (volume.ambient / 100);
+    }
+
+    function sfxVolume() {
+      return (volume.master / 100) * (volume.sfx / 100);
+    }
+
+    function playAmbient(path) {
+      if (ambientAudio) { ambientAudio.pause(); ambientAudio = null; }
+      ambientAudio = new Audio('/audio/' + path);
+      ambientAudio.loop = true;
+      ambientAudio.volume = ambientVolume();
+      ambientAudio.play().catch(e => console.warn('Ambient play blocked:', e));
+    }
+
+    function playSfx(path) {
+      const sfx = new Audio('/audio/' + path);
+      sfx.volume = sfxVolume();
+      sfx.play().catch(e => console.warn('SFX play blocked:', e));
+    }
+
+    // ── Phoenix Channel ─────────────────────────────────────────────────────────
+    if (!sessionId) {
+      statusEl.textContent = 'Error: no session_id in URL';
+    } else {
+      const { Socket } = window.Phoenix;
+      const socket = new Socket('/socket', {});
+      socket.connect();
+
+      const channel = socket.channel('session:live:' + sessionId, {});
+
+      channel.on('map_update', ({ map_id }) => {
+        mapImg.src = '/maps/assets/' + map_id + '.png';
+        fogGrid = {};
+        fogAll = false;
+        drawFog();
+      });
+
+      channel.on('fog_update', ({ fog_grid }) => {
+        if (fog_grid === 'all_revealed') {
+          fogAll = true;
+          fogGrid = {};
+        } else {
+          fogAll = false;
+          fogGrid = fog_grid || {};
+        }
+        drawFog();
+      });
+
+      channel.on('audio_play', ({ path, type, volume: vol }) => {
+        if (vol) volume = vol;
+        if (type === 'ambient') {
+          playAmbient(path);
+        } else {
+          playSfx(path);
+        }
+      });
+
+      channel.on('audio_stop', ({ type }) => {
+        if (type === 'ambient' && ambientAudio) {
+          ambientAudio.pause();
+          ambientAudio = null;
+        }
+      });
+
+      channel.on('volume_update', ({ volume: vol }) => {
+        volume = vol;
+        if (ambientAudio) ambientAudio.volume = ambientVolume();
+      });
+
+      channel.join()
+        .receive('ok', (initialState) => {
+          statusEl.textContent = 'connected';
+          setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+
+          if (initialState.current_map) {
+            mapImg.src = '/maps/assets/' + initialState.current_map + '.png';
+          }
+
+          const fg = initialState.fog_grid;
+          if (fg === 'all_revealed') {
+            fogAll = true;
+          } else {
+            fogGrid = fg || {};
+          }
+
+          if (initialState.audio_state && initialState.audio_state.volume) {
+            volume = initialState.audio_state.volume;
+          }
+
+          drawFog();
+        })
+        .receive('error', (err) => {
+          statusEl.textContent = 'Error: ' + JSON.stringify(err);
+          console.error('Channel join error:', err);
+        })
+        .receive('timeout', () => {
+          statusEl.textContent = 'Timeout connecting to session';
+        });
+    }
+  </script>
+</body>
+</html>

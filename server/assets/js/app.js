@@ -46,6 +46,9 @@ liveSocket.connect()
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
 
+// Expose Phoenix Socket for non-LiveView pages (e.g. Chromecast receiver)
+window.Phoenix = { Socket }
+
 // The lines below enable quality of life phoenix_live_reload
 // development features:
 //
