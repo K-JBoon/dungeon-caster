@@ -37,6 +37,7 @@ defmodule CampaignToolWeb.Router do
     get "/health", HealthController, :index
     get "/receiver", ReceiverController, :index
     get "/audio/*path", AudioController, :stream
+    get "/maps/assets/*path", MapAssetController, :show
   end
 
   # Other scopes may use custom stacks.
