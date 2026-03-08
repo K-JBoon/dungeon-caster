@@ -14,8 +14,8 @@ defmodule CampaignTool.Application do
        repos: Application.fetch_env!(:campaign_tool, :ecto_repos), skip: skip_migrations?()},
       {DNSCluster, query: Application.get_env(:campaign_tool, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: CampaignTool.PubSub},
-      # Start a worker by calling: CampaignTool.Worker.start_link(arg)
-      # {CampaignTool.Worker, arg},
+      {Registry, keys: :unique, name: CampaignTool.Session.Registry},
+      CampaignTool.Sync.Supervisor,
       # Start to serve requests, typically the last entry
       CampaignToolWeb.Endpoint
     ]
