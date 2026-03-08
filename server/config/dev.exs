@@ -84,3 +84,8 @@ config :phoenix_live_view,
   debug_attributes: true,
   # Enable helpful, but potentially expensive runtime checks
   enable_expensive_runtime_checks: true
+
+config :campaign_tool, :campaign_dir,
+  System.get_env("CAMPAIGN_DIR", Path.expand("~/campaign"))
+
+config :campaign_tool, :ssh_key_path, nil
