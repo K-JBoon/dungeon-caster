@@ -3,9 +3,10 @@ defmodule CampaignToolWeb.EntityEditorLiveTest do
   import Phoenix.LiveViewTest
   alias CampaignTool.Entities
 
-  @test_file "/tmp/editor-test-npc.md"
+  @test_file "/tmp/campaign_test/editor-test-npc.md"
 
   setup do
+    File.mkdir_p!(Path.dirname(@test_file))
     File.write!(@test_file, "---\ntype: npc\nid: editor-test-npc\nname: Editor NPC\nstatus: alive\nrole: guard\ntags: []\nfaction_ids: []\n---\n\nOriginal body.")
     Entities.upsert_entity("npc", %{
       "id" => "editor-test-npc",

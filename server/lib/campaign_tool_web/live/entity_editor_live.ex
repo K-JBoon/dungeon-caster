@@ -17,8 +17,15 @@ defmodule CampaignToolWeb.EntityEditorLive do
   end
 
   def handle_event("save", %{"content" => content}, socket) do
-    File.write!(socket.assigns.entity.file_path, content)
-    {:noreply, assign(socket, content: content, flash_msg: "Saved — re-indexing...")}
+    campaign_dir = Application.get_env(:campaign_tool, :campaign_dir) |> Path.expand()
+    file_path = socket.assigns.entity.file_path |> Path.expand()
+
+    if String.starts_with?(file_path, campaign_dir) do
+      File.write!(file_path, content)
+      {:noreply, assign(socket, content: content, flash_msg: "Saved — re-indexing...")}
+    else
+      {:noreply, put_flash(socket, :error, "Invalid file path")}
+    end
   end
 
   def handle_info({:updated, id}, socket) when id == socket.assigns.entity.id do
