@@ -86,28 +86,6 @@ defmodule CampaignToolWeb.SessionRunnerLive do
     {:noreply, assign(socket, server_state: state)}
   end
 
-  # Combat events
-  def handle_event("add_combatant", %{"name" => name, "hp" => hp, "ac" => ac}, socket) do
-    combatant = %{
-      id: "c-#{:rand.uniform(99999)}",
-      name: name,
-      hp: String.to_integer(hp),
-      max_hp: String.to_integer(hp),
-      ac: String.to_integer(ac),
-      conditions: []
-    }
-    state = socket.assigns.server_state
-    new_initiative = state.initiative ++ [combatant]
-    Server.set_initiative(socket.assigns.session_id, new_initiative)
-    {:noreply, assign(socket, server_state: %{state | initiative: new_initiative})}
-  end
-
-  def handle_event("update_hp", %{"id" => id, "hp" => hp}, socket) do
-    Server.update_hp(socket.assigns.session_id, id, String.to_integer(hp))
-    state = Server.get_state(socket.assigns.session_id)
-    {:noreply, assign(socket, server_state: state)}
-  end
-
   # PubSub
   def handle_info({"fog_update", %{fog_grid: fog_grid}}, socket) do
     {:noreply, push_event(socket, "fog_state", %{fog_grid: fog_grid})}
@@ -134,17 +112,16 @@ defmodule CampaignToolWeb.SessionRunnerLive do
         <%= case @mode do %>
           <% :plan -> %> <%= render_plan(assigns) %>
           <% :map -> %> <%= render_map(assigns) %>
-          <% :combat -> %> <%= render_combat(assigns) %>
           <% :audio -> %> <%= render_audio(assigns) %>
         <% end %>
       </div>
 
       <!-- Bottom nav -->
       <nav style="display:flex; border-top:2px solid #333; background:#1a1a2e">
-        <%= for {mode, label, icon} <- [{:plan, "Plan", "📋"}, {:map, "Map", "🗺"}, {:combat, "Combat", "⚔"}, {:audio, "Audio", "🎵"}] do %>
+        <%= for {mode, label, icon} <- [{:plan, "Plan", "📋"}, {:map, "Map", "🗺"}, {:audio, "Audio", "🎵"}] do %>
           <button
             phx-click="set_mode" phx-value-mode={mode}
-            style={"flex:1; padding:12px; background:#{if @mode == mode, do: "#16213e", else: "transparent"}; color:white; border:none; font-size:0.9rem; cursor:pointer"}>
+            style={"flex:1; padding:12px; background:#{if @mode == mode, do: "#3b82f6", else: "#1a1a2e"}; color:white; border:none; border-right:1px solid #333; font-size:0.9rem; cursor:pointer; font-weight:#{if @mode == mode, do: "600", else: "400"}"}>
             <%= icon %> <%= label %>
           </button>
         <% end %>
@@ -197,36 +174,6 @@ defmodule CampaignToolWeb.SessionRunnerLive do
           <p>No map selected. Select a map from session assets.</p>
         <% end %>
       </div>
-    </div>
-    """
-  end
-
-  defp render_combat(assigns) do
-    ~H"""
-    <div>
-      <h3>Initiative Tracker</h3>
-      <form phx-submit="add_combatant" style="display:flex; gap:0.5rem; margin-bottom:1rem">
-        <input name="name" placeholder="Name" required />
-        <input name="hp" placeholder="HP" type="number" required style="width:70px" />
-        <input name="ac" placeholder="AC" type="number" required style="width:70px" />
-        <button type="submit">+ Add</button>
-      </form>
-      <table style="width:100%; border-collapse:collapse">
-        <tr><th>Name</th><th>HP</th><th>AC</th><th>Conditions</th></tr>
-        <%= for c <- @server_state.initiative do %>
-          <tr style="border-bottom:1px solid #eee">
-            <td><%= c.name %></td>
-            <td>
-              <input type="number" value={c.hp}
-                phx-blur="update_hp" phx-value-id={c.id}
-                name="hp" style="width:60px" />
-              / <%= c.max_hp %>
-            </td>
-            <td><%= c.ac %></td>
-            <td>—</td>
-          </tr>
-        <% end %>
-      </table>
     </div>
     """
   end
