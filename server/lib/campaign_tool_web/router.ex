@@ -17,13 +17,22 @@ defmodule CampaignToolWeb.Router do
   scope "/", CampaignToolWeb do
     pipe_through :browser
 
-    live "/", DashboardLive
-    live "/entities/:type", EntityBrowserLive
-    live "/entities/:type/:id", EntityDetailLive
-    live "/entities/:type/:id/edit", EntityEditorLive
-    live "/maps/:id", MapViewerLive
-    live "/sessions/:id/plan", SessionPlannerLive
-    live "/sessions/:id/run", SessionRunnerLive
+    # Runner is full-screen — no app layout
+    live_session :runner, layout: false do
+      live "/sessions/:id/run", SessionRunnerLive
+    end
+
+    # All other live views use the sidebar app layout
+    live_session :app, layout: {CampaignToolWeb.Layouts, :app} do
+      live "/", DashboardLive
+      live "/entities/:type", EntityBrowserLive
+      live "/entities/:type/new", EntityFormLive
+      live "/entities/:type/:id", EntityDetailLive
+      live "/entities/:type/:id/edit", EntityFormLive
+      live "/entities/:type/:id/edit/raw", EntityEditorLive
+      live "/maps/:id", MapViewerLive
+      live "/sessions/:id/plan", SessionPlannerLive
+    end
 
     get "/health", HealthController, :index
     get "/receiver", ReceiverController, :index

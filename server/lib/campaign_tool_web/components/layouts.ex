@@ -11,64 +11,49 @@ defmodule CampaignToolWeb.Layouts do
   # and other static content.
   embed_templates "layouts/*"
 
-  @doc """
-  Renders your app layout.
-
-  This function is typically invoked from every template,
-  and it often contains your application menu, sidebar,
-  or similar.
-
-  ## Examples
-
-      <Layouts.app flash={@flash}>
-        <h1>Content</h1>
-      </Layouts.app>
-
-  """
   attr :flash, :map, required: true, doc: "the map of flash messages"
-
-  attr :current_scope, :map,
-    default: nil,
-    doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
-
   slot :inner_block, required: true
 
   def app(assigns) do
     ~H"""
-    <header class="navbar px-4 sm:px-6 lg:px-8">
-      <div class="flex-1">
-        <a href="/" class="flex-1 flex w-fit items-center gap-2">
-          <img src={~p"/images/logo.svg"} width="36" />
-          <span class="text-sm font-semibold">v{Application.spec(:phoenix, :vsn)}</span>
+    <div class="flex h-screen overflow-hidden bg-base-200">
+      <%!-- Sidebar --%>
+      <nav class="w-56 shrink-0 bg-base-300 flex flex-col gap-1 p-3 overflow-y-auto">
+        <a href="/" class="flex items-center gap-2 px-2 py-3 mb-2">
+          <span class="text-lg font-bold text-primary">Campaign Tool</span>
         </a>
-      </div>
-      <div class="flex-none">
-        <ul class="flex flex-column px-1 space-x-4 items-center">
-          <li>
-            <a href="https://phoenixframework.org/" class="btn btn-ghost">Website</a>
-          </li>
-          <li>
-            <a href="https://github.com/phoenixframework/phoenix" class="btn btn-ghost">GitHub</a>
-          </li>
-          <li>
-            <.theme_toggle />
-          </li>
-          <li>
-            <a href="https://hexdocs.pm/phoenix/overview.html" class="btn btn-primary">
-              Get Started <span aria-hidden="true">&rarr;</span>
-            </a>
-          </li>
-        </ul>
-      </div>
-    </header>
+        <p class="text-xs uppercase tracking-wider text-base-content/50 px-2 mb-1">Entities</p>
+        <%= for {type, label, icon} <- [
+          {"npc", "NPCs", "hero-user-group"},
+          {"location", "Locations", "hero-map-pin"},
+          {"faction", "Factions", "hero-shield-check"},
+          {"stat-block", "Stat Blocks", "hero-book-open"},
+          {"map", "Maps", "hero-map"}
+        ] do %>
+          <.link navigate={"/entities/#{type}"}
+                 class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-base-100 transition-colors">
+            <.icon name={icon} class="size-4 opacity-70" />
+            <%= label %>
+          </.link>
+        <% end %>
+        <div class="divider my-1" />
+        <p class="text-xs uppercase tracking-wider text-base-content/50 px-2 mb-1">Sessions</p>
+        <.link navigate="/entities/session"
+               class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-base-100 transition-colors">
+          <.icon name="hero-calendar-days" class="size-4 opacity-70" />
+          Sessions
+        </.link>
+        <div class="mt-auto pt-4">
+          <.theme_toggle />
+        </div>
+      </nav>
 
-    <main class="px-4 py-20 sm:px-6 lg:px-8">
-      <div class="mx-auto max-w-2xl space-y-4">
+      <%!-- Main content --%>
+      <main class="flex-1 overflow-y-auto">
+        <.flash_group flash={@flash} />
         {render_slot(@inner_block)}
-      </div>
-    </main>
-
-    <.flash_group flash={@flash} />
+      </main>
+    </div>
     """
   end
 
