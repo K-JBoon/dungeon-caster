@@ -18,15 +18,19 @@ defmodule CampaignTool.Sync.IndexWorker do
   def index_file(path) do
     case Parser.parse_file(path) do
       {:ok, type, data} ->
-        with {:ok, _entity} <- Entities.upsert_entity(type, data) do
-          update_fts(type, data)
-          Phoenix.PubSub.broadcast(
-            CampaignTool.PubSub,
-            "entities:#{type}",
-            {:updated, data["id"]}
-          )
+        case Entities.upsert_entity(type, data) do
+          {:ok, _entity} ->
+            update_fts(type, data)
+            Phoenix.PubSub.broadcast(
+              CampaignTool.PubSub,
+              "entities:#{type}",
+              {:updated, data["id"]}
+            )
+            :ok
+          {:error, reason} ->
+            Logger.warning("IndexWorker: failed to upsert #{data["id"]}: #{inspect(reason)}")
+            :ok
         end
-        :ok
 
       {:error, reason} ->
         Logger.warning("IndexWorker: failed to parse #{path}: #{inspect(reason)}")
