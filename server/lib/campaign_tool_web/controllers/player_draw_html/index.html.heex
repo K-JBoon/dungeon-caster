@@ -101,6 +101,7 @@
     const container = document.getElementById('map-container');
 
     let fogGrid = {}, fogAll = true, fogPartial = false;
+    let gridCols = 0, gridRows = 0;
     let strokes   = [];
     let curColor  = COLORS[0];
     let curSize   = 6;
@@ -153,12 +154,13 @@
     new ResizeObserver(resizeCanvases).observe(container);
     mapImg.addEventListener('load', resizeCanvases);
 
-    // Image metrics (letterbox-correct)
-    function getImageMetrics() {
-      if (!mapImg.naturalWidth || !mapImg.naturalHeight) return {ox:0, oy:0, scale:1};
-      const scale = Math.min(fogCv.width / mapImg.naturalWidth, fogCv.height / mapImg.naturalHeight);
-      const rw = mapImg.naturalWidth * scale, rh = mapImg.naturalHeight * scale;
-      return {ox: (fogCv.width - rw) / 2, oy: (fogCv.height - rh) / 2, scale};
+    // Grid metrics — mirrors receiver's getGridMetrics(); no image-load dependency.
+    // Falls back to full-canvas extent when gridCols/gridRows aren't known yet.
+    function getGridMetrics(cvs) {
+      if (!gridCols || !gridRows) return {ox: 0, oy: 0, iw: cvs.width, ih: cvs.height};
+      const cellW = Math.min(cvs.width / gridCols, cvs.height / gridRows);
+      const iw = gridCols * cellW, ih = gridRows * cellW;
+      return {ox: (cvs.width - iw) / 2, oy: (cvs.height - ih) / 2, iw, ih};
     }
 
     // Fog rendering
@@ -173,27 +175,26 @@
       fogCtx.clearRect(0, 0, fogCv.width, fogCv.height);
       fogCtx.fillStyle = 'rgba(0,0,0,0.85)';
       if (fogAll) { fogCtx.fillRect(0, 0, fogCv.width, fogCv.height); return; }
-      const {ox, oy, scale} = getImageMetrics();
-      const cs = CELL_SIZE * scale;
+      const m = getGridMetrics(fogCv);
+      if (!m || m.iw === 0) return;
+      const cs = m.iw / (gridCols || 1);
       if (fogPartial) {
         fogCtx.fillRect(0, 0, fogCv.width, fogCv.height);
         for (const key of Object.keys(fogGrid)) {
           const [r, c] = key.split(',').map(Number);
-          fogCtx.clearRect(ox + c * cs, oy + r * cs, cs, cs);
+          fogCtx.clearRect(m.ox + c * cs, m.oy + r * cs, cs, cs);
         }
       } else {
         for (const key of Object.keys(fogGrid)) {
           const [r, c] = key.split(',').map(Number);
-          fogCtx.fillRect(ox + c * cs, oy + r * cs, cs, cs);
+          fogCtx.fillRect(m.ox + c * cs, m.oy + r * cs, cs, cs);
         }
       }
     }
 
     // Drawing rendering
     function renderStrokes(strokeList) {
-      const {ox, oy, scale} = getImageMetrics();
-      const iw = mapImg.naturalWidth * scale;
-      const ih = mapImg.naturalHeight * scale;
+      const m = getGridMetrics(drawCv);
       drawCtx.clearRect(0, 0, drawCv.width, drawCv.height);
       for (const s of strokeList) {
         if (!s.points || s.points.length < 2) continue;
@@ -210,10 +211,10 @@
         drawCtx.lineJoin   = 'round';
         drawCtx.beginPath();
         const p0 = s.points[0];
-        drawCtx.moveTo(ox + p0.x * iw, oy + p0.y * ih);
+        drawCtx.moveTo(m.ox + p0.x * m.iw, m.oy + p0.y * m.ih);
         for (let i = 1; i < s.points.length; i++) {
           const p = s.points[i];
-          drawCtx.lineTo(ox + p.x * iw, oy + p.y * ih);
+          drawCtx.lineTo(m.ox + p.x * m.iw, m.oy + p.y * m.ih);
         }
         drawCtx.stroke();
         drawCtx.restore();
@@ -227,11 +228,9 @@
       const rect = drawCv.getBoundingClientRect();
       const x = clientX - rect.left;
       const y = clientY - rect.top;
-      const {ox, oy, scale} = getImageMetrics();
-      const iw = mapImg.naturalWidth * scale;
-      const ih = mapImg.naturalHeight * scale;
-      if (iw === 0 || ih === 0) return null;
-      return {x: (x - ox) / iw, y: (y - oy) / ih};
+      const m = getGridMetrics(drawCv);
+      if (m.iw === 0 || m.ih === 0) return null;
+      return {x: (x - m.ox) / m.iw, y: (y - m.oy) / m.ih};
     }
 
     drawCv.addEventListener('pointerdown', e => {
@@ -274,7 +273,9 @@
     socket.connect();
     channel = socket.channel('session:live:' + SESSION_ID, {});
 
-    channel.on('map_update', ({asset, map_id}) => {
+    channel.on('map_update', ({asset, map_id, grid_cols, grid_rows}) => {
+      if (grid_cols) gridCols = grid_cols;
+      if (grid_rows) gridRows = grid_rows;
       mapImg.src = '/maps/assets/' + (asset || map_id + '.png');
       applyFogState('all_fogged');
       strokes = [];
@@ -298,6 +299,8 @@
 
     channel.join()
       .receive('ok', state => {
+        if (state.grid_cols) gridCols = state.grid_cols;
+        if (state.grid_rows) gridRows = state.grid_rows;
         if (state.current_map_asset) {
           mapImg.src = '/maps/assets/' + state.current_map_asset;
         } else if (state.current_map) {
