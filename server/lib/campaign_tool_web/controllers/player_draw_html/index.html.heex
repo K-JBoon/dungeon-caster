@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>Draw on Map</title>
+  <script src="/assets/phoenix.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100vw; height: 100dvh; overflow: hidden; background: #111; }
+
+    #map-container {
+      position: absolute;
+      inset: 0;
+      bottom: 60px;
+    }
+    #map-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+    #fog-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    #draw-canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+
+    #toolbar {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 60px;
+      background: rgba(20,20,20,0.95);
+      border-top: 1px solid #333;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 12px;
+      overflow-x: auto;
+    }
+
+    .color-swatch {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .color-swatch.active { border-color: #fff; }
+
+    .tool-btn {
+      background: #333;
+      color: #fff;
+      border: 2px solid transparent;
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 13px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .tool-btn.active { border-color: #fff; }
+
+    #size-slider { width: 60px; flex-shrink: 0; }
+
+    #clear-btn {
+      margin-left: auto;
+      background: #8b2020;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="map-container">
+    <img id="map-img" src="" alt="" />
+    <canvas id="fog-canvas"></canvas>
+    <canvas id="draw-canvas"></canvas>
+  </div>
+
+  <div id="toolbar">
+    <div id="color-swatches" style="display:flex;gap:6px;align-items:center;"></div>
+    <button class="tool-btn active" id="btn-brush">🖌</button>
+    <button class="tool-btn" id="btn-eraser">⬜</button>
+    <input type="range" id="size-slider" min="2" max="24" value="6" />
+    <button id="clear-btn">Clear Mine</button>
+  </div>
+
+  <script>
+    const SESSION_ID = '<%= @session_id %>';
+    const COLORS = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#1abc9c','#ffffff'];
+    const CELL_SIZE = 20;
+
+    let playerId = localStorage.getItem('draw_player_id');
+    if (!playerId) {
+      playerId = crypto.randomUUID();
+      localStorage.setItem('draw_player_id', playerId);
+    }
+
+    const mapImg   = document.getElementById('map-img');
+    const fogCv    = document.getElementById('fog-canvas');
+    const fogCtx   = fogCv.getContext('2d');
+    const drawCv   = document.getElementById('draw-canvas');
+    const drawCtx  = drawCv.getContext('2d');
+    const container = document.getElementById('map-container');
+
+    let fogGrid = {}, fogAll = true, fogPartial = false;
+    let strokes   = [];
+    let curColor  = COLORS[0];
+    let curSize   = 6;
+    let curErase  = false;
+    let painting  = false;
+    let curPoints = [];
+    let channel   = null;
+
+    // Color toolbar
+    const swatchContainer = document.getElementById('color-swatches');
+    COLORS.forEach(color => {
+      const el = document.createElement('div');
+      el.className = 'color-swatch' + (color === curColor ? ' active' : '');
+      el.style.background = color;
+      el.addEventListener('click', () => {
+        curColor = color;
+        curErase = false;
+        document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('btn-brush').classList.add('active');
+        document.getElementById('btn-eraser').classList.remove('active');
+      });
+      swatchContainer.appendChild(el);
+    });
+
+    document.getElementById('btn-brush').addEventListener('click', () => {
+      curErase = false;
+      document.getElementById('btn-brush').classList.add('active');
+      document.getElementById('btn-eraser').classList.remove('active');
+    });
+    document.getElementById('btn-eraser').addEventListener('click', () => {
+      curErase = true;
+      document.getElementById('btn-eraser').classList.add('active');
+      document.getElementById('btn-brush').classList.remove('active');
+    });
+    document.getElementById('size-slider').addEventListener('input', e => {
+      curSize = parseInt(e.target.value);
+    });
+    document.getElementById('clear-btn').addEventListener('click', () => {
+      if (channel) channel.push('clear_my_drawings', {player_id: playerId});
+    });
+
+    // Canvas sizing
+    function resizeCanvases() {
+      const r = container.getBoundingClientRect();
+      fogCv.width = drawCv.width = Math.round(r.width);
+      fogCv.height = drawCv.height = Math.round(r.height);
+      redrawAll();
+    }
+    new ResizeObserver(resizeCanvases).observe(container);
+    mapImg.addEventListener('load', resizeCanvases);
+
+    // Image metrics (letterbox-correct)
+    function getImageMetrics() {
+      if (!mapImg.naturalWidth || !mapImg.naturalHeight) return {ox:0, oy:0, scale:1};
+      const scale = Math.min(fogCv.width / mapImg.naturalWidth, fogCv.height / mapImg.naturalHeight);
+      const rw = mapImg.naturalWidth * scale, rh = mapImg.naturalHeight * scale;
+      return {ox: (fogCv.width - rw) / 2, oy: (fogCv.height - rh) / 2, scale};
+    }
+
+    // Fog rendering
+    function applyFogState(fg) {
+      if (fg === 'all_fogged')          { fogAll = true;  fogPartial = false; fogGrid = {}; }
+      else if (fg === 'all_revealed' || fg == null) { fogAll = false; fogPartial = false; fogGrid = {}; }
+      else if (fg && fg.type === 'partial_reveal')  { fogAll = false; fogPartial = true; fogGrid = fg.revealed || {}; }
+      else                              { fogAll = false; fogPartial = false; fogGrid = fg || {}; }
+    }
+
+    function drawFog() {
+      fogCtx.clearRect(0, 0, fogCv.width, fogCv.height);
+      fogCtx.fillStyle = 'rgba(0,0,0,0.85)';
+      if (fogAll) { fogCtx.fillRect(0, 0, fogCv.width, fogCv.height); return; }
+      const {ox, oy, scale} = getImageMetrics();
+      const cs = CELL_SIZE * scale;
+      if (fogPartial) {
+        fogCtx.fillRect(0, 0, fogCv.width, fogCv.height);
+        for (const key of Object.keys(fogGrid)) {
+          const [r, c] = key.split(',').map(Number);
+          fogCtx.clearRect(ox + c * cs, oy + r * cs, cs, cs);
+        }
+      } else {
+        for (const key of Object.keys(fogGrid)) {
+          const [r, c] = key.split(',').map(Number);
+          fogCtx.fillRect(ox + c * cs, oy + r * cs, cs, cs);
+        }
+      }
+    }
+
+    // Drawing rendering
+    function renderStrokes(strokeList) {
+      const {ox, oy, scale} = getImageMetrics();
+      const iw = mapImg.naturalWidth * scale;
+      const ih = mapImg.naturalHeight * scale;
+      drawCtx.clearRect(0, 0, drawCv.width, drawCv.height);
+      for (const s of strokeList) {
+        if (!s.points || s.points.length < 2) continue;
+        drawCtx.save();
+        if (s.erase) {
+          drawCtx.globalCompositeOperation = 'destination-out';
+          drawCtx.strokeStyle = 'rgba(0,0,0,1)';
+        } else {
+          drawCtx.globalCompositeOperation = 'source-over';
+          drawCtx.strokeStyle = s.color;
+        }
+        drawCtx.lineWidth  = s.size;
+        drawCtx.lineCap    = 'round';
+        drawCtx.lineJoin   = 'round';
+        drawCtx.beginPath();
+        const p0 = s.points[0];
+        drawCtx.moveTo(ox + p0.x * iw, oy + p0.y * ih);
+        for (let i = 1; i < s.points.length; i++) {
+          const p = s.points[i];
+          drawCtx.lineTo(ox + p.x * iw, oy + p.y * ih);
+        }
+        drawCtx.stroke();
+        drawCtx.restore();
+      }
+    }
+
+    function redrawAll() { drawFog(); renderStrokes(strokes); }
+
+    // Pointer input
+    function normalizePoint(clientX, clientY) {
+      const rect = drawCv.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const y = clientY - rect.top;
+      const {ox, oy, scale} = getImageMetrics();
+      const iw = mapImg.naturalWidth * scale;
+      const ih = mapImg.naturalHeight * scale;
+      if (iw === 0 || ih === 0) return null;
+      return {x: (x - ox) / iw, y: (y - oy) / ih};
+    }
+
+    drawCv.addEventListener('pointerdown', e => {
+      painting = true;
+      drawCv.setPointerCapture(e.pointerId);
+      curPoints = [];
+      const pt = normalizePoint(e.clientX, e.clientY);
+      if (pt) curPoints.push(pt);
+    });
+
+    drawCv.addEventListener('pointermove', e => {
+      if (!painting) return;
+      const pt = normalizePoint(e.clientX, e.clientY);
+      if (!pt) return;
+      curPoints.push(pt);
+      const preview = [...strokes, {player_id: playerId, color: curColor, size: curSize, erase: curErase, points: curPoints}];
+      renderStrokes(preview);
+    });
+
+    drawCv.addEventListener('pointerup', () => {
+      if (!painting || curPoints.length < 2) { painting = false; return; }
+      painting = false;
+      const stroke = {player_id: playerId, color: curColor, size: curSize, erase: curErase, points: curPoints};
+      if (channel) channel.push('drawing_stroke', stroke);
+      curPoints = [];
+    });
+
+    // Phoenix Channel
+    const {Socket} = window.Phoenix;
+    const socket = new Socket('/socket', {});
+    socket.connect();
+    channel = socket.channel('session:live:' + SESSION_ID, {});
+
+    channel.on('map_update', ({asset, map_id}) => {
+      mapImg.src = '/maps/assets/' + (asset || map_id + '.png');
+      applyFogState('all_fogged');
+      strokes = [];
+      redrawAll();
+    });
+
+    channel.on('fog_update', ({fog_grid}) => {
+      applyFogState(fog_grid);
+      drawFog();
+    });
+
+    channel.on('drawing_stroke', stroke => {
+      strokes.push(stroke);
+      renderStrokes(strokes);
+    });
+
+    channel.on('drawing_update', ({strokes: updated}) => {
+      strokes = updated;
+      renderStrokes(strokes);
+    });
+
+    channel.join()
+      .receive('ok', state => {
+        if (state.current_map_asset) {
+          mapImg.src = '/maps/assets/' + state.current_map_asset;
+        } else if (state.current_map) {
+          mapImg.src = '/maps/assets/' + state.current_map + '.png';
+        }
+        applyFogState(state.fog_grid);
+        strokes = state.drawings || [];
+        redrawAll();
+      });
+  </script>
+</body>
+</html>
