@@ -12,6 +12,8 @@ defmodule CampaignToolWeb.SessionChannel do
         initial = %{
           current_map: state.current_map,
           current_map_asset: state.current_map_asset,
+          grid_cols: state.grid_cols,
+          grid_rows: state.grid_rows,
           fog_grid: serialize_fog(state.fog_grid),
           audio_state: state.audio_state,
           drawings: Enum.reverse(state.drawings),

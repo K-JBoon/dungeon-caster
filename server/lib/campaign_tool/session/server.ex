@@ -6,6 +6,8 @@ defmodule CampaignTool.Session.Server do
   defstruct session_id: nil,
             current_map: nil,
             current_map_asset: nil,
+            grid_cols: nil,
+            grid_rows: nil,
             fog_grid: %{},
             audio_state: %{
               ambient: nil,
@@ -32,7 +34,7 @@ defmodule CampaignTool.Session.Server do
   def get_state(sid), do: GenServer.call(via(sid), :get_state)
   def reveal_cells(sid, cells), do: GenServer.call(via(sid), {:reveal_cells, cells})
   def hide_cells(sid, cells), do: GenServer.call(via(sid), {:hide_cells, cells})
-  def set_map(sid, map_id, asset), do: GenServer.call(via(sid), {:set_map, map_id, asset})
+  def set_map(sid, map_id, asset, grid_cols, grid_rows), do: GenServer.call(via(sid), {:set_map, map_id, asset, grid_cols, grid_rows})
   def reveal_all(sid), do: GenServer.call(via(sid), :reveal_all)
   def hide_all(sid), do: GenServer.call(via(sid), :hide_all)
   def play_audio(sid, path, type), do: GenServer.call(via(sid), {:play_audio, path, type})
@@ -102,9 +104,9 @@ defmodule CampaignTool.Session.Server do
     {:reply, :ok, new_state}
   end
 
-  def handle_call({:set_map, map_id, asset}, _from, state) do
-    new_state = %{state | current_map: map_id, current_map_asset: asset, fog_grid: :all_fogged, drawings: [], show_player_qr: false}
-    broadcast(state.session_id, "map_update", %{map_id: map_id, asset: asset})
+  def handle_call({:set_map, map_id, asset, grid_cols, grid_rows}, _from, state) do
+    new_state = %{state | current_map: map_id, current_map_asset: asset, grid_cols: grid_cols, grid_rows: grid_rows, fog_grid: :all_fogged, drawings: [], show_player_qr: false}
+    broadcast(state.session_id, "map_update", %{map_id: map_id, asset: asset, grid_cols: grid_cols, grid_rows: grid_rows})
     broadcast(state.session_id, "fog_update", :all_fogged)
     broadcast(state.session_id, "drawing_update", %{strokes: []})
     broadcast(state.session_id, "qr_toggle", %{visible: false})

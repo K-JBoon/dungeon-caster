@@ -120,34 +120,22 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // Recompute fog when image loads so getImageMetrics has naturalWidth/Height
-    mapImg.addEventListener('load', drawFog);
-    mapImg.addEventListener('load', renderDrawings);
-
-    // ── Image metrics (mirrors object-fit:contain math on the editor side) ───────
-    function getImageMetrics() {
-      if (!mapImg.naturalWidth || !mapImg.naturalHeight) return { ox: 0, oy: 0, scale: 1 };
-      const scale = Math.min(canvas.width / mapImg.naturalWidth, canvas.height / mapImg.naturalHeight);
-      const rw = mapImg.naturalWidth * scale;
-      const rh = mapImg.naturalHeight * scale;
-      return { ox: (canvas.width - rw) / 2, oy: (canvas.height - rh) / 2, scale };
-    }
-
-    function getDrawImageMetrics() {
-      if (!mapImg.naturalWidth || !mapImg.naturalHeight) return {ox:0, oy:0, scale:1};
-      const scale = Math.min(drawCanvas.width / mapImg.naturalWidth, drawCanvas.height / mapImg.naturalHeight);
-      return {
-        ox: (drawCanvas.width  - mapImg.naturalWidth  * scale) / 2,
-        oy: (drawCanvas.height - mapImg.naturalHeight * scale) / 2,
-        scale
-      };
+    // ── Grid metrics — mirrors fog_editor.js getMetrics(), no naturalWidth needed ──
+    function getGridMetrics(cvs) {
+      if (!gridCols || !gridRows) return null;
+      const cw = cvs.width, ch = cvs.height;
+      const cellW = Math.min(cw / gridCols, ch / gridRows); // px per cell (square)
+      const rendW = gridCols * cellW, rendH = gridRows * cellW;
+      return { ox: (cw - rendW) / 2, oy: (ch - rendH) / 2, cellW };
     }
 
     // ── Drawing rendering ────────────────────────────────────────────────────────
     function renderDrawings() {
-      const {ox, oy, scale} = getDrawImageMetrics();
-      const iw = mapImg.naturalWidth * scale;
-      const ih = mapImg.naturalHeight * scale;
+      const m = getGridMetrics(drawCanvas);
+      const ox = m ? m.ox : 0;
+      const oy = m ? m.oy : 0;
+      const iw = m ? gridCols * m.cellW : drawCanvas.width;
+      const ih = m ? gridRows * m.cellW : drawCanvas.height;
       drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
       for (const s of drawStrokes) {
         if (!s.points || s.points.length < 2) continue;
@@ -183,8 +171,9 @@
         return;
       }
 
-      const { ox, oy, scale } = getImageMetrics();
-      const cs = CELL_SIZE * scale;
+      const m = getGridMetrics(canvas);
+      if (!m) return;
+      const { ox, oy, cellW: cs } = m;
 
       if (fogPartial) {
         // Whitelist: fill everything, then clear revealed cells
@@ -251,7 +240,9 @@
 
       const channel = socket.channel('session:live:' + sessionId, {});
 
-      channel.on('map_update', ({ asset, map_id }) => {
+      channel.on('map_update', ({ asset, map_id, grid_cols, grid_rows }) => {
+        if (grid_cols) gridCols = grid_cols;
+        if (grid_rows) gridRows = grid_rows;
         mapImg.src = '/maps/assets/' + (asset || map_id + '.png');
         applyFogState('all_fogged');
         drawFog();
@@ -311,6 +302,9 @@
         .receive('ok', (initialState) => {
           statusEl.textContent = 'connected';
           setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+
+          if (initialState.grid_cols) gridCols = initialState.grid_cols;
+          if (initialState.grid_rows) gridRows = initialState.grid_rows;
 
           if (initialState.current_map_asset) {
             mapImg.src = '/maps/assets/' + initialState.current_map_asset;
