@@ -11,8 +11,11 @@ defmodule CampaignToolWeb.SessionChannel do
         state = Server.get_state(session_id)
         initial = %{
           current_map: state.current_map,
+          current_map_asset: state.current_map_asset,
           fog_grid: serialize_fog(state.fog_grid),
-          audio_state: state.audio_state
+          audio_state: state.audio_state,
+          drawings: Enum.reverse(state.drawings),
+          show_player_qr: state.show_player_qr
         }
         {:ok, initial, assign(socket, :session_id, session_id)}
 
@@ -22,13 +25,20 @@ defmodule CampaignToolWeb.SessionChannel do
   end
 
   # Forward PubSub messages to the connected receiver socket
+
+  # fog_update payload can be an atom or tuple — serialize it before pushing
   @impl true
-  def handle_info({event, payload}, socket) when is_binary(event) do
+  def handle_info({"fog_update", fog}, socket) do
+    push(socket, "fog_update", %{fog_grid: serialize_fog(fog)})
+    {:noreply, socket}
+  end
+
+  def handle_info({event, payload}, socket) when is_binary(event) and is_map(payload) do
     push(socket, event, payload)
     {:noreply, socket}
   end
 
-  def handle_info({event, payload}, socket) when is_atom(event) do
+  def handle_info({event, payload}, socket) when is_atom(event) and is_map(payload) do
     push(socket, Atom.to_string(event), Jason.encode!(payload) |> Jason.decode!())
     {:noreply, socket}
   end
@@ -37,6 +47,8 @@ defmodule CampaignToolWeb.SessionChannel do
   @impl true
   def handle_in(_event, _payload, socket), do: {:noreply, socket}
 
+  defp serialize_fog(:all_fogged), do: "all_fogged"
   defp serialize_fog(:all_revealed), do: "all_revealed"
+  defp serialize_fog({:partial_reveal, revealed}), do: %{type: "partial_reveal", revealed: revealed}
   defp serialize_fog(grid) when is_map(grid), do: grid
 end

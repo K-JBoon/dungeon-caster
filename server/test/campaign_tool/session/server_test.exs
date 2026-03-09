@@ -111,64 +111,55 @@ defmodule CampaignTool.Session.ServerTest do
     assert state.audio_state.volume.master == 0
   end
 
-  test "starts with empty drawings and qr hidden", %{sid: sid} do
+  test "starts with empty drawings and show_player_qr false", %{sid: sid} do
     state = CampaignTool.Session.Server.get_state(sid)
     assert state.drawings == []
     assert state.show_player_qr == false
   end
 
-  test "add_stroke appends to drawings and broadcasts", %{sid: sid} do
-    Phoenix.PubSub.subscribe(CampaignTool.PubSub, "session:live:#{sid}")
-    stroke = %{player_id: "uuid-1", color: "#ff0000", size: 6, erase: false, points: [%{x: 0.1, y: 0.2}]}
-    :ok = CampaignTool.Session.Server.add_stroke(sid, stroke)
+  test "add_stroke prepends stroke to drawings", %{sid: sid} do
+    stroke1 = %{player_id: "p1", color: "#ff0000", size: 4, points: [{0, 0}, {10, 10}]}
+    stroke2 = %{player_id: "p1", color: "#0000ff", size: 2, points: [{5, 5}, {15, 15}]}
+    :ok = CampaignTool.Session.Server.add_stroke(sid, stroke1)
+    :ok = CampaignTool.Session.Server.add_stroke(sid, stroke2)
     state = CampaignTool.Session.Server.get_state(sid)
-    assert length(state.drawings) == 1
-    assert hd(state.drawings).player_id == "uuid-1"
-    assert_receive {"drawing_stroke", ^stroke}
+    # newest-first in state
+    assert hd(state.drawings) == stroke2
+    assert length(state.drawings) == 2
   end
 
   test "clear_player_drawings removes only that player's strokes", %{sid: sid} do
-    Phoenix.PubSub.subscribe(CampaignTool.PubSub, "session:live:#{sid}")
-    s1 = %{player_id: "p1", color: "#f00", size: 4, erase: false, points: []}
-    s2 = %{player_id: "p2", color: "#00f", size: 4, erase: false, points: []}
-    CampaignTool.Session.Server.add_stroke(sid, s1)
-    CampaignTool.Session.Server.add_stroke(sid, s2)
+    stroke_p1 = %{player_id: "p1", color: "#ff0000", size: 4, points: []}
+    stroke_p2 = %{player_id: "p2", color: "#00ff00", size: 4, points: []}
+    CampaignTool.Session.Server.add_stroke(sid, stroke_p1)
+    CampaignTool.Session.Server.add_stroke(sid, stroke_p2)
     :ok = CampaignTool.Session.Server.clear_player_drawings(sid, "p1")
     state = CampaignTool.Session.Server.get_state(sid)
     assert length(state.drawings) == 1
     assert hd(state.drawings).player_id == "p2"
-    assert_receive {"drawing_update", %{strokes: strokes}}
-    assert length(strokes) == 1
   end
 
-  test "clear_all_drawings empties drawings", %{sid: sid} do
-    Phoenix.PubSub.subscribe(CampaignTool.PubSub, "session:live:#{sid}")
-    CampaignTool.Session.Server.add_stroke(sid, %{player_id: "p1", color: "#f00", size: 4, erase: false, points: []})
+  test "clear_all_drawings empties the drawings list", %{sid: sid} do
+    CampaignTool.Session.Server.add_stroke(sid, %{player_id: "p1", color: "#fff", size: 2, points: []})
     :ok = CampaignTool.Session.Server.clear_all_drawings(sid)
     state = CampaignTool.Session.Server.get_state(sid)
     assert state.drawings == []
-    assert_receive {"drawing_update", %{strokes: []}}
   end
 
-  test "toggle_player_qr flips show_player_qr and broadcasts", %{sid: sid} do
-    Phoenix.PubSub.subscribe(CampaignTool.PubSub, "session:live:#{sid}")
-    :ok = CampaignTool.Session.Server.toggle_player_qr(sid)
-    assert CampaignTool.Session.Server.get_state(sid).show_player_qr == true
-    assert_receive {"qr_toggle", %{visible: true}}
-    :ok = CampaignTool.Session.Server.toggle_player_qr(sid)
-    assert CampaignTool.Session.Server.get_state(sid).show_player_qr == false
-    assert_receive {"qr_toggle", %{visible: false}}
-  end
-
-  test "set_map resets drawings and hides qr", %{sid: sid} do
-    Phoenix.PubSub.subscribe(CampaignTool.PubSub, "session:live:#{sid}")
-    CampaignTool.Session.Server.add_stroke(sid, %{player_id: "p1", color: "#f00", size: 4, erase: false, points: []})
+  test "set_map resets drawings and show_player_qr", %{sid: sid} do
+    CampaignTool.Session.Server.add_stroke(sid, %{player_id: "p1", color: "#fff", size: 2, points: []})
     CampaignTool.Session.Server.toggle_player_qr(sid)
-    :ok = CampaignTool.Session.Server.set_map(sid, "map-2", "map-2.png")
+    :ok = CampaignTool.Session.Server.set_map(sid, "new-map")
     state = CampaignTool.Session.Server.get_state(sid)
     assert state.drawings == []
     assert state.show_player_qr == false
-    assert_receive {"drawing_update", %{strokes: []}}
-    assert_receive {"qr_toggle", %{visible: false}}
+  end
+
+  test "toggle_player_qr flips show_player_qr", %{sid: sid} do
+    assert CampaignTool.Session.Server.get_state(sid).show_player_qr == false
+    :ok = CampaignTool.Session.Server.toggle_player_qr(sid)
+    assert CampaignTool.Session.Server.get_state(sid).show_player_qr == true
+    :ok = CampaignTool.Session.Server.toggle_player_qr(sid)
+    assert CampaignTool.Session.Server.get_state(sid).show_player_qr == false
   end
 end

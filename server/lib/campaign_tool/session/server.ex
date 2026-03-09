@@ -5,7 +5,6 @@ defmodule CampaignTool.Session.Server do
   @derive [Inspect]
   defstruct session_id: nil,
             current_map: nil,
-            current_map_asset: nil,
             fog_grid: %{},
             audio_state: %{
               ambient: nil,
@@ -32,7 +31,7 @@ defmodule CampaignTool.Session.Server do
   def get_state(sid), do: GenServer.call(via(sid), :get_state)
   def reveal_cells(sid, cells), do: GenServer.call(via(sid), {:reveal_cells, cells})
   def hide_cells(sid, cells), do: GenServer.call(via(sid), {:hide_cells, cells})
-  def set_map(sid, map_id, asset), do: GenServer.call(via(sid), {:set_map, map_id, asset})
+  def set_map(sid, map_id), do: GenServer.call(via(sid), {:set_map, map_id})
   def reveal_all(sid), do: GenServer.call(via(sid), :reveal_all)
   def hide_all(sid), do: GenServer.call(via(sid), :hide_all)
   def play_audio(sid, path, type), do: GenServer.call(via(sid), {:play_audio, path, type})
@@ -102,15 +101,9 @@ defmodule CampaignTool.Session.Server do
     {:reply, :ok, new_state}
   end
 
-  def handle_call({:set_map, map_id, asset}, _from, state) do
-    new_state = %{state |
-      current_map: map_id,
-      current_map_asset: asset,
-      fog_grid: :all_fogged,
-      drawings: [],
-      show_player_qr: false
-    }
-    broadcast(state.session_id, "map_update", %{map_id: map_id, asset: asset})
+  def handle_call({:set_map, map_id}, _from, state) do
+    new_state = %{state | current_map: map_id, fog_grid: :all_fogged, drawings: [], show_player_qr: false}
+    broadcast(state.session_id, "map_update", %{map_id: map_id})
     broadcast(state.session_id, "fog_update", :all_fogged)
     broadcast(state.session_id, "drawing_update", %{strokes: []})
     broadcast(state.session_id, "qr_toggle", %{visible: false})
@@ -181,16 +174,16 @@ defmodule CampaignTool.Session.Server do
   end
 
   def handle_call({:add_stroke, stroke}, _from, state) do
-    new_drawings = state.drawings ++ [stroke]
+    new_drawings = [stroke | state.drawings]
     new_state = %{state | drawings: new_drawings}
     broadcast(state.session_id, "drawing_stroke", stroke)
     {:reply, :ok, new_state}
   end
 
   def handle_call({:clear_player_drawings, player_id}, _from, state) do
-    new_drawings = Enum.reject(state.drawings, &(&1.player_id == player_id))
+    new_drawings = Enum.filter(state.drawings, fn s -> s.player_id != player_id end)
     new_state = %{state | drawings: new_drawings}
-    broadcast(state.session_id, "drawing_update", %{strokes: new_drawings})
+    broadcast(state.session_id, "drawing_update", %{strokes: Enum.reverse(new_drawings)})
     {:reply, :ok, new_state}
   end
 
@@ -201,9 +194,9 @@ defmodule CampaignTool.Session.Server do
   end
 
   def handle_call(:toggle_player_qr, _from, state) do
-    new_val = !state.show_player_qr
-    new_state = %{state | show_player_qr: new_val}
-    broadcast(state.session_id, "qr_toggle", %{visible: new_val})
+    new_visible = !state.show_player_qr
+    new_state = %{state | show_player_qr: new_visible}
+    broadcast(state.session_id, "qr_toggle", %{visible: new_visible})
     {:reply, :ok, new_state}
   end
 
