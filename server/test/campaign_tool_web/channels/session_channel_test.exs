@@ -33,4 +33,45 @@ defmodule CampaignToolWeb.SessionChannelTest do
 
     assert {:error, %{reason: "session not active"}} = result
   end
+
+  test "join includes drawings and show_player_qr in initial state", %{sid: sid} do
+    {:ok, reply, _socket} =
+      CampaignToolWeb.UserSocket
+      |> socket("user_id", %{})
+      |> subscribe_and_join(CampaignToolWeb.SessionChannel, "session:live:#{sid}")
+
+    assert reply.drawings == []
+    assert reply.show_player_qr == false
+  end
+
+  test "drawing_stroke event is stored and broadcast", %{sid: sid} do
+    {:ok, _reply, socket} =
+      CampaignToolWeb.UserSocket
+      |> socket("user_id", %{})
+      |> subscribe_and_join(CampaignToolWeb.SessionChannel, "session:live:#{sid}")
+
+    stroke = %{"player_id" => "p1", "color" => "#ff0000", "size" => 6, "erase" => false, "points" => []}
+    push(socket, "drawing_stroke", stroke)
+    # give GenServer time to process
+    Process.sleep(50)
+
+    state = CampaignTool.Session.Server.get_state(sid)
+    assert length(state.drawings) == 1
+  end
+
+  test "clear_my_drawings event removes player strokes", %{sid: sid} do
+    s = %{player_id: "p1", color: "#f00", size: 4, erase: false, points: []}
+    CampaignTool.Session.Server.add_stroke(sid, s)
+
+    {:ok, _reply, socket} =
+      CampaignToolWeb.UserSocket
+      |> socket("user_id", %{})
+      |> subscribe_and_join(CampaignToolWeb.SessionChannel, "session:live:#{sid}")
+
+    push(socket, "clear_my_drawings", %{"player_id" => "p1"})
+    Process.sleep(50)
+
+    state = CampaignTool.Session.Server.get_state(sid)
+    assert state.drawings == []
+  end
 end

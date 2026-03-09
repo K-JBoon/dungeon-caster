@@ -11,7 +11,6 @@ defmodule CampaignToolWeb.SessionChannel do
         state = Server.get_state(session_id)
         initial = %{
           current_map: state.current_map,
-          current_map_asset: state.current_map_asset,
           fog_grid: serialize_fog(state.fog_grid),
           audio_state: state.audio_state,
           drawings: Enum.reverse(state.drawings),
@@ -43,9 +42,30 @@ defmodule CampaignToolWeb.SessionChannel do
     {:noreply, socket}
   end
 
-  # Receivers send no upstream messages; ignore them
+  @impl true
+  def handle_in("drawing_stroke", stroke, socket) do
+    Server.add_stroke(socket.assigns.session_id, atomize_stroke(stroke))
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_in("clear_my_drawings", %{"player_id" => player_id}, socket) do
+    Server.clear_player_drawings(socket.assigns.session_id, player_id)
+    {:noreply, socket}
+  end
+
   @impl true
   def handle_in(_event, _payload, socket), do: {:noreply, socket}
+
+  defp atomize_stroke(s) do
+    %{
+      player_id: s["player_id"],
+      color: s["color"],
+      size: s["size"],
+      erase: s["erase"] || false,
+      points: Enum.map(s["points"] || [], fn p -> %{x: p["x"], y: p["y"]} end)
+    }
+  end
 
   defp serialize_fog(:all_fogged), do: "all_fogged"
   defp serialize_fog(:all_revealed), do: "all_revealed"
