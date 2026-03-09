@@ -67,7 +67,7 @@
     }
   </style>
 </head>
-<body>
+<body data-session-id={@session_id}>
   <div id="map-container">
     <img id="map-img" src="" alt="" />
     <canvas id="fog-canvas"></canvas>
@@ -83,7 +83,7 @@
   </div>
 
   <script>
-    const SESSION_ID = '<%= @session_id %>';
+    const SESSION_ID = document.body.dataset.sessionId;
     const COLORS = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#1abc9c','#ffffff'];
     const CELL_SIZE = 20;
 
@@ -252,11 +252,20 @@
     });
 
     drawCv.addEventListener('pointerup', () => {
-      if (!painting || curPoints.length < 2) { painting = false; return; }
+      if (!painting) return;
       painting = false;
+      // Single-point tap: duplicate the point to form a minimal stroke (renders as a dot)
+      if (curPoints.length === 1) curPoints.push(curPoints[0]);
+      if (curPoints.length < 2) { curPoints = []; renderStrokes(strokes); return; }
       const stroke = {player_id: playerId, color: curColor, size: curSize, erase: curErase, points: curPoints};
       if (channel) channel.push('drawing_stroke', stroke);
       curPoints = [];
+    });
+
+    drawCv.addEventListener('pointercancel', () => {
+      painting = false;
+      curPoints = [];
+      renderStrokes(strokes);
     });
 
     // Phoenix Channel
@@ -297,6 +306,12 @@
         applyFogState(state.fog_grid);
         strokes = state.drawings || [];
         redrawAll();
+      })
+      .receive('error', err => {
+        document.body.innerHTML = '<p style="color:#f88;font-family:sans-serif;padding:2rem">Could not join session: ' + JSON.stringify(err) + '</p>';
+      })
+      .receive('timeout', () => {
+        document.body.innerHTML = '<p style="color:#f88;font-family:sans-serif;padding:2rem">Connection timed out. Is the session active?</p>';
       });
   </script>
 </body>
