@@ -2,10 +2,13 @@ package com.campaigntool
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.view.Menu
+import android.os.SystemClock
+import android.view.MotionEvent
+import android.view.View
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
+import androidx.mediarouter.app.MediaRouteButton
 import com.google.android.gms.cast.framework.CastButtonFactory
 import com.google.android.gms.cast.framework.CastContext
 import com.google.android.gms.cast.framework.CastSession
@@ -15,7 +18,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private lateinit var castContext: CastContext
-    private val serverUrl = "http://192.168.1.100:4000" // Configure via Settings in future
+    private val serverUrl = "http://192.168.1.109:4000" // Configure via Settings in future
     private var currentSessionId: String? = null
 
     private val sessionManagerListener = object : SessionManagerListener<CastSession> {
@@ -29,15 +32,20 @@ class MainActivity : AppCompatActivity() {
         override fun onSessionResuming(session: CastSession, sessionId: String) {}
         override fun onSessionStarting(session: CastSession) {}
         override fun onSessionSuspended(session: CastSession, reason: Int) {}
+        override fun onSessionResumeFailed(session: CastSession, error: Int) {}
     }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        setSupportActionBar(findViewById(R.id.toolbar))
-
         castContext = CastContext.getSharedInstance(this)
+
+        val castButton = findViewById<MediaRouteButton>(R.id.media_route_menu_item)
+        CastButtonFactory.setUpMediaRouteButton(applicationContext, castButton)
+
+        val gestureZone = findViewById<View>(R.id.cast_gesture_zone)
+        gestureZone.setOnTouchListener(TripleTapListener { castButton.performClick() })
 
         webView = findViewById(R.id.webview)
         webView.settings.javaScriptEnabled = true
@@ -56,12 +64,6 @@ class MainActivity : AppCompatActivity() {
         webView.loadUrl(serverUrl)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.main_menu, menu)
-        CastButtonFactory.setUpMediaRouteButton(applicationContext, menu, R.id.media_route_menu_item)
-        return true
-    }
-
     override fun onResume() {
         super.onResume()
         castContext.sessionManager.addSessionManagerListener(sessionManagerListener, CastSession::class.java)
@@ -70,6 +72,26 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         castContext.sessionManager.removeSessionManagerListener(sessionManagerListener, CastSession::class.java)
+    }
+
+    private inner class TripleTapListener(private val onTripleTap: () -> Unit) : View.OnTouchListener {
+        private var tapCount = 0
+        private var lastTapTime = 0L
+        private val windowMs = 600L
+
+        @SuppressLint("ClickableViewAccessibility")
+        override fun onTouch(v: View, event: MotionEvent): Boolean {
+            if (event.actionMasked != MotionEvent.ACTION_DOWN) return false
+            val now = SystemClock.elapsedRealtime()
+            if (now - lastTapTime > windowMs) tapCount = 0
+            lastTapTime = now
+            tapCount++
+            if (tapCount >= 3) {
+                tapCount = 0
+                onTripleTap()
+            }
+            return true
+        }
     }
 
     private fun launchReceiver(session: CastSession) {

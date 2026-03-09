@@ -160,9 +160,10 @@ defmodule CampaignToolWeb.SessionPlannerLive do
   defp decode_scenes(list) when is_list(list), do: list
 
   defp save_scenes(session, scenes) do
+    encoded = Jason.encode!(scenes)
+    Entities.update_session_scenes(session.id, encoded)
     case File.read(session.file_path) do
       {:ok, content} ->
-        encoded = Jason.encode!(scenes)
         File.write!(session.file_path, replace_frontmatter_field(content, "scenes", encoded))
       {:error, _} -> :ok
     end

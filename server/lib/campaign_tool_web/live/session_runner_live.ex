@@ -5,22 +5,29 @@ defmodule CampaignToolWeb.SessionRunnerLive do
   def mount(%{"id" => session_id}, _session, socket) do
     Phoenix.PubSub.subscribe(CampaignTool.PubSub, "session:live:#{session_id}")
     session = Entities.get_entity!("session", session_id)
+    case Registry.lookup(CampaignTool.Session.Registry, session_id) do
+      [] -> Server.start_link(session_id)
+      _ -> :ok
+    end
     server_state = Server.get_state(session_id)
     music = Audio.list_music()
     sfx = Audio.list_sfx()
+    scenes = parse_scenes(session)
+    session_maps = collect_maps(session, scenes)
 
     {:ok,
      assign(socket,
        session_id: session_id,
        session: session,
        mode: :plan,
-       scenes: parse_scenes(session),
+       scenes: scenes,
        scene_index: 0,
        notes: "",
        notes_open: false,
        expanded_entities: MapSet.new(),
        server_state: server_state,
-       map_confirm: nil,
+       fog_mode: :eraser,
+       session_maps: session_maps,
        music: music,
        sfx: sfx
      )}
@@ -80,21 +87,23 @@ defmodule CampaignToolWeb.SessionRunnerLive do
     {:noreply, socket}
   end
 
-  def handle_event("confirm_tap", %{"action" => action}, socket) do
-    atom = String.to_existing_atom(action)
-    if socket.assigns.map_confirm == atom do
-      case atom do
-        :reveal_all -> Server.reveal_all(socket.assigns.session_id)
-        :hide_all -> Server.hide_all(socket.assigns.session_id)
-      end
-      {:noreply, assign(socket, map_confirm: nil)}
-    else
-      {:noreply, assign(socket, map_confirm: atom)}
-    end
+  def handle_event("cover_cells", %{"cells" => cells}, socket) do
+    Server.hide_cells(socket.assigns.session_id, cells)
+    {:noreply, socket}
   end
 
-  def handle_event("cancel_confirm", _, socket) do
-    {:noreply, assign(socket, map_confirm: nil)}
+  def handle_event("set_fog_mode", %{"mode" => mode}, socket) do
+    {:noreply, assign(socket, fog_mode: String.to_existing_atom(mode))}
+  end
+
+  def handle_event("reveal_all", _, socket) do
+    Server.reveal_all(socket.assigns.session_id)
+    {:noreply, socket}
+  end
+
+  def handle_event("hide_all", _, socket) do
+    Server.hide_all(socket.assigns.session_id)
+    {:noreply, socket}
   end
 
   def handle_event("set_map", %{"map_id" => map_id}, socket) do
@@ -135,12 +144,34 @@ defmodule CampaignToolWeb.SessionRunnerLive do
 
   # ── PubSub ─────────────────────────────────────────────────────────────────
 
-  def handle_info({"fog_update", %{fog_grid: fog_grid}}, socket) do
+  def handle_info({"fog_update", :all_fogged}, socket) do
+    {:noreply, push_event(socket, "fog_state", %{fog_grid: "all_fogged"})}
+  end
+  def handle_info({"fog_update", {:partial_reveal, revealed}}, socket) do
+    {:noreply, push_event(socket, "fog_state", %{fog_grid: %{mode: "partial_reveal", revealed: revealed}})}
+  end
+  def handle_info({"fog_update", fog_grid}, socket) do
     {:noreply, push_event(socket, "fog_state", %{fog_grid: fog_grid})}
   end
   def handle_info(_, socket), do: {:noreply, socket}
 
   # ── Helpers ─────────────────────────────────────────────────────────────────
+
+  defp collect_maps(session, scenes) do
+    from_session = (session.map_ids || [])
+                   |> Enum.map(&Entities.get_entity("map", &1))
+                   |> Enum.reject(&is_nil/1)
+
+    from_scenes =
+      scenes
+      |> Enum.flat_map(fn s -> s["entity_ids"] || [] end)
+      |> Enum.filter(&String.starts_with?(&1, "map:"))
+      |> Enum.map(fn "map:" <> id -> Entities.get_entity("map", id) end)
+      |> Enum.reject(&is_nil/1)
+
+    (from_session ++ from_scenes)
+    |> Enum.uniq_by(& &1.id)
+  end
 
   defp parse_scenes(session) do
     case session.scenes do
@@ -318,53 +349,55 @@ defmodule CampaignToolWeb.SessionRunnerLive do
   defp render_map(assigns) do
     ~H"""
     <div class="flex flex-col h-full">
-      <div class="flex items-center gap-3 px-3 py-2 bg-base-200/90 backdrop-blur border-b border-base-300 shrink-0 flex-wrap">
-        <% map_ids = @session.map_ids || [] %>
-        <select phx-change="set_map" name="map_id"
-                class="select select-bordered select-sm flex-1 min-w-0 max-w-44">
-          <option value="">Select map...</option>
-          <%= for map_id <- map_ids do %>
-            <% map = Entities.get_entity("map", map_id) %>
-            <%= if map do %>
+      <div class="flex items-center gap-2 px-3 py-2 bg-base-200/90 backdrop-blur border-b border-base-300 shrink-0 flex-wrap">
+        <form phx-change="set_map" class="contents">
+          <select name="map_id" class="select select-bordered select-sm min-w-0 max-w-40">
+            <option value="">Select map...</option>
+            <%= for map <- @session_maps do %>
               <option value={map.id} selected={@server_state.current_map == map.id}>
                 <%= map.name %>
               </option>
             <% end %>
-          <% end %>
-        </select>
+          </select>
+        </form>
 
         <div class="flex items-center gap-1">
           <.icon name="hero-paint-brush" class="size-4 opacity-60" />
-          <input type="range" id="brush-radius" min="1" max="10" value="3"
+          <input type="range" id="brush-radius" min="0" max="8" value="0"
                  class="range range-xs range-primary w-20" />
         </div>
 
-        <%= if @map_confirm == :reveal_all do %>
-          <button phx-click="confirm_tap" phx-value-action="reveal_all"
-                  class="btn btn-warning btn-xs">Confirm?</button>
-          <button phx-click="cancel_confirm" class="btn btn-ghost btn-xs">✕</button>
-        <% else %>
-          <button phx-click="confirm_tap" phx-value-action="reveal_all"
-                  class="btn btn-ghost btn-xs">👁 All</button>
-        <% end %>
+        <%!-- Brush / Eraser toggle --%>
+        <div class="join">
+          <button phx-click="set_fog_mode" phx-value-mode="brush"
+                  class={["join-item btn btn-xs", if(@fog_mode == :brush, do: "btn-primary", else: "btn-ghost")]}>
+            🖌 Brush
+          </button>
+          <button phx-click="set_fog_mode" phx-value-mode="eraser"
+                  class={["join-item btn btn-xs", if(@fog_mode == :eraser, do: "btn-primary", else: "btn-ghost")]}>
+            ⬜ Eraser
+          </button>
+        </div>
 
-        <%= if @map_confirm == :hide_all do %>
-          <button phx-click="confirm_tap" phx-value-action="hide_all"
-                  class="btn btn-warning btn-xs">Confirm?</button>
-          <button phx-click="cancel_confirm" class="btn btn-ghost btn-xs">✕</button>
-        <% else %>
-          <button phx-click="confirm_tap" phx-value-action="hide_all"
-                  class="btn btn-ghost btn-xs">🌑 Hide</button>
-        <% end %>
+        <%!-- Map-wide actions --%>
+        <button phx-click="hide_all" class="btn btn-xs btn-ghost" title="Cover entire map in fog">
+          🌑 Cover
+        </button>
+        <button phx-click="reveal_all" class="btn btn-xs btn-ghost" title="Disable fog of war">
+          ☀️ Clear
+        </button>
       </div>
 
       <div class="flex-1 relative overflow-hidden bg-black">
         <%= if @server_state.current_map do %>
-          <img id="map-bg" src={"/maps/assets/#{@server_state.current_map}.png"}
+          <% map_entity = Enum.find(@session_maps, &(&1.id == @server_state.current_map)) %>
+          <img id="map-bg"
+               src={"/maps/assets/#{if map_entity && map_entity.asset_path && map_entity.asset_path != "", do: Path.basename(map_entity.asset_path), else: @server_state.current_map <> ".png"}"}
                class="absolute inset-0 w-full h-full object-contain" />
           <canvas id="fog-editor"
             data-session-id={@session_id}
             data-cell-size="20"
+            data-fog-mode={@fog_mode}
             phx-hook="FogEditor"
             class="absolute inset-0 w-full h-full cursor-crosshair">
           </canvas>

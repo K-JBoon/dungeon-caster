@@ -46,6 +46,11 @@ defmodule CampaignTool.Entities do
     )
   end
 
+  def update_session_scenes(session_id, scenes_json) when is_binary(scenes_json) do
+    from(s in Session, where: s.id == ^session_id)
+    |> Repo.update_all(set: [scenes: scenes_json])
+  end
+
   def delete_entity(type, id) do
     case Repo.get(schema_for(type), id) do
       nil -> :ok

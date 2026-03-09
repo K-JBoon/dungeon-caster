@@ -48,47 +48,69 @@ defmodule CampaignTool.Session.Server do
     {:reply, state, state}
   end
 
-  def handle_call({:reveal_cells, _cells}, _from, %{fog_grid: :all_revealed} = state) do
-    {:reply, :ok, state}
-  end
+  # fog_grid states: %{} = clear, %{cell => true} = blacklist, :all_fogged = full cover,
+  # {:partial_reveal, map} = full cover except whitelisted cells.
 
-  def handle_call({:reveal_cells, cells}, _from, state) do
-    fog = Enum.reduce(cells, state.fog_grid, fn cell, acc ->
-      Map.put(acc, cell, true)
-    end)
-    new_state = %{state | fog_grid: fog}
-    broadcast(state.session_id, "fog_update", %{fog_grid: fog})
+  # :all_fogged → reveal cells → transition to {:partial_reveal, revealed_map}
+  # {:partial_reveal, map} means "entire map fogged except these cells"
+  def handle_call({:reveal_cells, cells}, _from, %{fog_grid: :all_fogged} = state) do
+    revealed = Enum.reduce(cells, %{}, fn cell, acc -> Map.put(acc, cell, true) end)
+    new_fog = {:partial_reveal, revealed}
+    new_state = %{state | fog_grid: new_fog}
+    broadcast(state.session_id, "fog_update", new_fog)
     {:reply, :ok, new_state}
   end
 
-  def handle_call({:hide_cells, _cells}, _from, %{fog_grid: :all_revealed} = state) do
+  def handle_call({:reveal_cells, cells}, _from, %{fog_grid: {:partial_reveal, revealed}} = state) do
+    new_revealed = Enum.reduce(cells, revealed, fn cell, acc -> Map.put(acc, cell, true) end)
+    new_fog = {:partial_reveal, new_revealed}
+    new_state = %{state | fog_grid: new_fog}
+    broadcast(state.session_id, "fog_update", new_fog)
+    {:reply, :ok, new_state}
+  end
+
+  def handle_call({:reveal_cells, cells}, _from, state) do
+    fog = Enum.reduce(cells, state.fog_grid, fn cell, acc -> Map.delete(acc, cell) end)
+    new_state = %{state | fog_grid: fog}
+    broadcast(state.session_id, "fog_update", fog)
+    {:reply, :ok, new_state}
+  end
+
+  def handle_call({:hide_cells, _cells}, _from, %{fog_grid: :all_fogged} = state) do
     {:reply, :ok, state}
   end
 
+  def handle_call({:hide_cells, cells}, _from, %{fog_grid: {:partial_reveal, revealed}} = state) do
+    new_revealed = Enum.reduce(cells, revealed, fn cell, acc -> Map.delete(acc, cell) end)
+    new_fog = {:partial_reveal, new_revealed}
+    new_state = %{state | fog_grid: new_fog}
+    broadcast(state.session_id, "fog_update", new_fog)
+    {:reply, :ok, new_state}
+  end
+
   def handle_call({:hide_cells, cells}, _from, state) do
-    fog = Enum.reduce(cells, state.fog_grid, fn cell, acc ->
-      Map.delete(acc, cell)
-    end)
+    fog = Enum.reduce(cells, state.fog_grid, fn cell, acc -> Map.put(acc, cell, true) end)
     new_state = %{state | fog_grid: fog}
-    broadcast(state.session_id, "fog_update", %{fog_grid: fog})
+    broadcast(state.session_id, "fog_update", fog)
     {:reply, :ok, new_state}
   end
 
   def handle_call({:set_map, map_id}, _from, state) do
-    new_state = %{state | current_map: map_id, fog_grid: %{}}
+    new_state = %{state | current_map: map_id, fog_grid: :all_fogged}
     broadcast(state.session_id, "map_update", %{map_id: map_id})
+    broadcast(state.session_id, "fog_update", :all_fogged)
     {:reply, :ok, new_state}
   end
 
   def handle_call(:reveal_all, _from, state) do
-    new_state = %{state | fog_grid: :all_revealed}
-    broadcast(state.session_id, "fog_update", %{fog_grid: :all_revealed})
+    new_state = %{state | fog_grid: %{}}
+    broadcast(state.session_id, "fog_update", %{})
     {:reply, :ok, new_state}
   end
 
   def handle_call(:hide_all, _from, state) do
-    new_state = %{state | fog_grid: %{}}
-    broadcast(state.session_id, "fog_update", %{fog_grid: %{}})
+    new_state = %{state | fog_grid: :all_fogged}
+    broadcast(state.session_id, "fog_update", :all_fogged)
     {:reply, :ok, new_state}
   end
 

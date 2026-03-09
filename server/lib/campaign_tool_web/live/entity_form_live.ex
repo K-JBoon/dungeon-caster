@@ -40,6 +40,10 @@ defmodule CampaignToolWeb.EntityFormLive do
     {:noreply, assign(socket, preview_tab: String.to_existing_atom(tab))}
   end
 
+  def handle_event("validate", %{"entity" => %{"body" => body}}, socket) do
+    {:noreply, assign(socket, body: body)}
+  end
+
   def handle_event("validate", _params, socket) do
     {:noreply, socket}
   end
@@ -66,7 +70,7 @@ defmodule CampaignToolWeb.EntityFormLive do
         params
       end
 
-    body = Map.get(params, "body", "")
+    body = socket.assigns.body
     fields = Map.drop(params, ["body"])
 
     case socket.assigns.mode do
@@ -193,7 +197,7 @@ defmodule CampaignToolWeb.EntityFormLive do
   # ── DB attrs builders ────────────────────────────────────────────────────────
 
   defp fields_to_db_attrs("npc", id, fields, body, file_path) do
-    {:ok, html} = Earmark.as_html(body)
+    {:ok, html, _} = Earmark.as_html(body)
     %{"id" => id, "name" => fields["name"] || "", "status" => fields["status"] || "alive",
       "role" => fields["role"] || "unknown", "race" => fields["race"],
       "class" => fields["class"], "faction_ids" => parse_list(fields["faction_ids"]),
@@ -202,21 +206,21 @@ defmodule CampaignToolWeb.EntityFormLive do
   end
 
   defp fields_to_db_attrs("location", id, fields, body, file_path) do
-    {:ok, html} = Earmark.as_html(body)
+    {:ok, html, _} = Earmark.as_html(body)
     %{"id" => id, "name" => fields["name"] || "", "location_type" => fields["location_type"] || "city",
       "faction_ids" => parse_list(fields["faction_ids"]),
       "body_raw" => body, "body_html" => html, "file_path" => file_path, "tags" => []}
   end
 
   defp fields_to_db_attrs("faction", id, fields, body, file_path) do
-    {:ok, html} = Earmark.as_html(body)
+    {:ok, html, _} = Earmark.as_html(body)
     %{"id" => id, "name" => fields["name"] || "", "status" => fields["status"] || "active",
       "member_ids" => parse_list(fields["member_ids"]),
       "body_raw" => body, "body_html" => html, "file_path" => file_path, "tags" => []}
   end
 
   defp fields_to_db_attrs("stat-block", id, fields, body, file_path) do
-    {:ok, html} = Earmark.as_html(body)
+    {:ok, html, _} = Earmark.as_html(body)
     %{"id" => id, "name" => fields["name"] || "", "cr" => fields["cr"] || "1",
       "size" => fields["size"] || "medium", "creature_type" => fields["creature_type"] || "humanoid",
       "source" => fields["source"] || "homebrew", "hp" => parse_int(fields["hp"]),
@@ -225,14 +229,14 @@ defmodule CampaignToolWeb.EntityFormLive do
   end
 
   defp fields_to_db_attrs("map", id, fields, body, file_path) do
-    {:ok, html} = Earmark.as_html(body)
+    {:ok, html, _} = Earmark.as_html(body)
     %{"id" => id, "name" => fields["name"] || "", "map_type" => fields["map_type"] || "battle",
       "asset_path" => fields["asset_path"] || "",
       "body_raw" => body, "body_html" => html, "file_path" => file_path, "tags" => []}
   end
 
   defp fields_to_db_attrs("session", id, fields, body, file_path) do
-    {:ok, html} = Earmark.as_html(body)
+    {:ok, html, _} = Earmark.as_html(body)
     %{"id" => id, "title" => fields["title"] || "", "session_number" => parse_int(fields["session_number"]) || 1,
       "status" => fields["status"] || "planned",
       "body_raw" => body, "body_html" => html, "file_path" => file_path, "tags" => [],
@@ -240,7 +244,7 @@ defmodule CampaignToolWeb.EntityFormLive do
   end
 
   defp fields_to_db_attrs(type, id, fields, body, file_path) do
-    {:ok, html} = Earmark.as_html(body)
+    {:ok, html, _} = Earmark.as_html(body)
     %{"id" => id, "name" => fields["name"] || "", "type" => type,
       "body_raw" => body, "body_html" => html, "file_path" => file_path}
   end

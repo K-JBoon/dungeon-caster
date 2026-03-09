@@ -12,7 +12,6 @@ defmodule CampaignToolWeb.Layouts do
   embed_templates "layouts/*"
 
   attr :flash, :map, required: true, doc: "the map of flash messages"
-  slot :inner_block, required: true
 
   def app(assigns) do
     ~H"""
@@ -51,7 +50,7 @@ defmodule CampaignToolWeb.Layouts do
       <%!-- Main content --%>
       <main class="flex-1 overflow-y-auto">
         <.flash_group flash={@flash} />
-        {render_slot(@inner_block)}
+        {@inner_content}
       </main>
     </div>
     """

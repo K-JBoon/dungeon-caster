@@ -1,0 +1,425 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:2:1-29:12
+INJECTED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:2:1-29:12
+INJECTED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:2:1-29:12
+INJECTED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:2:1-29:12
+MERGED from [com.google.android.material:material:1.11.0] /home/epixors/.gradle/caches/transforms-3/9ed5f16cbcd27bf9ff2227301560040d/transformed/material-1.11.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] /home/epixors/.gradle/caches/transforms-3/aad55ffcee58ccc831f05327108ea51c/transformed/constraintlayout-2.1.4/AndroidManifest.xml:2:1-11:12
+MERGED from [com.google.android.gms:play-services-cast-framework:21.5.0] /home/epixors/.gradle/caches/transforms-3/15a966f24ac7234c1e8702df612a3231/transformed/play-services-cast-framework-21.5.0/AndroidManifest.xml:2:1-20:12
+MERGED from [com.google.android.gms:play-services-cast:21.5.0] /home/epixors/.gradle/caches/transforms-3/b25180eacddd38a9fd17c27fcefb7a90/transformed/play-services-cast-21.5.0/AndroidManifest.xml:2:1-8:12
+MERGED from [androidx.mediarouter:mediarouter:1.7.0] /home/epixors/.gradle/caches/transforms-3/1160128caf488596532d86d979e5fae0/transformed/mediarouter-1.7.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /home/epixors/.gradle/caches/transforms-3/271ec94f65a57f94df289c3373f2c5dc/transformed/appcompat-resources-1.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.appcompat:appcompat:1.6.1] /home/epixors/.gradle/caches/transforms-3/1e2f861312ad42faf7384aadd6209d49/transformed/appcompat-1.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.viewpager2:viewpager2:1.0.0] /home/epixors/.gradle/caches/transforms-3/f9c85a9eb837a3b2135348a55f4d3036/transformed/viewpager2-1.0.0/AndroidManifest.xml:17:1-24:12
+MERGED from [com.google.android.gms:play-services-flags:18.1.0] /home/epixors/.gradle/caches/transforms-3/719e0db45bffee60d388f7419a541523/transformed/play-services-flags-18.1.0/AndroidManifest.xml:2:1-6:12
+MERGED from [com.google.android.gms:play-services-base:18.5.0] /home/epixors/.gradle/caches/transforms-3/5a7b928747255e72aa4f6fe1889ec841/transformed/play-services-base-18.5.0/AndroidManifest.xml:2:1-7:12
+MERGED from [com.google.android.gms:play-services-tasks:18.2.0] /home/epixors/.gradle/caches/transforms-3/7f0f9ad3404a21f80a2683f4b131fae9/transformed/play-services-tasks-18.2.0/AndroidManifest.xml:2:1-5:12
+MERGED from [com.google.android.gms:play-services-basement:18.4.0] /home/epixors/.gradle/caches/transforms-3/e478fa82ec50bde011fc6fac4776e901/transformed/play-services-basement-18.4.0/AndroidManifest.xml:2:1-9:12
+MERGED from [androidx.fragment:fragment:1.3.6] /home/epixors/.gradle/caches/transforms-3/93d051215dd556919325192e9267394f/transformed/fragment-1.3.6/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.activity:activity:1.8.0] /home/epixors/.gradle/caches/transforms-3/0c9bc45651b3a76b162cb970bdea4e72/transformed/activity-1.8.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.core:core-ktx:1.12.0] /home/epixors/.gradle/caches/transforms-3/4100b841586b883593622faabab84925/transformed/core-ktx-1.12.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.emoji2:emoji2-views-helper:1.2.0] /home/epixors/.gradle/caches/transforms-3/bf9c7c35f16b82e37e5862824dbf6a2e/transformed/emoji2-views-helper-1.2.0/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.emoji2:emoji2:1.2.0] /home/epixors/.gradle/caches/transforms-3/3a7ada3a889b9ea2c31a262f7dbe4410/transformed/emoji2-1.2.0/AndroidManifest.xml:17:1-35:12
+MERGED from [androidx.drawerlayout:drawerlayout:1.1.1] /home/epixors/.gradle/caches/transforms-3/87e2a7effb6477558063d7b96ed46841/transformed/drawerlayout-1.1.1/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.1.0] /home/epixors/.gradle/caches/transforms-3/6b7ba88104748c4c51411b9e50e06a30/transformed/coordinatorlayout-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.dynamicanimation:dynamicanimation:1.0.0] /home/epixors/.gradle/caches/transforms-3/7b5158fe5413357ade3b0ecfdf2d38c7/transformed/dynamicanimation-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.transition:transition:1.2.0] /home/epixors/.gradle/caches/transforms-3/366f922937d64342377d54babc75e7e5/transformed/transition-1.2.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /home/epixors/.gradle/caches/transforms-3/568f18e6e83962442c94cd626fcd70f4/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /home/epixors/.gradle/caches/transforms-3/8edc9bec36f9b17d825c84255f48f5ce/transformed/vectordrawable-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.recyclerview:recyclerview:1.1.0] /home/epixors/.gradle/caches/transforms-3/5c8fc46914125d0119d65d9e22f7426c/transformed/recyclerview-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.palette:palette:1.0.0] /home/epixors/.gradle/caches/transforms-3/7f001962b59e2416eee88fa37e11692c/transformed/palette-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.media:media:1.6.0] /home/epixors/.gradle/caches/transforms-3/cbe9978132bf0c4b7449e74b2e6901f2/transformed/media-1.6.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.viewpager:viewpager:1.0.0] /home/epixors/.gradle/caches/transforms-3/bcda3bce82309a15b87adcaa20ead521/transformed/viewpager-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] /home/epixors/.gradle/caches/transforms-3/0d369ebbd77f442a661ec6b7a85ce91d/transformed/legacy-support-core-utils-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.loader:loader:1.0.0] /home/epixors/.gradle/caches/transforms-3/6f4d832a3c9b5f1a65bb29a1cff686eb/transformed/loader-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.customview:customview:1.1.0] /home/epixors/.gradle/caches/transforms-3/476694efd41c7b37e0328704cec2ea7f/transformed/customview-1.1.0/AndroidManifest.xml:17:1-24:12
+MERGED from [androidx.core:core:1.12.0] /home/epixors/.gradle/caches/transforms-3/8775ed491970576126584cf24be3fe11/transformed/core-1.12.0/AndroidManifest.xml:17:1-30:12
+MERGED from [androidx.savedstate:savedstate:1.2.1] /home/epixors/.gradle/caches/transforms-3/ed7d6aa29ffbd7b2b662e1a9828c2e3b/transformed/savedstate-1.2.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/epixors/.gradle/caches/transforms-3/44cc79cfd0a36b173e6d243d6e0a0363/transformed/lifecycle-process-2.6.1/AndroidManifest.xml:17:1-35:12
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.6.1] /home/epixors/.gradle/caches/transforms-3/d3720a144891669d77e30d363a179d19/transformed/lifecycle-livedata-core-2.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.6.1] /home/epixors/.gradle/caches/transforms-3/10f5097351b1e81f8a41db1f0acab2c0/transformed/lifecycle-livedata-2.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.6.1] /home/epixors/.gradle/caches/transforms-3/526b13b730a18e28fc11ad8f90d964b4/transformed/lifecycle-viewmodel-2.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.6.1] /home/epixors/.gradle/caches/transforms-3/32eb621d5953e7cbfc039573e6c7ca6f/transformed/lifecycle-runtime-2.6.1/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.1] /home/epixors/.gradle/caches/transforms-3/b5e8d6238139026dbe77d41cbeef0a26/transformed/lifecycle-viewmodel-savedstate-2.6.1/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.annotation:annotation-experimental:1.4.0-rc01] /home/epixors/.gradle/caches/transforms-3/c191cb5ff92871d99722ffaa494cd619/transformed/annotation-experimental-1.4.0-rc01/AndroidManifest.xml:2:1-7:12
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /home/epixors/.gradle/caches/transforms-3/0b4141e5e7c6405f559a9814ac5274f8/transformed/cursoradapter-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.cardview:cardview:1.0.0] /home/epixors/.gradle/caches/transforms-3/22e26384dd04e6d50684989214aa0c1b/transformed/cardview-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:17:1-55:12
+MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.3] /home/epixors/.gradle/caches/transforms-3/c9e4af1d25195066228b6078f3674f80/transformed/transport-backend-cct-3.1.3/AndroidManifest.xml:15:1-38:12
+MERGED from [com.google.android.datatransport:transport-runtime:3.1.3] /home/epixors/.gradle/caches/transforms-3/d54a0071b19f5e3baa64f8cd53204fec/transformed/transport-runtime-3.1.3/AndroidManifest.xml:15:1-41:12
+MERGED from [com.google.android.datatransport:transport-api:3.0.0] /home/epixors/.gradle/caches/transforms-3/ef7d91e0ac86511028e94340c1ab32ea/transformed/transport-api-3.0.0/AndroidManifest.xml:15:1-22:12
+MERGED from [androidx.interpolator:interpolator:1.0.0] /home/epixors/.gradle/caches/transforms-3/01f8a52920859effab75f3f0a03b6526/transformed/interpolator-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/epixors/.gradle/caches/transforms-3/6d70a15f50173908b681dbbfd8244ea0/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:17:1-27:12
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/epixors/.gradle/caches/transforms-3/0095671cf0de38f4511901b8a19cba12/transformed/startup-runtime-1.1.1/AndroidManifest.xml:17:1-33:12
+MERGED from [androidx.tracing:tracing:1.0.0] /home/epixors/.gradle/caches/transforms-3/78c4dc832a46ec7ed1f87b3ef99e0764/transformed/tracing-1.0.0/AndroidManifest.xml:17:1-24:12
+MERGED from [com.google.firebase:firebase-encoders-json:18.0.0] /home/epixors/.gradle/caches/transforms-3/f7d901e903047685e41c4795de58577d/transformed/firebase-encoders-json-18.0.0/AndroidManifest.xml:15:1-23:12
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /home/epixors/.gradle/caches/transforms-3/80fbe79fb3269821ba091f65b4c61316/transformed/core-runtime-2.2.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.documentfile:documentfile:1.0.0] /home/epixors/.gradle/caches/transforms-3/59137b5f7b8028e7ea96cd2bf071591d/transformed/documentfile-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /home/epixors/.gradle/caches/transforms-3/5be0c3d0564c38df5f21e22c70893f18/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:17:1-22:12
+MERGED from [androidx.print:print:1.0.0] /home/epixors/.gradle/caches/transforms-3/f80771ca54e74e8593be36315dbdd735/transformed/print-1.0.0/AndroidManifest.xml:17:1-22:12
+	package
+		INJECTED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml
+	android:versionName
+		INJECTED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml
+	android:versionCode
+		INJECTED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml
+	xmlns:android
+		ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:2:11-69
+uses-permission#android.permission.INTERNET
+ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:4:5-67
+MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.3] /home/epixors/.gradle/caches/transforms-3/c9e4af1d25195066228b6078f3674f80/transformed/transport-backend-cct-3.1.3/AndroidManifest.xml:26:5-67
+MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.3] /home/epixors/.gradle/caches/transforms-3/c9e4af1d25195066228b6078f3674f80/transformed/transport-backend-cct-3.1.3/AndroidManifest.xml:26:5-67
+	android:name
+		ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:4:22-64
+application
+ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:6:5-27:19
+INJECTED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:6:5-27:19
+MERGED from [com.google.android.material:material:1.11.0] /home/epixors/.gradle/caches/transforms-3/9ed5f16cbcd27bf9ff2227301560040d/transformed/material-1.11.0/AndroidManifest.xml:22:5-20
+MERGED from [com.google.android.material:material:1.11.0] /home/epixors/.gradle/caches/transforms-3/9ed5f16cbcd27bf9ff2227301560040d/transformed/material-1.11.0/AndroidManifest.xml:22:5-20
+MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] /home/epixors/.gradle/caches/transforms-3/aad55ffcee58ccc831f05327108ea51c/transformed/constraintlayout-2.1.4/AndroidManifest.xml:9:5-20
+MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] /home/epixors/.gradle/caches/transforms-3/aad55ffcee58ccc831f05327108ea51c/transformed/constraintlayout-2.1.4/AndroidManifest.xml:9:5-20
+MERGED from [com.google.android.gms:play-services-cast-framework:21.5.0] /home/epixors/.gradle/caches/transforms-3/15a966f24ac7234c1e8702df612a3231/transformed/play-services-cast-framework-21.5.0/AndroidManifest.xml:14:5-18:19
+MERGED from [com.google.android.gms:play-services-cast-framework:21.5.0] /home/epixors/.gradle/caches/transforms-3/15a966f24ac7234c1e8702df612a3231/transformed/play-services-cast-framework-21.5.0/AndroidManifest.xml:14:5-18:19
+MERGED from [com.google.android.gms:play-services-cast:21.5.0] /home/epixors/.gradle/caches/transforms-3/b25180eacddd38a9fd17c27fcefb7a90/transformed/play-services-cast-21.5.0/AndroidManifest.xml:6:5-20
+MERGED from [com.google.android.gms:play-services-cast:21.5.0] /home/epixors/.gradle/caches/transforms-3/b25180eacddd38a9fd17c27fcefb7a90/transformed/play-services-cast-21.5.0/AndroidManifest.xml:6:5-20
+MERGED from [com.google.android.gms:play-services-base:18.5.0] /home/epixors/.gradle/caches/transforms-3/5a7b928747255e72aa4f6fe1889ec841/transformed/play-services-base-18.5.0/AndroidManifest.xml:4:5-6:19
+MERGED from [com.google.android.gms:play-services-base:18.5.0] /home/epixors/.gradle/caches/transforms-3/5a7b928747255e72aa4f6fe1889ec841/transformed/play-services-base-18.5.0/AndroidManifest.xml:4:5-6:19
+MERGED from [com.google.android.gms:play-services-tasks:18.2.0] /home/epixors/.gradle/caches/transforms-3/7f0f9ad3404a21f80a2683f4b131fae9/transformed/play-services-tasks-18.2.0/AndroidManifest.xml:4:5-20
+MERGED from [com.google.android.gms:play-services-tasks:18.2.0] /home/epixors/.gradle/caches/transforms-3/7f0f9ad3404a21f80a2683f4b131fae9/transformed/play-services-tasks-18.2.0/AndroidManifest.xml:4:5-20
+MERGED from [com.google.android.gms:play-services-basement:18.4.0] /home/epixors/.gradle/caches/transforms-3/e478fa82ec50bde011fc6fac4776e901/transformed/play-services-basement-18.4.0/AndroidManifest.xml:5:5-7:19
+MERGED from [com.google.android.gms:play-services-basement:18.4.0] /home/epixors/.gradle/caches/transforms-3/e478fa82ec50bde011fc6fac4776e901/transformed/play-services-basement-18.4.0/AndroidManifest.xml:5:5-7:19
+MERGED from [androidx.emoji2:emoji2:1.2.0] /home/epixors/.gradle/caches/transforms-3/3a7ada3a889b9ea2c31a262f7dbe4410/transformed/emoji2-1.2.0/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.emoji2:emoji2:1.2.0] /home/epixors/.gradle/caches/transforms-3/3a7ada3a889b9ea2c31a262f7dbe4410/transformed/emoji2-1.2.0/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.core:core:1.12.0] /home/epixors/.gradle/caches/transforms-3/8775ed491970576126584cf24be3fe11/transformed/core-1.12.0/AndroidManifest.xml:28:5-89
+MERGED from [androidx.core:core:1.12.0] /home/epixors/.gradle/caches/transforms-3/8775ed491970576126584cf24be3fe11/transformed/core-1.12.0/AndroidManifest.xml:28:5-89
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/epixors/.gradle/caches/transforms-3/44cc79cfd0a36b173e6d243d6e0a0363/transformed/lifecycle-process-2.6.1/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/epixors/.gradle/caches/transforms-3/44cc79cfd0a36b173e6d243d6e0a0363/transformed/lifecycle-process-2.6.1/AndroidManifest.xml:23:5-33:19
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:23:5-53:19
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:23:5-53:19
+MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.3] /home/epixors/.gradle/caches/transforms-3/c9e4af1d25195066228b6078f3674f80/transformed/transport-backend-cct-3.1.3/AndroidManifest.xml:28:5-36:19
+MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.3] /home/epixors/.gradle/caches/transforms-3/c9e4af1d25195066228b6078f3674f80/transformed/transport-backend-cct-3.1.3/AndroidManifest.xml:28:5-36:19
+MERGED from [com.google.android.datatransport:transport-runtime:3.1.3] /home/epixors/.gradle/caches/transforms-3/d54a0071b19f5e3baa64f8cd53204fec/transformed/transport-runtime-3.1.3/AndroidManifest.xml:25:5-39:19
+MERGED from [com.google.android.datatransport:transport-runtime:3.1.3] /home/epixors/.gradle/caches/transforms-3/d54a0071b19f5e3baa64f8cd53204fec/transformed/transport-runtime-3.1.3/AndroidManifest.xml:25:5-39:19
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/epixors/.gradle/caches/transforms-3/6d70a15f50173908b681dbbfd8244ea0/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:24:5-25:19
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/epixors/.gradle/caches/transforms-3/6d70a15f50173908b681dbbfd8244ea0/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:24:5-25:19
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/epixors/.gradle/caches/transforms-3/0095671cf0de38f4511901b8a19cba12/transformed/startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/epixors/.gradle/caches/transforms-3/0095671cf0de38f4511901b8a19cba12/transformed/startup-runtime-1.1.1/AndroidManifest.xml:25:5-31:19
+	android:extractNativeLibs
+		INJECTED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml
+	android:appComponentFactory
+		ADDED from [androidx.core:core:1.12.0] /home/epixors/.gradle/caches/transforms-3/8775ed491970576126584cf24be3fe11/transformed/core-1.12.0/AndroidManifest.xml:28:18-86
+	android:supportsRtl
+		ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:11:9-35
+	android:label
+		ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:9:9-41
+	android:roundIcon
+		ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:10:9-54
+	android:icon
+		ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:8:9-43
+	android:allowBackup
+		ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:7:9-35
+	android:theme
+		ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:12:9-65
+	android:usesCleartextTraffic
+		ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:13:9-44
+meta-data#com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME
+ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:15:9-17:68
+	android:value
+		ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:17:13-65
+	android:name
+		ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:16:13-93
+activity#com.campaigntool.MainActivity
+ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:19:9-26:20
+	android:exported
+		ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:21:13-36
+	android:name
+		ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:20:13-41
+intent-filter#action:name:android.intent.action.MAIN+category:name:android.intent.category.LAUNCHER
+ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:22:13-25:29
+action#android.intent.action.MAIN
+ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:23:17-69
+	android:name
+		ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:23:25-66
+category#android.intent.category.LAUNCHER
+ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:24:17-77
+	android:name
+		ADDED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml:24:27-74
+uses-sdk
+INJECTED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml
+INJECTED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml
+MERGED from [com.google.android.material:material:1.11.0] /home/epixors/.gradle/caches/transforms-3/9ed5f16cbcd27bf9ff2227301560040d/transformed/material-1.11.0/AndroidManifest.xml:20:5-44
+MERGED from [com.google.android.material:material:1.11.0] /home/epixors/.gradle/caches/transforms-3/9ed5f16cbcd27bf9ff2227301560040d/transformed/material-1.11.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] /home/epixors/.gradle/caches/transforms-3/aad55ffcee58ccc831f05327108ea51c/transformed/constraintlayout-2.1.4/AndroidManifest.xml:5:5-7:41
+MERGED from [androidx.constraintlayout:constraintlayout:2.1.4] /home/epixors/.gradle/caches/transforms-3/aad55ffcee58ccc831f05327108ea51c/transformed/constraintlayout-2.1.4/AndroidManifest.xml:5:5-7:41
+MERGED from [com.google.android.gms:play-services-cast-framework:21.5.0] /home/epixors/.gradle/caches/transforms-3/15a966f24ac7234c1e8702df612a3231/transformed/play-services-cast-framework-21.5.0/AndroidManifest.xml:4:5-74
+MERGED from [com.google.android.gms:play-services-cast-framework:21.5.0] /home/epixors/.gradle/caches/transforms-3/15a966f24ac7234c1e8702df612a3231/transformed/play-services-cast-framework-21.5.0/AndroidManifest.xml:4:5-74
+MERGED from [com.google.android.gms:play-services-cast:21.5.0] /home/epixors/.gradle/caches/transforms-3/b25180eacddd38a9fd17c27fcefb7a90/transformed/play-services-cast-21.5.0/AndroidManifest.xml:4:5-44
+MERGED from [com.google.android.gms:play-services-cast:21.5.0] /home/epixors/.gradle/caches/transforms-3/b25180eacddd38a9fd17c27fcefb7a90/transformed/play-services-cast-21.5.0/AndroidManifest.xml:4:5-44
+MERGED from [androidx.mediarouter:mediarouter:1.7.0] /home/epixors/.gradle/caches/transforms-3/1160128caf488596532d86d979e5fae0/transformed/mediarouter-1.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.mediarouter:mediarouter:1.7.0] /home/epixors/.gradle/caches/transforms-3/1160128caf488596532d86d979e5fae0/transformed/mediarouter-1.7.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /home/epixors/.gradle/caches/transforms-3/271ec94f65a57f94df289c3373f2c5dc/transformed/appcompat-resources-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.appcompat:appcompat-resources:1.6.1] /home/epixors/.gradle/caches/transforms-3/271ec94f65a57f94df289c3373f2c5dc/transformed/appcompat-resources-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.appcompat:appcompat:1.6.1] /home/epixors/.gradle/caches/transforms-3/1e2f861312ad42faf7384aadd6209d49/transformed/appcompat-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.appcompat:appcompat:1.6.1] /home/epixors/.gradle/caches/transforms-3/1e2f861312ad42faf7384aadd6209d49/transformed/appcompat-1.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.viewpager2:viewpager2:1.0.0] /home/epixors/.gradle/caches/transforms-3/f9c85a9eb837a3b2135348a55f4d3036/transformed/viewpager2-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.viewpager2:viewpager2:1.0.0] /home/epixors/.gradle/caches/transforms-3/f9c85a9eb837a3b2135348a55f4d3036/transformed/viewpager2-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.android.gms:play-services-flags:18.1.0] /home/epixors/.gradle/caches/transforms-3/719e0db45bffee60d388f7419a541523/transformed/play-services-flags-18.1.0/AndroidManifest.xml:4:5-44
+MERGED from [com.google.android.gms:play-services-flags:18.1.0] /home/epixors/.gradle/caches/transforms-3/719e0db45bffee60d388f7419a541523/transformed/play-services-flags-18.1.0/AndroidManifest.xml:4:5-44
+MERGED from [com.google.android.gms:play-services-base:18.5.0] /home/epixors/.gradle/caches/transforms-3/5a7b928747255e72aa4f6fe1889ec841/transformed/play-services-base-18.5.0/AndroidManifest.xml:3:5-44
+MERGED from [com.google.android.gms:play-services-base:18.5.0] /home/epixors/.gradle/caches/transforms-3/5a7b928747255e72aa4f6fe1889ec841/transformed/play-services-base-18.5.0/AndroidManifest.xml:3:5-44
+MERGED from [com.google.android.gms:play-services-tasks:18.2.0] /home/epixors/.gradle/caches/transforms-3/7f0f9ad3404a21f80a2683f4b131fae9/transformed/play-services-tasks-18.2.0/AndroidManifest.xml:3:5-44
+MERGED from [com.google.android.gms:play-services-tasks:18.2.0] /home/epixors/.gradle/caches/transforms-3/7f0f9ad3404a21f80a2683f4b131fae9/transformed/play-services-tasks-18.2.0/AndroidManifest.xml:3:5-44
+MERGED from [com.google.android.gms:play-services-basement:18.4.0] /home/epixors/.gradle/caches/transforms-3/e478fa82ec50bde011fc6fac4776e901/transformed/play-services-basement-18.4.0/AndroidManifest.xml:3:5-44
+MERGED from [com.google.android.gms:play-services-basement:18.4.0] /home/epixors/.gradle/caches/transforms-3/e478fa82ec50bde011fc6fac4776e901/transformed/play-services-basement-18.4.0/AndroidManifest.xml:3:5-44
+MERGED from [androidx.fragment:fragment:1.3.6] /home/epixors/.gradle/caches/transforms-3/93d051215dd556919325192e9267394f/transformed/fragment-1.3.6/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.fragment:fragment:1.3.6] /home/epixors/.gradle/caches/transforms-3/93d051215dd556919325192e9267394f/transformed/fragment-1.3.6/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.activity:activity:1.8.0] /home/epixors/.gradle/caches/transforms-3/0c9bc45651b3a76b162cb970bdea4e72/transformed/activity-1.8.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.activity:activity:1.8.0] /home/epixors/.gradle/caches/transforms-3/0c9bc45651b3a76b162cb970bdea4e72/transformed/activity-1.8.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.core:core-ktx:1.12.0] /home/epixors/.gradle/caches/transforms-3/4100b841586b883593622faabab84925/transformed/core-ktx-1.12.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.core:core-ktx:1.12.0] /home/epixors/.gradle/caches/transforms-3/4100b841586b883593622faabab84925/transformed/core-ktx-1.12.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.emoji2:emoji2-views-helper:1.2.0] /home/epixors/.gradle/caches/transforms-3/bf9c7c35f16b82e37e5862824dbf6a2e/transformed/emoji2-views-helper-1.2.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.emoji2:emoji2-views-helper:1.2.0] /home/epixors/.gradle/caches/transforms-3/bf9c7c35f16b82e37e5862824dbf6a2e/transformed/emoji2-views-helper-1.2.0/AndroidManifest.xml:5:5-44
+MERGED from [androidx.emoji2:emoji2:1.2.0] /home/epixors/.gradle/caches/transforms-3/3a7ada3a889b9ea2c31a262f7dbe4410/transformed/emoji2-1.2.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.emoji2:emoji2:1.2.0] /home/epixors/.gradle/caches/transforms-3/3a7ada3a889b9ea2c31a262f7dbe4410/transformed/emoji2-1.2.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.drawerlayout:drawerlayout:1.1.1] /home/epixors/.gradle/caches/transforms-3/87e2a7effb6477558063d7b96ed46841/transformed/drawerlayout-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.drawerlayout:drawerlayout:1.1.1] /home/epixors/.gradle/caches/transforms-3/87e2a7effb6477558063d7b96ed46841/transformed/drawerlayout-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.1.0] /home/epixors/.gradle/caches/transforms-3/6b7ba88104748c4c51411b9e50e06a30/transformed/coordinatorlayout-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.coordinatorlayout:coordinatorlayout:1.1.0] /home/epixors/.gradle/caches/transforms-3/6b7ba88104748c4c51411b9e50e06a30/transformed/coordinatorlayout-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.dynamicanimation:dynamicanimation:1.0.0] /home/epixors/.gradle/caches/transforms-3/7b5158fe5413357ade3b0ecfdf2d38c7/transformed/dynamicanimation-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.dynamicanimation:dynamicanimation:1.0.0] /home/epixors/.gradle/caches/transforms-3/7b5158fe5413357ade3b0ecfdf2d38c7/transformed/dynamicanimation-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.transition:transition:1.2.0] /home/epixors/.gradle/caches/transforms-3/366f922937d64342377d54babc75e7e5/transformed/transition-1.2.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.transition:transition:1.2.0] /home/epixors/.gradle/caches/transforms-3/366f922937d64342377d54babc75e7e5/transformed/transition-1.2.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /home/epixors/.gradle/caches/transforms-3/568f18e6e83962442c94cd626fcd70f4/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable-animated:1.1.0] /home/epixors/.gradle/caches/transforms-3/568f18e6e83962442c94cd626fcd70f4/transformed/vectordrawable-animated-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /home/epixors/.gradle/caches/transforms-3/8edc9bec36f9b17d825c84255f48f5ce/transformed/vectordrawable-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.vectordrawable:vectordrawable:1.1.0] /home/epixors/.gradle/caches/transforms-3/8edc9bec36f9b17d825c84255f48f5ce/transformed/vectordrawable-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.recyclerview:recyclerview:1.1.0] /home/epixors/.gradle/caches/transforms-3/5c8fc46914125d0119d65d9e22f7426c/transformed/recyclerview-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.recyclerview:recyclerview:1.1.0] /home/epixors/.gradle/caches/transforms-3/5c8fc46914125d0119d65d9e22f7426c/transformed/recyclerview-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.palette:palette:1.0.0] /home/epixors/.gradle/caches/transforms-3/7f001962b59e2416eee88fa37e11692c/transformed/palette-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.palette:palette:1.0.0] /home/epixors/.gradle/caches/transforms-3/7f001962b59e2416eee88fa37e11692c/transformed/palette-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.media:media:1.6.0] /home/epixors/.gradle/caches/transforms-3/cbe9978132bf0c4b7449e74b2e6901f2/transformed/media-1.6.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.media:media:1.6.0] /home/epixors/.gradle/caches/transforms-3/cbe9978132bf0c4b7449e74b2e6901f2/transformed/media-1.6.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.viewpager:viewpager:1.0.0] /home/epixors/.gradle/caches/transforms-3/bcda3bce82309a15b87adcaa20ead521/transformed/viewpager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.viewpager:viewpager:1.0.0] /home/epixors/.gradle/caches/transforms-3/bcda3bce82309a15b87adcaa20ead521/transformed/viewpager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] /home/epixors/.gradle/caches/transforms-3/0d369ebbd77f442a661ec6b7a85ce91d/transformed/legacy-support-core-utils-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.legacy:legacy-support-core-utils:1.0.0] /home/epixors/.gradle/caches/transforms-3/0d369ebbd77f442a661ec6b7a85ce91d/transformed/legacy-support-core-utils-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.loader:loader:1.0.0] /home/epixors/.gradle/caches/transforms-3/6f4d832a3c9b5f1a65bb29a1cff686eb/transformed/loader-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.loader:loader:1.0.0] /home/epixors/.gradle/caches/transforms-3/6f4d832a3c9b5f1a65bb29a1cff686eb/transformed/loader-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.customview:customview:1.1.0] /home/epixors/.gradle/caches/transforms-3/476694efd41c7b37e0328704cec2ea7f/transformed/customview-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.customview:customview:1.1.0] /home/epixors/.gradle/caches/transforms-3/476694efd41c7b37e0328704cec2ea7f/transformed/customview-1.1.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.core:core:1.12.0] /home/epixors/.gradle/caches/transforms-3/8775ed491970576126584cf24be3fe11/transformed/core-1.12.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.core:core:1.12.0] /home/epixors/.gradle/caches/transforms-3/8775ed491970576126584cf24be3fe11/transformed/core-1.12.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate:1.2.1] /home/epixors/.gradle/caches/transforms-3/ed7d6aa29ffbd7b2b662e1a9828c2e3b/transformed/savedstate-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.savedstate:savedstate:1.2.1] /home/epixors/.gradle/caches/transforms-3/ed7d6aa29ffbd7b2b662e1a9828c2e3b/transformed/savedstate-1.2.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/epixors/.gradle/caches/transforms-3/44cc79cfd0a36b173e6d243d6e0a0363/transformed/lifecycle-process-2.6.1/AndroidManifest.xml:21:5-44
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/epixors/.gradle/caches/transforms-3/44cc79cfd0a36b173e6d243d6e0a0363/transformed/lifecycle-process-2.6.1/AndroidManifest.xml:21:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.6.1] /home/epixors/.gradle/caches/transforms-3/d3720a144891669d77e30d363a179d19/transformed/lifecycle-livedata-core-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata-core:2.6.1] /home/epixors/.gradle/caches/transforms-3/d3720a144891669d77e30d363a179d19/transformed/lifecycle-livedata-core-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.6.1] /home/epixors/.gradle/caches/transforms-3/10f5097351b1e81f8a41db1f0acab2c0/transformed/lifecycle-livedata-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-livedata:2.6.1] /home/epixors/.gradle/caches/transforms-3/10f5097351b1e81f8a41db1f0acab2c0/transformed/lifecycle-livedata-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.6.1] /home/epixors/.gradle/caches/transforms-3/526b13b730a18e28fc11ad8f90d964b4/transformed/lifecycle-viewmodel-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel:2.6.1] /home/epixors/.gradle/caches/transforms-3/526b13b730a18e28fc11ad8f90d964b4/transformed/lifecycle-viewmodel-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.6.1] /home/epixors/.gradle/caches/transforms-3/32eb621d5953e7cbfc039573e6c7ca6f/transformed/lifecycle-runtime-2.6.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-runtime:2.6.1] /home/epixors/.gradle/caches/transforms-3/32eb621d5953e7cbfc039573e6c7ca6f/transformed/lifecycle-runtime-2.6.1/AndroidManifest.xml:5:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.1] /home/epixors/.gradle/caches/transforms-3/b5e8d6238139026dbe77d41cbeef0a26/transformed/lifecycle-viewmodel-savedstate-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.lifecycle:lifecycle-viewmodel-savedstate:2.6.1] /home/epixors/.gradle/caches/transforms-3/b5e8d6238139026dbe77d41cbeef0a26/transformed/lifecycle-viewmodel-savedstate-2.6.1/AndroidManifest.xml:20:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.4.0-rc01] /home/epixors/.gradle/caches/transforms-3/c191cb5ff92871d99722ffaa494cd619/transformed/annotation-experimental-1.4.0-rc01/AndroidManifest.xml:5:5-44
+MERGED from [androidx.annotation:annotation-experimental:1.4.0-rc01] /home/epixors/.gradle/caches/transforms-3/c191cb5ff92871d99722ffaa494cd619/transformed/annotation-experimental-1.4.0-rc01/AndroidManifest.xml:5:5-44
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /home/epixors/.gradle/caches/transforms-3/0b4141e5e7c6405f559a9814ac5274f8/transformed/cursoradapter-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.cursoradapter:cursoradapter:1.0.0] /home/epixors/.gradle/caches/transforms-3/0b4141e5e7c6405f559a9814ac5274f8/transformed/cursoradapter-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.cardview:cardview:1.0.0] /home/epixors/.gradle/caches/transforms-3/22e26384dd04e6d50684989214aa0c1b/transformed/cardview-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.cardview:cardview:1.0.0] /home/epixors/.gradle/caches/transforms-3/22e26384dd04e6d50684989214aa0c1b/transformed/cardview-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:21:5-44
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:21:5-44
+MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.3] /home/epixors/.gradle/caches/transforms-3/c9e4af1d25195066228b6078f3674f80/transformed/transport-backend-cct-3.1.3/AndroidManifest.xml:19:5-21:41
+MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.3] /home/epixors/.gradle/caches/transforms-3/c9e4af1d25195066228b6078f3674f80/transformed/transport-backend-cct-3.1.3/AndroidManifest.xml:19:5-21:41
+MERGED from [com.google.android.datatransport:transport-runtime:3.1.3] /home/epixors/.gradle/caches/transforms-3/d54a0071b19f5e3baa64f8cd53204fec/transformed/transport-runtime-3.1.3/AndroidManifest.xml:18:5-20:41
+MERGED from [com.google.android.datatransport:transport-runtime:3.1.3] /home/epixors/.gradle/caches/transforms-3/d54a0071b19f5e3baa64f8cd53204fec/transformed/transport-runtime-3.1.3/AndroidManifest.xml:18:5-20:41
+MERGED from [com.google.android.datatransport:transport-api:3.0.0] /home/epixors/.gradle/caches/transforms-3/ef7d91e0ac86511028e94340c1ab32ea/transformed/transport-api-3.0.0/AndroidManifest.xml:18:5-20:41
+MERGED from [com.google.android.datatransport:transport-api:3.0.0] /home/epixors/.gradle/caches/transforms-3/ef7d91e0ac86511028e94340c1ab32ea/transformed/transport-api-3.0.0/AndroidManifest.xml:18:5-20:41
+MERGED from [androidx.interpolator:interpolator:1.0.0] /home/epixors/.gradle/caches/transforms-3/01f8a52920859effab75f3f0a03b6526/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.interpolator:interpolator:1.0.0] /home/epixors/.gradle/caches/transforms-3/01f8a52920859effab75f3f0a03b6526/transformed/interpolator-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/epixors/.gradle/caches/transforms-3/6d70a15f50173908b681dbbfd8244ea0/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.versionedparcelable:versionedparcelable:1.1.1] /home/epixors/.gradle/caches/transforms-3/6d70a15f50173908b681dbbfd8244ea0/transformed/versionedparcelable-1.1.1/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/epixors/.gradle/caches/transforms-3/0095671cf0de38f4511901b8a19cba12/transformed/startup-runtime-1.1.1/AndroidManifest.xml:21:5-23:41
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/epixors/.gradle/caches/transforms-3/0095671cf0de38f4511901b8a19cba12/transformed/startup-runtime-1.1.1/AndroidManifest.xml:21:5-23:41
+MERGED from [androidx.tracing:tracing:1.0.0] /home/epixors/.gradle/caches/transforms-3/78c4dc832a46ec7ed1f87b3ef99e0764/transformed/tracing-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [androidx.tracing:tracing:1.0.0] /home/epixors/.gradle/caches/transforms-3/78c4dc832a46ec7ed1f87b3ef99e0764/transformed/tracing-1.0.0/AndroidManifest.xml:20:5-22:41
+MERGED from [com.google.firebase:firebase-encoders-json:18.0.0] /home/epixors/.gradle/caches/transforms-3/f7d901e903047685e41c4795de58577d/transformed/firebase-encoders-json-18.0.0/AndroidManifest.xml:19:5-21:41
+MERGED from [com.google.firebase:firebase-encoders-json:18.0.0] /home/epixors/.gradle/caches/transforms-3/f7d901e903047685e41c4795de58577d/transformed/firebase-encoders-json-18.0.0/AndroidManifest.xml:19:5-21:41
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /home/epixors/.gradle/caches/transforms-3/80fbe79fb3269821ba091f65b4c61316/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.arch.core:core-runtime:2.2.0] /home/epixors/.gradle/caches/transforms-3/80fbe79fb3269821ba091f65b4c61316/transformed/core-runtime-2.2.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.documentfile:documentfile:1.0.0] /home/epixors/.gradle/caches/transforms-3/59137b5f7b8028e7ea96cd2bf071591d/transformed/documentfile-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.documentfile:documentfile:1.0.0] /home/epixors/.gradle/caches/transforms-3/59137b5f7b8028e7ea96cd2bf071591d/transformed/documentfile-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /home/epixors/.gradle/caches/transforms-3/5be0c3d0564c38df5f21e22c70893f18/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.localbroadcastmanager:localbroadcastmanager:1.0.0] /home/epixors/.gradle/caches/transforms-3/5be0c3d0564c38df5f21e22c70893f18/transformed/localbroadcastmanager-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.print:print:1.0.0] /home/epixors/.gradle/caches/transforms-3/f80771ca54e74e8593be36315dbdd735/transformed/print-1.0.0/AndroidManifest.xml:20:5-44
+MERGED from [androidx.print:print:1.0.0] /home/epixors/.gradle/caches/transforms-3/f80771ca54e74e8593be36315dbdd735/transformed/print-1.0.0/AndroidManifest.xml:20:5-44
+	android:targetSdkVersion
+		INJECTED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /home/epixors/checkouts/git/campaign-tool/android/app/src/main/AndroidManifest.xml
+uses-permission#android.permission.ACCESS_NETWORK_STATE
+ADDED from [com.google.android.gms:play-services-cast-framework:21.5.0] /home/epixors/.gradle/caches/transforms-3/15a966f24ac7234c1e8702df612a3231/transformed/play-services-cast-framework-21.5.0/AndroidManifest.xml:6:5-79
+MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.3] /home/epixors/.gradle/caches/transforms-3/c9e4af1d25195066228b6078f3674f80/transformed/transport-backend-cct-3.1.3/AndroidManifest.xml:25:5-79
+MERGED from [com.google.android.datatransport:transport-backend-cct:3.1.3] /home/epixors/.gradle/caches/transforms-3/c9e4af1d25195066228b6078f3674f80/transformed/transport-backend-cct-3.1.3/AndroidManifest.xml:25:5-79
+MERGED from [com.google.android.datatransport:transport-runtime:3.1.3] /home/epixors/.gradle/caches/transforms-3/d54a0071b19f5e3baa64f8cd53204fec/transformed/transport-runtime-3.1.3/AndroidManifest.xml:22:5-79
+MERGED from [com.google.android.datatransport:transport-runtime:3.1.3] /home/epixors/.gradle/caches/transforms-3/d54a0071b19f5e3baa64f8cd53204fec/transformed/transport-runtime-3.1.3/AndroidManifest.xml:22:5-79
+	android:name
+		ADDED from [com.google.android.gms:play-services-cast-framework:21.5.0] /home/epixors/.gradle/caches/transforms-3/15a966f24ac7234c1e8702df612a3231/transformed/play-services-cast-framework-21.5.0/AndroidManifest.xml:6:22-76
+uses-permission#android.permission.FOREGROUND_SERVICE
+ADDED from [com.google.android.gms:play-services-cast-framework:21.5.0] /home/epixors/.gradle/caches/transforms-3/15a966f24ac7234c1e8702df612a3231/transformed/play-services-cast-framework-21.5.0/AndroidManifest.xml:8:5-77
+	android:name
+		ADDED from [com.google.android.gms:play-services-cast-framework:21.5.0] /home/epixors/.gradle/caches/transforms-3/15a966f24ac7234c1e8702df612a3231/transformed/play-services-cast-framework-21.5.0/AndroidManifest.xml:8:22-74
+queries
+ADDED from [com.google.android.gms:play-services-cast-framework:21.5.0] /home/epixors/.gradle/caches/transforms-3/15a966f24ac7234c1e8702df612a3231/transformed/play-services-cast-framework-21.5.0/AndroidManifest.xml:10:5-12:15
+package#com.google.android.gms.policy_cast_dynamite
+ADDED from [com.google.android.gms:play-services-cast-framework:21.5.0] /home/epixors/.gradle/caches/transforms-3/15a966f24ac7234c1e8702df612a3231/transformed/play-services-cast-framework-21.5.0/AndroidManifest.xml:11:9-79
+	android:name
+		ADDED from [com.google.android.gms:play-services-cast-framework:21.5.0] /home/epixors/.gradle/caches/transforms-3/15a966f24ac7234c1e8702df612a3231/transformed/play-services-cast-framework-21.5.0/AndroidManifest.xml:11:18-76
+receiver#com.google.android.gms.cast.framework.media.MediaIntentReceiver
+ADDED from [com.google.android.gms:play-services-cast-framework:21.5.0] /home/epixors/.gradle/caches/transforms-3/15a966f24ac7234c1e8702df612a3231/transformed/play-services-cast-framework-21.5.0/AndroidManifest.xml:15:9-125
+	android:exported
+		ADDED from [com.google.android.gms:play-services-cast-framework:21.5.0] /home/epixors/.gradle/caches/transforms-3/15a966f24ac7234c1e8702df612a3231/transformed/play-services-cast-framework-21.5.0/AndroidManifest.xml:15:98-122
+	android:name
+		ADDED from [com.google.android.gms:play-services-cast-framework:21.5.0] /home/epixors/.gradle/caches/transforms-3/15a966f24ac7234c1e8702df612a3231/transformed/play-services-cast-framework-21.5.0/AndroidManifest.xml:15:19-97
+service#com.google.android.gms.cast.framework.ReconnectionService
+ADDED from [com.google.android.gms:play-services-cast-framework:21.5.0] /home/epixors/.gradle/caches/transforms-3/15a966f24ac7234c1e8702df612a3231/transformed/play-services-cast-framework-21.5.0/AndroidManifest.xml:17:9-118
+	android:exported
+		ADDED from [com.google.android.gms:play-services-cast-framework:21.5.0] /home/epixors/.gradle/caches/transforms-3/15a966f24ac7234c1e8702df612a3231/transformed/play-services-cast-framework-21.5.0/AndroidManifest.xml:17:91-115
+	android:name
+		ADDED from [com.google.android.gms:play-services-cast-framework:21.5.0] /home/epixors/.gradle/caches/transforms-3/15a966f24ac7234c1e8702df612a3231/transformed/play-services-cast-framework-21.5.0/AndroidManifest.xml:17:18-90
+activity#com.google.android.gms.common.api.GoogleApiActivity
+ADDED from [com.google.android.gms:play-services-base:18.5.0] /home/epixors/.gradle/caches/transforms-3/5a7b928747255e72aa4f6fe1889ec841/transformed/play-services-base-18.5.0/AndroidManifest.xml:5:9-173
+	android:exported
+		ADDED from [com.google.android.gms:play-services-base:18.5.0] /home/epixors/.gradle/caches/transforms-3/5a7b928747255e72aa4f6fe1889ec841/transformed/play-services-base-18.5.0/AndroidManifest.xml:5:146-170
+	android:theme
+		ADDED from [com.google.android.gms:play-services-base:18.5.0] /home/epixors/.gradle/caches/transforms-3/5a7b928747255e72aa4f6fe1889ec841/transformed/play-services-base-18.5.0/AndroidManifest.xml:5:86-145
+	android:name
+		ADDED from [com.google.android.gms:play-services-base:18.5.0] /home/epixors/.gradle/caches/transforms-3/5a7b928747255e72aa4f6fe1889ec841/transformed/play-services-base-18.5.0/AndroidManifest.xml:5:19-85
+meta-data#com.google.android.gms.version
+ADDED from [com.google.android.gms:play-services-basement:18.4.0] /home/epixors/.gradle/caches/transforms-3/e478fa82ec50bde011fc6fac4776e901/transformed/play-services-basement-18.4.0/AndroidManifest.xml:6:9-122
+	android:value
+		ADDED from [com.google.android.gms:play-services-basement:18.4.0] /home/epixors/.gradle/caches/transforms-3/e478fa82ec50bde011fc6fac4776e901/transformed/play-services-basement-18.4.0/AndroidManifest.xml:6:66-119
+	android:name
+		ADDED from [com.google.android.gms:play-services-basement:18.4.0] /home/epixors/.gradle/caches/transforms-3/e478fa82ec50bde011fc6fac4776e901/transformed/play-services-basement-18.4.0/AndroidManifest.xml:6:20-65
+provider#androidx.startup.InitializationProvider
+ADDED from [androidx.emoji2:emoji2:1.2.0] /home/epixors/.gradle/caches/transforms-3/3a7ada3a889b9ea2c31a262f7dbe4410/transformed/emoji2-1.2.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/epixors/.gradle/caches/transforms-3/44cc79cfd0a36b173e6d243d6e0a0363/transformed/lifecycle-process-2.6.1/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/epixors/.gradle/caches/transforms-3/44cc79cfd0a36b173e6d243d6e0a0363/transformed/lifecycle-process-2.6.1/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:24:9-32:20
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/epixors/.gradle/caches/transforms-3/0095671cf0de38f4511901b8a19cba12/transformed/startup-runtime-1.1.1/AndroidManifest.xml:26:9-30:34
+MERGED from [androidx.startup:startup-runtime:1.1.1] /home/epixors/.gradle/caches/transforms-3/0095671cf0de38f4511901b8a19cba12/transformed/startup-runtime-1.1.1/AndroidManifest.xml:26:9-30:34
+	tools:node
+		ADDED from [androidx.emoji2:emoji2:1.2.0] /home/epixors/.gradle/caches/transforms-3/3a7ada3a889b9ea2c31a262f7dbe4410/transformed/emoji2-1.2.0/AndroidManifest.xml:28:13-31
+	android:authorities
+		ADDED from [androidx.emoji2:emoji2:1.2.0] /home/epixors/.gradle/caches/transforms-3/3a7ada3a889b9ea2c31a262f7dbe4410/transformed/emoji2-1.2.0/AndroidManifest.xml:26:13-68
+	android:exported
+		ADDED from [androidx.emoji2:emoji2:1.2.0] /home/epixors/.gradle/caches/transforms-3/3a7ada3a889b9ea2c31a262f7dbe4410/transformed/emoji2-1.2.0/AndroidManifest.xml:27:13-37
+	android:name
+		ADDED from [androidx.emoji2:emoji2:1.2.0] /home/epixors/.gradle/caches/transforms-3/3a7ada3a889b9ea2c31a262f7dbe4410/transformed/emoji2-1.2.0/AndroidManifest.xml:25:13-67
+meta-data#androidx.emoji2.text.EmojiCompatInitializer
+ADDED from [androidx.emoji2:emoji2:1.2.0] /home/epixors/.gradle/caches/transforms-3/3a7ada3a889b9ea2c31a262f7dbe4410/transformed/emoji2-1.2.0/AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.emoji2:emoji2:1.2.0] /home/epixors/.gradle/caches/transforms-3/3a7ada3a889b9ea2c31a262f7dbe4410/transformed/emoji2-1.2.0/AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.emoji2:emoji2:1.2.0] /home/epixors/.gradle/caches/transforms-3/3a7ada3a889b9ea2c31a262f7dbe4410/transformed/emoji2-1.2.0/AndroidManifest.xml:30:17-75
+permission#${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.12.0] /home/epixors/.gradle/caches/transforms-3/8775ed491970576126584cf24be3fe11/transformed/core-1.12.0/AndroidManifest.xml:22:5-24:47
+	android:protectionLevel
+		ADDED from [androidx.core:core:1.12.0] /home/epixors/.gradle/caches/transforms-3/8775ed491970576126584cf24be3fe11/transformed/core-1.12.0/AndroidManifest.xml:24:9-44
+	android:name
+		ADDED from [androidx.core:core:1.12.0] /home/epixors/.gradle/caches/transforms-3/8775ed491970576126584cf24be3fe11/transformed/core-1.12.0/AndroidManifest.xml:23:9-81
+permission#com.campaigntool.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.12.0] /home/epixors/.gradle/caches/transforms-3/8775ed491970576126584cf24be3fe11/transformed/core-1.12.0/AndroidManifest.xml:22:5-24:47
+	android:protectionLevel
+		ADDED from [androidx.core:core:1.12.0] /home/epixors/.gradle/caches/transforms-3/8775ed491970576126584cf24be3fe11/transformed/core-1.12.0/AndroidManifest.xml:24:9-44
+	android:name
+		ADDED from [androidx.core:core:1.12.0] /home/epixors/.gradle/caches/transforms-3/8775ed491970576126584cf24be3fe11/transformed/core-1.12.0/AndroidManifest.xml:23:9-81
+uses-permission#${applicationId}.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.12.0] /home/epixors/.gradle/caches/transforms-3/8775ed491970576126584cf24be3fe11/transformed/core-1.12.0/AndroidManifest.xml:26:5-97
+	android:name
+		ADDED from [androidx.core:core:1.12.0] /home/epixors/.gradle/caches/transforms-3/8775ed491970576126584cf24be3fe11/transformed/core-1.12.0/AndroidManifest.xml:26:22-94
+uses-permission#com.campaigntool.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+ADDED from [androidx.core:core:1.12.0] /home/epixors/.gradle/caches/transforms-3/8775ed491970576126584cf24be3fe11/transformed/core-1.12.0/AndroidManifest.xml:26:5-97
+	android:name
+		ADDED from [androidx.core:core:1.12.0] /home/epixors/.gradle/caches/transforms-3/8775ed491970576126584cf24be3fe11/transformed/core-1.12.0/AndroidManifest.xml:26:22-94
+meta-data#androidx.lifecycle.ProcessLifecycleInitializer
+ADDED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/epixors/.gradle/caches/transforms-3/44cc79cfd0a36b173e6d243d6e0a0363/transformed/lifecycle-process-2.6.1/AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/epixors/.gradle/caches/transforms-3/44cc79cfd0a36b173e6d243d6e0a0363/transformed/lifecycle-process-2.6.1/AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.lifecycle:lifecycle-process:2.6.1] /home/epixors/.gradle/caches/transforms-3/44cc79cfd0a36b173e6d243d6e0a0363/transformed/lifecycle-process-2.6.1/AndroidManifest.xml:30:17-78
+meta-data#androidx.profileinstaller.ProfileInstallerInitializer
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:29:13-31:52
+	android:value
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:31:17-49
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:30:17-85
+receiver#androidx.profileinstaller.ProfileInstallReceiver
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:34:9-52:20
+	android:enabled
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:37:13-35
+	android:exported
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:38:13-36
+	android:permission
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:39:13-57
+	android:directBootAware
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:36:13-44
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:35:13-76
+intent-filter#action:name:androidx.profileinstaller.action.INSTALL_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:40:13-42:29
+action#androidx.profileinstaller.action.INSTALL_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:41:17-91
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:41:25-88
+intent-filter#action:name:androidx.profileinstaller.action.SKIP_FILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:43:13-45:29
+action#androidx.profileinstaller.action.SKIP_FILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:44:17-85
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:44:25-82
+intent-filter#action:name:androidx.profileinstaller.action.SAVE_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:46:13-48:29
+action#androidx.profileinstaller.action.SAVE_PROFILE
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:47:17-88
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:47:25-85
+intent-filter#action:name:androidx.profileinstaller.action.BENCHMARK_OPERATION
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:49:13-51:29
+action#androidx.profileinstaller.action.BENCHMARK_OPERATION
+ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:50:17-95
+	android:name
+		ADDED from [androidx.profileinstaller:profileinstaller:1.3.0] /home/epixors/.gradle/caches/transforms-3/90a64130ec507173f2e223ecf3b43bfc/transformed/profileinstaller-1.3.0/AndroidManifest.xml:50:25-92
+service#com.google.android.datatransport.runtime.backends.TransportBackendDiscovery
+ADDED from [com.google.android.datatransport:transport-backend-cct:3.1.3] /home/epixors/.gradle/caches/transforms-3/c9e4af1d25195066228b6078f3674f80/transformed/transport-backend-cct-3.1.3/AndroidManifest.xml:29:9-35:19
+MERGED from [com.google.android.datatransport:transport-runtime:3.1.3] /home/epixors/.gradle/caches/transforms-3/d54a0071b19f5e3baa64f8cd53204fec/transformed/transport-runtime-3.1.3/AndroidManifest.xml:36:9-38:40
+MERGED from [com.google.android.datatransport:transport-runtime:3.1.3] /home/epixors/.gradle/caches/transforms-3/d54a0071b19f5e3baa64f8cd53204fec/transformed/transport-runtime-3.1.3/AndroidManifest.xml:36:9-38:40
+	android:exported
+		ADDED from [com.google.android.datatransport:transport-backend-cct:3.1.3] /home/epixors/.gradle/caches/transforms-3/c9e4af1d25195066228b6078f3674f80/transformed/transport-backend-cct-3.1.3/AndroidManifest.xml:31:13-37
+	android:name
+		ADDED from [com.google.android.datatransport:transport-backend-cct:3.1.3] /home/epixors/.gradle/caches/transforms-3/c9e4af1d25195066228b6078f3674f80/transformed/transport-backend-cct-3.1.3/AndroidManifest.xml:30:13-103
+meta-data#backend:com.google.android.datatransport.cct.CctBackendFactory
+ADDED from [com.google.android.datatransport:transport-backend-cct:3.1.3] /home/epixors/.gradle/caches/transforms-3/c9e4af1d25195066228b6078f3674f80/transformed/transport-backend-cct-3.1.3/AndroidManifest.xml:32:13-34:39
+	android:value
+		ADDED from [com.google.android.datatransport:transport-backend-cct:3.1.3] /home/epixors/.gradle/caches/transforms-3/c9e4af1d25195066228b6078f3674f80/transformed/transport-backend-cct-3.1.3/AndroidManifest.xml:34:17-36
+	android:name
+		ADDED from [com.google.android.datatransport:transport-backend-cct:3.1.3] /home/epixors/.gradle/caches/transforms-3/c9e4af1d25195066228b6078f3674f80/transformed/transport-backend-cct-3.1.3/AndroidManifest.xml:33:17-94
+service#com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService
+ADDED from [com.google.android.datatransport:transport-runtime:3.1.3] /home/epixors/.gradle/caches/transforms-3/d54a0071b19f5e3baa64f8cd53204fec/transformed/transport-runtime-3.1.3/AndroidManifest.xml:26:9-30:19
+	android:exported
+		ADDED from [com.google.android.datatransport:transport-runtime:3.1.3] /home/epixors/.gradle/caches/transforms-3/d54a0071b19f5e3baa64f8cd53204fec/transformed/transport-runtime-3.1.3/AndroidManifest.xml:28:13-37
+	android:permission
+		ADDED from [com.google.android.datatransport:transport-runtime:3.1.3] /home/epixors/.gradle/caches/transforms-3/d54a0071b19f5e3baa64f8cd53204fec/transformed/transport-runtime-3.1.3/AndroidManifest.xml:29:13-69
+	android:name
+		ADDED from [com.google.android.datatransport:transport-runtime:3.1.3] /home/epixors/.gradle/caches/transforms-3/d54a0071b19f5e3baa64f8cd53204fec/transformed/transport-runtime-3.1.3/AndroidManifest.xml:27:13-117
+receiver#com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver
+ADDED from [com.google.android.datatransport:transport-runtime:3.1.3] /home/epixors/.gradle/caches/transforms-3/d54a0071b19f5e3baa64f8cd53204fec/transformed/transport-runtime-3.1.3/AndroidManifest.xml:32:9-34:40
+	android:exported
+		ADDED from [com.google.android.datatransport:transport-runtime:3.1.3] /home/epixors/.gradle/caches/transforms-3/d54a0071b19f5e3baa64f8cd53204fec/transformed/transport-runtime-3.1.3/AndroidManifest.xml:34:13-37
+	android:name
+		ADDED from [com.google.android.datatransport:transport-runtime:3.1.3] /home/epixors/.gradle/caches/transforms-3/d54a0071b19f5e3baa64f8cd53204fec/transformed/transport-runtime-3.1.3/AndroidManifest.xml:33:13-132

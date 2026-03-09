@@ -1,0 +1,10 @@
+R_DEF: Internal format may change without notice
+local
+id cast_gesture_zone
+id media_route_menu_item
+id webview
+layout activity_main
+menu main_menu
+mipmap ic_launcher
+mipmap ic_launcher_round
+string app_name

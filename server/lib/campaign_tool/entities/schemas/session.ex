@@ -27,6 +27,11 @@ defmodule CampaignTool.Entities.Schemas.Session do
   end
 
   def changeset(session, attrs) do
+    attrs = case Map.get(attrs, "scenes") do
+      scenes when is_list(scenes) -> Map.put(attrs, "scenes", Jason.encode!(scenes))
+      _ -> attrs
+    end
+
     session
     |> cast(attrs, [
       :id, :title, :session_number, :status, :scheduled_date, :actual_date,
