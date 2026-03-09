@@ -185,6 +185,10 @@ defmodule CampaignToolWeb.SessionRunnerLive do
   def handle_info({"fog_update", {:partial_reveal, revealed}}, socket) do
     {:noreply, push_event(socket, "fog_state", %{fog_grid: %{mode: "partial_reveal", revealed: revealed}})}
   end
+  # Delta updates from brush strokes — fog editor already updated its local state,
+  # so no push_event needed here.
+  def handle_info({"fog_update", {:delta_reveal, _}}, socket), do: {:noreply, socket}
+  def handle_info({"fog_update", {:delta_cover, _}}, socket), do: {:noreply, socket}
   def handle_info({"fog_update", fog_grid}, socket) do
     {:noreply, push_event(socket, "fog_state", %{fog_grid: fog_grid})}
   end

@@ -214,6 +214,33 @@
       sfx.play().catch(e => console.warn('SFX play blocked:', e));
     }
 
+    // ── Incremental fog update (O(delta) instead of O(total cells)) ──────────────
+    function applyFogDelta(fg) {
+      const m = getGridMetrics(canvas);
+      if (!m) { applyFogState(fg); drawFog(); return; } // fallback if grid unknown
+      const { ox, oy, cellW: cs } = m;
+
+      if (fg.type === 'delta_reveal') {
+        if (fogAll) {
+          // Transition all_fogged → partial_reveal; canvas is already black
+          fogAll = false; fogPartial = true; fogGrid = {};
+        }
+        ctx.clearRect(0, 0, 0, 0); // no-op to start (cells cleared below)
+        for (const key of fg.cells) {
+          if (fogPartial) fogGrid[key] = true; else delete fogGrid[key];
+          const [r, c] = key.split(',').map(Number);
+          ctx.clearRect(ox + c * cs, oy + r * cs, cs, cs);
+        }
+      } else { // delta_cover
+        ctx.fillStyle = 'rgba(0,0,0,1)';
+        for (const key of fg.cells) {
+          if (fogPartial) delete fogGrid[key]; else fogGrid[key] = true;
+          const [r, c] = key.split(',').map(Number);
+          ctx.fillRect(ox + c * cs, oy + r * cs, cs, cs);
+        }
+      }
+    }
+
     // ── Fog state helpers ────────────────────────────────────────────────────────
     // fog_grid from server can be:
     //   "all_fogged"                          → entire map black
@@ -251,8 +278,12 @@
       });
 
       channel.on('fog_update', ({ fog_grid }) => {
-        applyFogState(fog_grid);
-        drawFog();
+        if (fog_grid && (fog_grid.type === 'delta_reveal' || fog_grid.type === 'delta_cover')) {
+          applyFogDelta(fog_grid);
+        } else {
+          applyFogState(fog_grid);
+          drawFog();
+        }
       });
 
       channel.on('drawing_stroke', stroke => {

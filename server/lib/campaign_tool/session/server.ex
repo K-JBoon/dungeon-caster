@@ -60,28 +60,37 @@ defmodule CampaignTool.Session.Server do
   # fog_grid states: %{} = clear, %{cell => true} = blacklist, :all_fogged = full cover,
   # {:partial_reveal, map} = full cover except whitelisted cells.
 
-  # :all_fogged → reveal cells → transition to {:partial_reveal, revealed_map}
-  # {:partial_reveal, map} means "entire map fogged except these cells"
+  # fog_grid states: %{} = clear, %{cell => true} = blacklist, :all_fogged = full cover,
+  # {:partial_reveal, map} = full cover except whitelisted cells.
+  #
+  # Incremental brush strokes broadcast only the delta cells (newly revealed/covered)
+  # so the payload stays O(stroke size) rather than O(total revealed area).
+  # Bulk operations (hide_all, reveal_all, set_map) still send the full state.
+
   def handle_call({:reveal_cells, cells}, _from, %{fog_grid: :all_fogged} = state) do
-    revealed = Enum.reduce(cells, %{}, fn cell, acc -> Map.put(acc, cell, true) end)
-    new_fog = {:partial_reveal, revealed}
-    new_state = %{state | fog_grid: new_fog}
-    broadcast(state.session_id, "fog_update", new_fog)
+    new_revealed = Map.new(cells, &{&1, true})
+    new_state = %{state | fog_grid: {:partial_reveal, new_revealed}}
+    broadcast(state.session_id, "fog_update", {:delta_reveal, cells})
     {:reply, :ok, new_state}
   end
 
   def handle_call({:reveal_cells, cells}, _from, %{fog_grid: {:partial_reveal, revealed}} = state) do
-    new_revealed = Enum.reduce(cells, revealed, fn cell, acc -> Map.put(acc, cell, true) end)
-    new_fog = {:partial_reveal, new_revealed}
-    new_state = %{state | fog_grid: new_fog}
-    broadcast(state.session_id, "fog_update", new_fog)
+    new_cells = Enum.reject(cells, &Map.has_key?(revealed, &1))
+    new_revealed = Enum.reduce(new_cells, revealed, &Map.put(&2, &1, true))
+    new_state = %{state | fog_grid: {:partial_reveal, new_revealed}}
+    broadcast(state.session_id, "fog_update", {:delta_reveal, new_cells})
     {:reply, :ok, new_state}
   end
 
   def handle_call({:reveal_cells, cells}, _from, state) do
-    fog = Enum.reduce(cells, state.fog_grid, fn cell, acc -> Map.delete(acc, cell) end)
-    new_state = %{state | fog_grid: fog}
-    broadcast(state.session_id, "fog_update", fog)
+    {newly_revealed, new_fog} =
+      Enum.reduce(cells, {[], state.fog_grid}, fn cell, {acc, grid} ->
+        if Map.has_key?(grid, cell),
+          do: {[cell | acc], Map.delete(grid, cell)},
+          else: {acc, grid}
+      end)
+    new_state = %{state | fog_grid: new_fog}
+    broadcast(state.session_id, "fog_update", {:delta_reveal, newly_revealed})
     {:reply, :ok, new_state}
   end
 
@@ -90,17 +99,26 @@ defmodule CampaignTool.Session.Server do
   end
 
   def handle_call({:hide_cells, cells}, _from, %{fog_grid: {:partial_reveal, revealed}} = state) do
-    new_revealed = Enum.reduce(cells, revealed, fn cell, acc -> Map.delete(acc, cell) end)
-    new_fog = {:partial_reveal, new_revealed}
-    new_state = %{state | fog_grid: new_fog}
-    broadcast(state.session_id, "fog_update", new_fog)
+    {newly_covered, new_revealed} =
+      Enum.reduce(cells, {[], revealed}, fn cell, {acc, grid} ->
+        if Map.has_key?(grid, cell),
+          do: {[cell | acc], Map.delete(grid, cell)},
+          else: {acc, grid}
+      end)
+    new_state = %{state | fog_grid: {:partial_reveal, new_revealed}}
+    broadcast(state.session_id, "fog_update", {:delta_cover, newly_covered})
     {:reply, :ok, new_state}
   end
 
   def handle_call({:hide_cells, cells}, _from, state) do
-    fog = Enum.reduce(cells, state.fog_grid, fn cell, acc -> Map.put(acc, cell, true) end)
-    new_state = %{state | fog_grid: fog}
-    broadcast(state.session_id, "fog_update", fog)
+    {newly_covered, new_fog} =
+      Enum.reduce(cells, {[], state.fog_grid}, fn cell, {acc, grid} ->
+        if not Map.has_key?(grid, cell),
+          do: {[cell | acc], Map.put(grid, cell, true)},
+          else: {acc, grid}
+      end)
+    new_state = %{state | fog_grid: new_fog}
+    broadcast(state.session_id, "fog_update", {:delta_cover, newly_covered})
     {:reply, :ok, new_state}
   end
 
