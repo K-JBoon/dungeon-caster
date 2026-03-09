@@ -11,6 +11,7 @@ defmodule CampaignToolWeb.SessionChannel do
         state = Server.get_state(session_id)
         initial = %{
           current_map: state.current_map,
+          current_map_asset: state.current_map_asset,
           fog_grid: serialize_fog(state.fog_grid),
           audio_state: state.audio_state,
           drawings: Enum.reverse(state.drawings),
