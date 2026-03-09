@@ -19,6 +19,18 @@ defmodule CampaignToolWeb.Endpoint do
     websocket: true,
     longpoll: false
 
+  # Serve phoenix.js UMD build for non-LiveView pages (e.g. Chromecast receiver)
+  plug Plug.Static,
+    at: "/assets",
+    from: {:phoenix, "priv/static"},
+    only: ~w(phoenix.js)
+
+  # Serve vendored JS libraries (qrcode.min.js etc.) at /assets/
+  plug Plug.Static,
+    at: "/assets",
+    from: Path.expand("../../assets/vendor", __DIR__),
+    only: ~w(qrcode.min.js)
+
   # Serve at "/" the static files from "priv/static" directory.
   #
   # When code reloading is disabled (e.g., in production),

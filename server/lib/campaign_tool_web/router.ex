@@ -36,6 +36,7 @@ defmodule CampaignToolWeb.Router do
 
     get "/health", HealthController, :index
     get "/receiver", ReceiverController, :index
+    get "/sessions/:id/draw", PlayerDrawController, :index
     get "/audio/*path", AudioController, :stream
     get "/maps/assets/*path", MapAssetController, :show
   end
