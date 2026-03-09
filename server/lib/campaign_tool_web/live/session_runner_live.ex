@@ -107,9 +107,43 @@ defmodule CampaignToolWeb.SessionRunnerLive do
   end
 
   def handle_event("set_map", %{"map_id" => map_id}, socket) do
-    Server.set_map(socket.assigns.session_id, map_id)
+    map_entity = Enum.find(socket.assigns.session_maps, &(&1.id == map_id))
+    asset = if map_entity && map_entity.asset_path != "",
+      do: Path.basename(map_entity.asset_path),
+      else: map_id <> ".png"
+    {grid_cols, grid_rows} = image_grid_dims(map_entity && map_entity.asset_path)
+    Server.set_map(socket.assigns.session_id, map_id, asset, grid_cols, grid_rows)
     state = Server.get_state(socket.assigns.session_id)
     {:noreply, assign(socket, server_state: state)}
+  end
+
+  def handle_event("toggle_player_qr", _, socket) do
+    Server.toggle_player_qr(socket.assigns.session_id)
+    state = Server.get_state(socket.assigns.session_id)
+    {:noreply, assign(socket, server_state: state)}
+  end
+
+  def handle_event("clear_all_drawings", _, socket) do
+    Server.clear_all_drawings(socket.assigns.session_id)
+    {:noreply, socket}
+  end
+
+  # Read width/height from PNG file header (bytes 16-23) and compute grid dimensions.
+  # Falls back to a sensible default for non-PNG or missing files.
+  defp image_grid_dims(nil), do: {96, 54}
+  defp image_grid_dims(""), do: {96, 54}
+  defp image_grid_dims(asset_path) do
+    campaign_dir = Application.get_env(:campaign_tool, :campaign_dir) |> Path.expand()
+    path = Path.join([campaign_dir, "maps", asset_path])
+    try do
+      {:ok, fd} = :file.open(String.to_charlist(path), [:read, :binary])
+      {:ok, _} = :file.position(fd, 16)
+      {:ok, <<w::32-big, h::32-big>>} = :file.read(fd, 8)
+      :file.close(fd)
+      {ceil(w / 20), ceil(h / 20)}
+    rescue
+      _ -> {96, 54}
+    end
   end
 
   # ── Audio events ───────────────────────────────────────────────────────────
@@ -386,6 +420,17 @@ defmodule CampaignToolWeb.SessionRunnerLive do
         <button phx-click="reveal_all" class="btn btn-xs btn-ghost" title="Disable fog of war">
           ☀️ Clear
         </button>
+
+        <%!-- QR code toggle --%>
+        <button phx-click="toggle_player_qr"
+                class={["btn btn-xs", if(@server_state.show_player_qr, do: "btn-primary", else: "btn-ghost")]}>
+          📱 QR
+        </button>
+
+        <%!-- Clear all player drawings --%>
+        <button phx-click="clear_all_drawings" class="btn btn-xs btn-ghost">
+          🗑 Drawings
+        </button>
       </div>
 
       <div class="flex-1 relative overflow-hidden bg-black">
@@ -397,9 +442,11 @@ defmodule CampaignToolWeb.SessionRunnerLive do
           <canvas id="fog-editor"
             data-session-id={@session_id}
             data-cell-size="20"
+            data-grid-cols={@server_state.grid_cols}
+            data-grid-rows={@server_state.grid_rows}
             data-fog-mode={@fog_mode}
             phx-hook="FogEditor"
-            class="absolute inset-0 w-full h-full cursor-crosshair">
+            class="absolute inset-0 w-full h-full cursor-crosshair touch-none">
           </canvas>
         <% else %>
           <div class="absolute inset-0 flex items-center justify-center text-white/40">
