@@ -125,7 +125,8 @@ defmodule CampaignToolWeb.SessionRunnerLive do
 
   def handle_event("clear_all_drawings", _, socket) do
     Server.clear_all_drawings(socket.assigns.session_id)
-    {:noreply, socket}
+    state = Server.get_state(socket.assigns.session_id)
+    {:noreply, assign(socket, server_state: state)}
   end
 
   # Read width/height from PNG file header (bytes 16-23) and compute grid dimensions.
@@ -186,6 +187,12 @@ defmodule CampaignToolWeb.SessionRunnerLive do
   end
   def handle_info({"fog_update", fog_grid}, socket) do
     {:noreply, push_event(socket, "fog_state", %{fog_grid: fog_grid})}
+  end
+  def handle_info({"qr_toggle", _}, socket) do
+    # Refresh server_state so the QR toolbar button active state stays in sync
+    # when the toggle is triggered by an external source (e.g. map change)
+    state = Server.get_state(socket.assigns.session_id)
+    {:noreply, assign(socket, server_state: state)}
   end
   def handle_info(_, socket), do: {:noreply, socket}
 
