@@ -45,7 +45,7 @@
       background: rgba(0,0,0,0.75);
       align-items: center;
       justify-content: center;
-      z-index: 10;
+      z-index: 20;
     }
     #qr-overlay.visible {
       display: flex;
@@ -89,7 +89,6 @@
   <script>
     // ── Configuration ──────────────────────────────────────────────────────────
     const CAST_NAMESPACE = 'urn:x-cast:com.campaigntool';
-    const CELL_SIZE = 20; // px per fog grid cell
 
     // ── DOM refs ────────────────────────────────────────────────────────────────
     const mapImg = document.getElementById('map-img');
@@ -104,6 +103,7 @@
     let fogGrid = {};      // cell map; meaning depends on fogPartial
     let fogAll = true;     // start fully fogged; server state overrides on join
     let fogPartial = false;// true → fogGrid is whitelist (revealed), rest is black
+    let gridCols = 0, gridRows = 0; // server-supplied grid layout
     let ambientAudio = null;
     let volume = { master: 80, ambient: 80, sfx: 80 };
     let drawStrokes = [];
