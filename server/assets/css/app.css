@@ -213,6 +213,7 @@
   cursor: grab;
   user-select: none;
   flex-shrink: 0;
+  touch-action: none;
 }
 .entity-popover-header:active { cursor: grabbing; }
 .entity-popover-type {
@@ -260,13 +261,25 @@
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
 }
+.entity-popover.collapsed {
+  min-height: 0;
+  height: auto !important;
+}
+.entity-popover.collapsed .entity-popover-content,
+.entity-popover.collapsed .entity-popover-resize {
+  display: none;
+}
+.entity-popover.collapsed .entity-popover-header {
+  border-bottom: none;
+}
 .entity-popover-resize {
   position: absolute;
   bottom: 0;
   right: 0;
-  width: 18px;
-  height: 18px;
+  width: 36px;
+  height: 36px;
   cursor: se-resize;
+  touch-action: none;
   background:
     linear-gradient(135deg, transparent 50%, var(--color-base-300) 50%),
     linear-gradient(135deg, transparent 60%, var(--color-base-300) 60%);

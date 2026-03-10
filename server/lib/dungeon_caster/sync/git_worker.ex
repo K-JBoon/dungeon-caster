@@ -27,7 +27,7 @@ defmodule DungeonCaster.Sync.GitWorker do
       # git diff --cached --quiet exits 1 when there ARE staged changes
       # OR git add failed
       _ ->
-        case System.cmd("git", ["commit", "-m", "Campaign Tool auto-save"], cd: dir, env: env, stderr_to_stdout: true) do
+        case System.cmd("git", ["commit", "-m", "Dungeon Caster auto-save"], cd: dir, env: env, stderr_to_stdout: true) do
           {_, 0} ->
             Logger.info("GitWorker: committed changes in #{dir}")
             push(dir, env)

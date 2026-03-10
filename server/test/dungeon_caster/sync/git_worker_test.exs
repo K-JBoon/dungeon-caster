@@ -16,7 +16,7 @@ defmodule DungeonCaster.Sync.GitWorkerTest do
     File.write!(Path.join(tmp, "test.md"), "hello world")
     assert :ok = DungeonCaster.Sync.GitWorker.git_commit(tmp)
     {log, 0} = System.cmd("git", ["log", "--oneline"], cd: tmp)
-    assert log =~ "Campaign Tool auto-save"
+    assert log =~ "Dungeon Caster auto-save"
   end
 
   test "git_commit/1 returns :ok even with nothing to commit", %{tmp: tmp} do

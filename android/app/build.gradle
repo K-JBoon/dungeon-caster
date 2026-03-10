@@ -20,7 +20,7 @@ android {
         versionCode 1
         versionName "1.0"
 
-        buildConfigField "String", "CAST_APP_ID", "\"${localProps.getProperty('CAST_APP_ID', 'YOUR_APP_ID_HERE')}\""
+        buildConfigField "String", "CAST_APP_ID", "\"${localProps.getProperty('CAST_APP_ID', '2D2B117D')}\""
     }
 
     buildTypes {

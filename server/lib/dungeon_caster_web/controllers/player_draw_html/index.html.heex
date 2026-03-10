@@ -84,7 +84,7 @@
 
   <script>
     const SESSION_ID = document.body.dataset.sessionId;
-    const COLORS = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#1abc9c','#ffffff'];
+    const COLORS = ['#e74c3c','#e67e22','#2ecc71','#3498db','#9b59b6'];
     const CELL_SIZE = 20;
 
     function genUUID() {
@@ -162,13 +162,32 @@
     new ResizeObserver(resizeCanvases).observe(container);
     mapImg.addEventListener('load', resizeCanvases);
 
-    // Grid metrics — mirrors receiver's getGridMetrics(); no image-load dependency.
-    // Falls back to full-canvas extent when gridCols/gridRows aren't known yet.
+    function getMapRect() {
+      const cw = drawCv.width;
+      const ch = drawCv.height;
+
+      const iw = mapImg.naturalWidth;
+      const ih = mapImg.naturalHeight;
+
+      if (!iw || !ih) return null;
+
+      const scale = Math.min(cw / iw, ch / ih);
+
+      const w = iw * scale;
+      const h = ih * scale;
+
+      const x = (cw - w) / 2;
+      const y = (ch - h) / 2;
+
+      return {x, y, w, h};
+    }
+    // Grid metrics for fog/rendering — uses canvas buffer dimensions (image area only).
     function getGridMetrics(cvs) {
-      if (!gridCols || !gridRows) return {ox: 0, oy: 0, iw: cvs.width, ih: cvs.height};
-      const cellW = Math.min(cvs.width / gridCols, cvs.height / gridRows);
+      const w = cvs.width, h = cvs.height;
+      if (!gridCols || !gridRows) return {ox: 0, oy: 0, iw: w, ih: h};
+      const cellW = Math.min(w / gridCols, h / gridRows);
       const iw = gridCols * cellW, ih = gridRows * cellW;
-      return {ox: (cvs.width - iw) / 2, oy: (cvs.height - ih) / 2, iw, ih};
+      return {ox: (w - iw) / 2, oy: (h - ih) / 2, iw, ih};
     }
 
     // Fog rendering
@@ -191,7 +210,7 @@
           fogCtx.clearRect(m.ox + c * cs, m.oy + r * cs, cs, cs);
         }
       } else {
-        fogCtx.fillStyle = 'rgba(0,0,0,0.85)';
+        fogCtx.fillStyle = 'rgba(0,0,0,1)';
         for (const key of fg.cells) {
           if (fogPartial) delete fogGrid[key]; else fogGrid[key] = true;
           const [r, c] = key.split(',').map(Number);
@@ -202,7 +221,7 @@
 
     function drawFog() {
       fogCtx.clearRect(0, 0, fogCv.width, fogCv.height);
-      fogCtx.fillStyle = 'rgba(0,0,0,0.85)';
+      fogCtx.fillStyle = 'rgba(0,0,0,1)';
       if (fogAll) { fogCtx.fillRect(0, 0, fogCv.width, fogCv.height); return; }
       const m = getGridMetrics(fogCv);
       if (!m || m.iw === 0) return;
@@ -221,9 +240,12 @@
       }
     }
 
-    // Drawing rendering
+    // Drawing rendering — coordinates are fractions of the full canvas (0–1), so render
+    // directly relative to the canvas buffer size with no letterbox offset.
     function renderStrokes(strokeList) {
-      const m = getGridMetrics(drawCv);
+      const map = getMapRect();
+      if (!map) return;
+
       drawCtx.clearRect(0, 0, drawCv.width, drawCv.height);
       for (const s of strokeList) {
         if (!s.points || s.points.length < 2) continue;
@@ -240,10 +262,10 @@
         drawCtx.lineJoin   = 'round';
         drawCtx.beginPath();
         const p0 = s.points[0];
-        drawCtx.moveTo(m.ox + p0.x * m.iw, m.oy + p0.y * m.ih);
+        drawCtx.moveTo(map.x + p0.x * map.w, map.y + p0.y * map.h);
         for (let i = 1; i < s.points.length; i++) {
           const p = s.points[i];
-          drawCtx.lineTo(m.ox + p.x * m.iw, m.oy + p.y * m.ih);
+          drawCtx.lineTo(map.x + p.x * map.w, map.y + p.y * map.h);
         }
         drawCtx.stroke();
         drawCtx.restore();
@@ -252,14 +274,25 @@
 
     function redrawAll() { drawFog(); renderStrokes(strokes); }
 
-    // Pointer input
+    // Normalise pointer position as a fraction of the full canvas (0–1 each axis).
+    // Using the full canvas — not just the letterboxed image area — means the entire
+    // phone screen maps onto the receiver's image area, so corner-to-corner draws
+    // appear corner-to-corner on the projector.
     function normalizePoint(clientX, clientY) {
       const rect = drawCv.getBoundingClientRect();
-      const x = clientX - rect.left;
-      const y = clientY - rect.top;
-      const m = getGridMetrics(drawCv);
-      if (m.iw === 0 || m.ih === 0) return null;
-      return {x: (x - m.ox) / m.iw, y: (y - m.oy) / m.ih};
+      const map = getMapRect();
+      if (!map) return null;
+
+      const px = (clientX - rect.left) * (drawCv.width / rect.width);
+      const py = (clientY - rect.top)  * (drawCv.height / rect.height);
+
+      if (px < map.x || px > map.x + map.w || py < map.y || py > map.y + map.h)
+        return null;
+
+      return {
+        x: (px - map.x) / map.w,
+        y: (py - map.y) / map.h
+      };
     }
 
     drawCv.addEventListener('pointerdown', e => {

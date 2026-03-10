@@ -59,9 +59,19 @@ const EntityPopover = {
   },
 
   _makeDraggable(win, handle) {
+    let lastTap = 0
     handle.addEventListener('pointerdown', (e) => {
       if (win._fullscreen) return
       if (e.target.closest('button')) return
+
+      const now = Date.now()
+      if (now - lastTap < 300) {
+        lastTap = 0
+        this._toggleCollapse(win)
+        return
+      }
+      lastTap = now
+
       e.preventDefault()
 
       const startX = e.clientX, startY = e.clientY
@@ -105,6 +115,17 @@ const EntityPopover = {
       document.addEventListener('pointerup', onUp)
       handle.setPointerCapture(e.pointerId)
     })
+  },
+
+  _toggleCollapse(win) {
+    if (win._fullscreen) return
+    if (win.classList.contains('collapsed')) {
+      win.classList.remove('collapsed')
+      if (win._savedHeightBeforeCollapse) win.style.height = win._savedHeightBeforeCollapse
+    } else {
+      win._savedHeightBeforeCollapse = win.style.height
+      win.classList.add('collapsed')
+    }
   },
 
   _toggleFullscreen(win) {

@@ -88,7 +88,7 @@
 
   <script>
     // ── Configuration ──────────────────────────────────────────────────────────
-    const CAST_NAMESPACE = 'urn:x-cast:com.campaigntool';
+    const CAST_NAMESPACE = 'urn:x-cast:com.dungeoncaster';
 
     // ── DOM refs ────────────────────────────────────────────────────────────────
     const mapImg = document.getElementById('map-img');
@@ -131,12 +131,15 @@
 
     // ── Drawing rendering ────────────────────────────────────────────────────────
     function renderDrawings() {
-      const m = getGridMetrics(drawCanvas);
-      const ox = m ? m.ox : 0;
-      const oy = m ? m.oy : 0;
-      const iw = m ? gridCols * m.cellW : drawCanvas.width;
-      const ih = m ? gridRows * m.cellW : drawCanvas.height;
+      const rect = mapImg.getBoundingClientRect();
+
+      const ox = rect.left;
+      const oy = rect.top;
+      const iw = rect.width;
+      const ih = rect.height;
+
       drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+
       for (const s of drawStrokes) {
         if (!s.points || s.points.length < 2) continue;
         drawCtx.save();
@@ -152,9 +155,15 @@
         drawCtx.lineJoin  = 'round';
         drawCtx.beginPath();
         const p0 = s.points[0];
-        drawCtx.moveTo(ox + p0.x * iw, oy + p0.y * ih);
+        drawCtx.moveTo(
+          (ox - mapImg.offsetLeft) + p0.x * iw,
+          (oy - mapImg.offsetTop) + p0.y * ih
+        );
         for (let i = 1; i < s.points.length; i++) {
-          drawCtx.lineTo(ox + s.points[i].x * iw, oy + s.points[i].y * ih);
+          drawCtx.lineTo(
+            (ox - mapImg.offsetLeft) + s.points[i].x * iw,
+            (oy - mapImg.offsetTop) + s.points[i].y * ih
+          );
         }
         drawCtx.stroke();
         drawCtx.restore();

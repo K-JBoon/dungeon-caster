@@ -19,7 +19,7 @@ defmodule DungeonCasterWeb.Layouts do
       <%!-- Sidebar --%>
       <nav class="w-56 shrink-0 bg-base-300 flex flex-col gap-1 p-3 overflow-y-auto">
         <a href="/" class="flex items-center gap-2 px-2 py-3 mb-2">
-          <span class="text-lg font-bold text-primary">Campaign Tool</span>
+          <span class="text-lg font-bold text-primary">Dungeon Caster</span>
         </a>
         <p class="text-xs uppercase tracking-wider text-base-content/50 px-2 mb-1">Entities</p>
         <%= for {type, label, icon} <- [
