@@ -1,16 +1,20 @@
 defmodule DungeonCasterWeb.SessionPlannerLive do
   use DungeonCasterWeb, :live_view
   alias DungeonCaster.{Entities, Session.Server, Audio}
+  alias DungeonCaster.Markdown
+  alias DungeonCasterWeb.EntityHelpers
 
   def mount(%{"id" => id}, _session, socket) do
     session = Entities.get_entity!("session", id)
     scenes = decode_scenes(session.scenes)
+    linked_entities = collect_linked_entities(session, scenes)
     music = Audio.list_music()
 
     {:ok,
      assign(socket,
        session: session,
        scenes: scenes,
+       linked_entities: linked_entities,
        selected_scene_id: (List.first(scenes) || %{})["id"],
        entity_search: "",
        search_results: [],
@@ -32,7 +36,7 @@ defmodule DungeonCasterWeb.SessionPlannerLive do
     }
     scenes = socket.assigns.scenes ++ [new_scene]
     save_scenes(socket.assigns.session, scenes)
-    {:noreply, assign(socket, scenes: scenes, selected_scene_id: new_scene["id"])}
+    {:noreply, assign(socket, scenes: scenes, selected_scene_id: new_scene["id"], linked_entities: collect_linked_entities(socket.assigns.session, scenes))}
   end
 
   def handle_event("select_scene", %{"id" => id}, socket) do
@@ -46,7 +50,7 @@ defmodule DungeonCasterWeb.SessionPlannerLive do
       if socket.assigns.selected_scene_id == id,
         do: (List.first(scenes) || %{})["id"],
         else: socket.assigns.selected_scene_id
-    {:noreply, assign(socket, scenes: scenes, selected_scene_id: new_selected)}
+    {:noreply, assign(socket, scenes: scenes, selected_scene_id: new_selected, linked_entities: collect_linked_entities(socket.assigns.session, scenes))}
   end
 
   def handle_event("reorder_scenes", %{"ids" => ids}, socket) do
@@ -54,7 +58,7 @@ defmodule DungeonCasterWeb.SessionPlannerLive do
     ordered = Enum.map(ids, fn id -> Enum.find(scenes, &(&1["id"] == id)) end)
               |> Enum.reject(&is_nil/1)
     save_scenes(socket.assigns.session, ordered)
-    {:noreply, assign(socket, scenes: ordered)}
+    {:noreply, assign(socket, scenes: ordered, linked_entities: collect_linked_entities(socket.assigns.session, ordered))}
   end
 
   def handle_event("update_scene", %{"title" => title, "notes" => notes}, socket) do
@@ -65,17 +69,23 @@ defmodule DungeonCasterWeb.SessionPlannerLive do
           else: s
       end)
     save_scenes(socket.assigns.session, scenes)
-    {:noreply, assign(socket, scenes: scenes)}
+    {:noreply, assign(socket, scenes: scenes, linked_entities: collect_linked_entities(socket.assigns.session, scenes))}
   end
 
   # ── Entity search / link ────────────────────────────────────────────────────
 
-  def handle_event("search_entities", %{"q" => q}, socket) when byte_size(q) > 1 do
-    results = Entities.search(q) |> Enum.take(8)
-    {:noreply, assign(socket, search_results: results, entity_search: q)}
+  def handle_event("open_entity_popover", %{"ref" => ref}, socket) do
+    case EntityHelpers.entity_popover_data(ref) do
+      {:ok, data} ->
+        {:noreply, push_event(socket, "entity:popover-open", data)}
+      :error ->
+        {:noreply, socket}
+    end
   end
-  def handle_event("search_entities", _, socket) do
-    {:noreply, assign(socket, search_results: [], entity_search: "")}
+
+  def handle_event("search_entities", %{"q" => q}, socket) do
+    results = EntityHelpers.search_entities(q)
+    {:reply, %{results: results}, socket}
   end
 
   def handle_event("link_entity", %{"ref" => ref}, socket) do
@@ -169,6 +179,19 @@ defmodule DungeonCasterWeb.SessionPlannerLive do
     end
   end
 
+  defp collect_linked_entities(session, scenes) do
+    sources = [session.body_raw || ""] ++ Enum.map(scenes, &(&1["notes"] || ""))
+
+    sources
+    |> Enum.flat_map(&Markdown.extract_entity_refs/1)
+    |> Enum.uniq_by(fn %{type: t, id: id} -> {t, id} end)
+    |> Enum.map(fn %{type: type, id: id} = ref ->
+      entity = Entities.get_entity(type, id)
+      if entity, do: Map.put(ref, :entity, entity), else: nil
+    end)
+    |> Enum.reject(&is_nil/1)
+  end
+
   defp replace_frontmatter_field("---\n" <> rest, field, value) do
     case String.split(rest, "\n---\n", parts: 2) do
       [fm, body] ->
@@ -233,9 +256,11 @@ defmodule DungeonCasterWeb.SessionPlannerLive do
               <input name="title" value={scene["title"]} phx-debounce="500"
                      class="input input-ghost w-full text-lg font-semibold focus:bg-base-200" />
             </div>
-            <textarea name="notes" phx-debounce="800"
-                      class="flex-1 w-full font-mono text-sm p-3 resize-none bg-transparent focus:outline-none"
-                      placeholder="Scene notes (Markdown)..."><%= scene["notes"] %></textarea>
+            <div id={"scene-notes-#{scene["id"]}"} phx-hook="EntityEditor" phx-update="ignore" class="flex-1 flex flex-col min-h-0">
+              <textarea name="notes" phx-debounce="800"
+                        class="flex-1 w-full font-mono text-sm p-3 resize-none bg-transparent focus:outline-none"
+                        placeholder="Scene notes (Markdown)..."><%= scene["notes"] %></textarea>
+            </div>
           </form>
 
           <%!-- Entity linking --%>
@@ -318,55 +343,31 @@ defmodule DungeonCasterWeb.SessionPlannerLive do
       <div class="w-64 shrink-0 border-l border-base-300 overflow-y-auto p-3 space-y-5">
         <% campaign_dir = Application.get_env(:dungeon_caster, :campaign_dir) |> Path.expand() %>
 
-        <%!-- Maps --%>
-        <div>
-          <h4 class="text-xs uppercase tracking-wider text-base-content/50 mb-2">Maps</h4>
-          <% map_ids = @session.map_ids || [] %>
-          <%= if map_ids == [] do %>
-            <p class="text-xs text-base-content/40">No maps linked.</p>
-          <% else %>
-            <div class="grid grid-cols-2 gap-2">
-              <%= for map_id <- map_ids do %>
-                <% map = Entities.get_entity("map", map_id) %>
-                <%= if map do %>
-                  <.link navigate={"/entities/map/#{map.id}"}
-                         class="rounded overflow-hidden border border-base-300 hover:border-primary transition-colors">
-                    <%= if map.asset_path && map.asset_path != "" do %>
-                      <img src={"/maps/assets/#{Path.basename(map.asset_path)}"}
-                           class="w-full h-14 object-cover" />
-                    <% else %>
-                      <div class="w-full h-14 bg-base-300 flex items-center justify-center">
-                        <.icon name="hero-map" class="size-5 opacity-30" />
-                      </div>
-                    <% end %>
-                    <p class="text-xs px-1 py-0.5 truncate"><%= map.name %></p>
-                  </.link>
-                <% end %>
-              <% end %>
-            </div>
-          <% end %>
-        </div>
-
-        <%!-- Stat blocks --%>
-        <div>
-          <h4 class="text-xs uppercase tracking-wider text-base-content/50 mb-2">Stat Blocks</h4>
-          <% sb_ids = @session.stat_block_ids || [] %>
-          <%= if sb_ids == [] do %>
-            <p class="text-xs text-base-content/40">No stat blocks linked.</p>
-          <% else %>
-            <ul class="space-y-1">
-              <%= for sb_id <- sb_ids do %>
-                <% sb = Entities.get_entity("stat-block", sb_id) %>
-                <%= if sb do %>
-                  <li class="flex items-center gap-2 text-sm">
-                    <span class="badge badge-error badge-xs">CR <%= sb.cr %></span>
-                    <span class="truncate text-xs"><%= sb.name %></span>
+        <%!-- Linked entities from ~[...]{} refs in body and scene notes --%>
+        <% grouped = Enum.group_by(@linked_entities, & &1.type) %>
+        <%= if @linked_entities == [] do %>
+          <p class="text-xs text-base-content/40 italic">
+            <%= "Link entities inline with ~[Name]{type:id} in the body or scene notes." %>
+          </p>
+        <% else %>
+          <%= for {type, items} <- grouped do %>
+            <div>
+              <h4 class="text-xs uppercase tracking-wider text-base-content/50 mb-2">
+                <%= String.replace(type, "-", " ") |> String.capitalize() %>s
+              </h4>
+              <ul class="space-y-1">
+                <%= for %{entity: entity, display_name: label} <- items do %>
+                  <li class="text-xs truncate">
+                    <.link navigate={"/entities/#{type}/#{entity.id}"}
+                           class="hover:text-primary transition-colors">
+                      <%= label %>
+                    </.link>
                   </li>
                 <% end %>
-              <% end %>
-            </ul>
+              </ul>
+            </div>
           <% end %>
-        </div>
+        <% end %>
 
         <%!-- Audio --%>
         <div>

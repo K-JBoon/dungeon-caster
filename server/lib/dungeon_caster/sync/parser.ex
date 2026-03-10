@@ -59,9 +59,6 @@ defmodule DungeonCaster.Sync.Parser do
   defp validate_type(_, _), do: {:error, :missing_type_field}
 
   defp render_markdown(body) do
-    case Earmark.as_html(body) do
-      {:ok, html, _warnings} -> {:ok, html}
-      {:error, _html, errors} -> {:error, {:markdown_error, errors}}
-    end
+    {:ok, DungeonCaster.Markdown.render(body)}
   end
 end

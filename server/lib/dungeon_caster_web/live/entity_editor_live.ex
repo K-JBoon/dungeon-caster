@@ -1,6 +1,7 @@
 defmodule DungeonCasterWeb.EntityEditorLive do
   use DungeonCasterWeb, :live_view
   alias DungeonCaster.Entities
+  alias DungeonCasterWeb.EntityHelpers
 
   def mount(%{"type" => type, "id" => id}, _session, socket) do
     Phoenix.PubSub.subscribe(DungeonCaster.PubSub, "entities:#{type}")
@@ -28,6 +29,20 @@ defmodule DungeonCasterWeb.EntityEditorLive do
     end
   end
 
+  def handle_event("open_entity_popover", %{"ref" => ref}, socket) do
+    case EntityHelpers.entity_popover_data(ref) do
+      {:ok, data} ->
+        {:noreply, push_event(socket, "entity:popover-open", data)}
+      :error ->
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event("search_entities", %{"q" => q}, socket) do
+    results = EntityHelpers.search_entities(q)
+    {:reply, %{results: results}, socket}
+  end
+
   def handle_info({:updated, id}, socket) when id == socket.assigns.entity.id do
     {:noreply, assign(socket, flash_msg: "Re-indexed ✓")}
   end
@@ -46,8 +61,10 @@ defmodule DungeonCasterWeb.EntityEditorLive do
         <p class="mb-2 text-green-600 text-sm"><%= @flash_msg %></p>
       <% end %>
       <form phx-submit="save">
-        <textarea name="content" rows="40"
-                  class="w-full font-mono text-sm border rounded p-3"><%= @content %></textarea>
+        <div id="entity-raw-editor" phx-hook="EntityEditor" phx-update="ignore">
+          <textarea name="content" rows="40"
+                    class="w-full font-mono text-sm border rounded p-3"><%= @content %></textarea>
+        </div>
         <button type="submit"
                 class="mt-2 px-4 py-2 bg-blue-600 text-white rounded">
           Save
