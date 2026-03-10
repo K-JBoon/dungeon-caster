@@ -24,13 +24,13 @@ defmodule DungeonCasterWeb.EntityEditorLiveTest do
   end
 
   test "renders file content in textarea", %{conn: conn} do
-    {:ok, _view, html} = live(conn, "/entities/npc/editor-test-npc/edit")
+    {:ok, _view, html} = live(conn, "/entities/npc/editor-test-npc/edit/raw")
     assert html =~ "Editor NPC"
     assert html =~ "Original body."
   end
 
   test "save event writes content to file", %{conn: conn} do
-    {:ok, view, _html} = live(conn, "/entities/npc/editor-test-npc/edit")
+    {:ok, view, _html} = live(conn, "/entities/npc/editor-test-npc/edit/raw")
     view |> form("form", %{content: "---\ntype: npc\nid: editor-test-npc\nname: Editor NPC\nstatus: alive\nrole: guard\ntags: []\nfaction_ids: []\n---\n\nUpdated body."}) |> render_submit()
     assert File.read!(@test_file) =~ "Updated body."
   end

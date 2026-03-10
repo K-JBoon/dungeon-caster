@@ -21,42 +21,45 @@ defmodule DungeonCaster.Session.ServerTest do
     assert state.initiative == []
   end
 
-  test "reveal_cells adds cells to fog grid", %{sid: sid} do
+  test "reveal_cells removes cells from fog_grid (fog model: cells in map = fogged)", %{sid: sid} do
+    # First hide some cells so they appear in the fog grid
+    DungeonCaster.Session.Server.hide_cells(sid, ["0,0", "0,1", "1,0"])
     :ok = DungeonCaster.Session.Server.reveal_cells(sid, ["0,0", "0,1", "1,0"])
     state = DungeonCaster.Session.Server.get_state(sid)
-    assert state.fog_grid["0,0"] == true
-    assert state.fog_grid["0,1"] == true
-    assert state.fog_grid["1,0"] == true
-    refute Map.has_key?(state.fog_grid, "5,5")
+    # Revealed cells are NOT present in fog_grid
+    refute Map.has_key?(state.fog_grid, "0,0")
+    refute Map.has_key?(state.fog_grid, "0,1")
+    refute Map.has_key?(state.fog_grid, "1,0")
   end
 
-  test "hide_cells removes revealed cells", %{sid: sid} do
-    DungeonCaster.Session.Server.reveal_cells(sid, ["0,0", "0,1"])
-    :ok = DungeonCaster.Session.Server.hide_cells(sid, ["0,0"])
+  test "hide_cells adds cells to fog_grid", %{sid: sid} do
+    :ok = DungeonCaster.Session.Server.hide_cells(sid, ["0,0", "0,1"])
+    DungeonCaster.Session.Server.reveal_cells(sid, ["0,0"])
     state = DungeonCaster.Session.Server.get_state(sid)
+    # "0,0" was revealed (removed from fog), "0,1" remains fogged
     refute Map.has_key?(state.fog_grid, "0,0")
     assert state.fog_grid["0,1"] == true
   end
 
-  test "set_map updates current_map and resets fog", %{sid: sid} do
-    DungeonCaster.Session.Server.reveal_cells(sid, ["0,0"])
-    :ok = DungeonCaster.Session.Server.set_map(sid, "dungeon-level-1")
+  test "set_map updates current_map and resets fog to :all_fogged", %{sid: sid} do
+    DungeonCaster.Session.Server.hide_cells(sid, ["0,0"])
+    :ok = DungeonCaster.Session.Server.set_map(sid, "dungeon-level-1", nil, 20, 20)
     state = DungeonCaster.Session.Server.get_state(sid)
     assert state.current_map == "dungeon-level-1"
+    assert state.fog_grid == :all_fogged
+  end
+
+  test "reveal_all sets fog_grid to empty map (nothing fogged)", %{sid: sid} do
+    :ok = DungeonCaster.Session.Server.reveal_all(sid)
+    state = DungeonCaster.Session.Server.get_state(sid)
     assert state.fog_grid == %{}
   end
 
-  test "reveal_all sets fog_grid to :all_revealed", %{sid: sid} do
-    :ok = DungeonCaster.Session.Server.reveal_all(sid)
-    state = DungeonCaster.Session.Server.get_state(sid)
-    assert state.fog_grid == :all_revealed
-  end
-
-  test "hide_all resets fog_grid to empty map", %{sid: sid} do
+  test "hide_all sets fog_grid to :all_fogged", %{sid: sid} do
     DungeonCaster.Session.Server.reveal_all(sid)
     :ok = DungeonCaster.Session.Server.hide_all(sid)
     state = DungeonCaster.Session.Server.get_state(sid)
-    assert state.fog_grid == %{}
+    assert state.fog_grid == :all_fogged
   end
 
   test "play_audio :ambient sets ambient track", %{sid: sid} do
@@ -98,11 +101,12 @@ defmodule DungeonCaster.Session.ServerTest do
     assert Enum.at(state.initiative, 0).hp == 3
   end
 
-  test "reveal_cells on :all_revealed state is a no-op and does not crash", %{sid: sid} do
+  test "reveal_cells on %{} (all_revealed) state is a no-op and does not crash", %{sid: sid} do
     :ok = DungeonCaster.Session.Server.reveal_all(sid)
     assert :ok = DungeonCaster.Session.Server.reveal_cells(sid, ["0,0", "1,1"])
     state = DungeonCaster.Session.Server.get_state(sid)
-    assert state.fog_grid == :all_revealed
+    # fog_grid stays %{} — nothing to remove, cells are already revealed
+    assert state.fog_grid == %{}
   end
 
   test "set_volume with 0 for master sets master to 0", %{sid: sid} do
@@ -149,7 +153,7 @@ defmodule DungeonCaster.Session.ServerTest do
   test "set_map resets drawings and show_player_qr", %{sid: sid} do
     DungeonCaster.Session.Server.add_stroke(sid, %{player_id: "p1", color: "#fff", size: 2, points: []})
     DungeonCaster.Session.Server.toggle_player_qr(sid)
-    :ok = DungeonCaster.Session.Server.set_map(sid, "new-map")
+    :ok = DungeonCaster.Session.Server.set_map(sid, "new-map", nil, 20, 20)
     state = DungeonCaster.Session.Server.get_state(sid)
     assert state.drawings == []
     assert state.show_player_qr == false

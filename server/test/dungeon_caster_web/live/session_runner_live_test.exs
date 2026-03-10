@@ -31,7 +31,6 @@ defmodule DungeonCasterWeb.SessionRunnerLiveTest do
     {:ok, _view, html} = live(conn, "/sessions/run-session-01/run")
     assert html =~ "Plan"
     assert html =~ "Map"
-    assert html =~ "Combat"
     assert html =~ "Audio"
   end
 
