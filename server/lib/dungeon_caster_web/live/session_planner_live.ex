@@ -184,14 +184,31 @@ defmodule DungeonCasterWeb.SessionPlannerLive do
   end
 
   defp collect_linked_entities(session, scenes) do
+    # New-style: ~[Name]{type:id} refs in body and scene notes
     sources = [session.body_raw || ""] ++ Enum.map(scenes, &(&1["notes"] || ""))
+    from_refs = Enum.flat_map(sources, &Markdown.extract_entity_refs/1)
 
-    sources
-    |> Enum.flat_map(&Markdown.extract_entity_refs/1)
+    # Migration shim: old frontmatter ID list fields (npc_ids, stat_block_ids, etc.)
+    frontmatter_refs =
+      [
+        {"npc", session.npc_ids || []},
+        {"location", session.location_ids || []},
+        {"faction", session.faction_ids || []},
+        {"stat-block", session.stat_block_ids || []},
+        {"map", session.map_ids || []}
+      ]
+      |> Enum.flat_map(fn {type, ids} ->
+        Enum.map(ids, fn id -> %{type: type, id: id, display_name: id} end)
+      end)
+
+    (from_refs ++ frontmatter_refs)
     |> Enum.uniq_by(fn %{type: t, id: id} -> {t, id} end)
     |> Enum.map(fn %{type: type, id: id} = ref ->
       entity = Entities.get_entity(type, id)
-      if entity, do: Map.put(ref, :entity, entity), else: nil
+      if entity do
+        name = Map.get(entity, :name) || Map.get(entity, :title) || id
+        Map.merge(ref, %{entity: entity, display_name: name})
+      end
     end)
     |> Enum.reject(&is_nil/1)
   end

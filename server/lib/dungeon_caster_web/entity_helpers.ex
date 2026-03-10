@@ -22,7 +22,9 @@ defmodule DungeonCasterWeb.EntityHelpers do
   Results are %{type, id, name} maps.
   """
   def search_entities(q) when is_binary(q) and byte_size(q) > 1 do
-    Entities.search(q) |> Enum.take(8)
+    Entities.search(q)
+    |> Enum.reject(&(&1.type == "session"))
+    |> Enum.take(8)
   end
   def search_entities(_), do: []
 
