@@ -165,15 +165,7 @@ defmodule DungeonCasterWeb.EntityFormLive do
   end
 
   defp fields_to_yaml("stat-block", fields) do
-    [
-      "name: #{fields["name"] || ""}",
-      "cr: #{fields["cr"] || "1"}",
-      "size: #{fields["size"] || "medium"}",
-      "creature_type: #{fields["creature_type"] || "humanoid"}",
-      "source: #{fields["source"] || "homebrew"}",
-      "hp: #{fields["hp"] || ""}",
-      "ac: #{fields["ac"] || ""}",
-    ]
+    ["name: #{fields["name"] || ""}"]
   end
 
   defp fields_to_yaml("map", fields) do
@@ -237,11 +229,8 @@ defmodule DungeonCasterWeb.EntityFormLive do
 
   defp fields_to_db_attrs("stat-block", id, fields, body, file_path) do
     html = Markdown.render(body)
-    %{"id" => id, "name" => fields["name"] || "", "cr" => fields["cr"] || "1",
-      "size" => fields["size"] || "medium", "creature_type" => fields["creature_type"] || "humanoid",
-      "source" => fields["source"] || "homebrew", "hp" => parse_int(fields["hp"]),
-      "ac" => parse_int(fields["ac"]),
-      "body_raw" => body, "body_html" => html, "file_path" => file_path, "tags" => []}
+    %{"id" => id, "name" => fields["name"] || "",
+      "body_raw" => body, "body_html" => html, "file_path" => file_path}
   end
 
   defp fields_to_db_attrs("map", id, fields, body, file_path) do
@@ -270,7 +259,7 @@ defmodule DungeonCasterWeb.EntityFormLive do
   defp default_fields("npc"), do: %{"status" => "alive", "role" => "unknown"}
   defp default_fields("location"), do: %{"location_type" => "city"}
   defp default_fields("faction"), do: %{"status" => "active"}
-  defp default_fields("stat-block"), do: %{"cr" => "1", "size" => "medium", "creature_type" => "humanoid", "source" => "homebrew"}
+  defp default_fields("stat-block"), do: %{}
   defp default_fields("map"), do: %{"map_type" => "battle"}
   defp default_fields("session"), do: %{"session_number" => "1", "status" => "planned"}
   defp default_fields(_), do: %{}
@@ -290,9 +279,7 @@ defmodule DungeonCasterWeb.EntityFormLive do
       "member_ids" => Enum.join(e.member_ids || [], ", ")}
   end
   defp entity_to_form_data("stat-block", e) do
-    %{"name" => e.name, "cr" => e.cr, "size" => e.size,
-      "creature_type" => e.creature_type, "source" => e.source,
-      "hp" => e.hp && to_string(e.hp), "ac" => e.ac && to_string(e.ac)}
+    %{"name" => e.name}
   end
   defp entity_to_form_data("map", e) do
     %{"name" => e.name, "map_type" => e.map_type, "asset_path" => e.asset_path}
@@ -506,40 +493,10 @@ defmodule DungeonCasterWeb.EntityFormLive do
 
   defp render_fields("stat-block", assigns) do
     ~H"""
-    <div class="grid grid-cols-2 gap-4">
-      <label class="form-control col-span-2">
-        <div class="label"><span class="label-text">Name *</span></div>
-        <input name="entity[name]" value={@form_data["name"]} class="input input-bordered" required />
-      </label>
-      <label class="form-control">
-        <div class="label"><span class="label-text">CR</span></div>
-        <input name="entity[cr]" value={@form_data["cr"]} class="input input-bordered" placeholder="1/4, 1, 5..." />
-      </label>
-      <label class="form-control">
-        <div class="label"><span class="label-text">Size</span></div>
-        <select name="entity[size]" class="select select-bordered">
-          <%= for s <- ~w(tiny small medium large huge gargantuan) do %>
-            <option value={s} selected={@form_data["size"] == s}><%= s %></option>
-          <% end %>
-        </select>
-      </label>
-      <label class="form-control">
-        <div class="label"><span class="label-text">Creature Type</span></div>
-        <input name="entity[creature_type]" value={@form_data["creature_type"]} class="input input-bordered" />
-      </label>
-      <label class="form-control">
-        <div class="label"><span class="label-text">Source</span></div>
-        <input name="entity[source]" value={@form_data["source"]} class="input input-bordered" />
-      </label>
-      <label class="form-control">
-        <div class="label"><span class="label-text">HP</span></div>
-        <input name="entity[hp]" type="number" value={@form_data["hp"]} class="input input-bordered" />
-      </label>
-      <label class="form-control">
-        <div class="label"><span class="label-text">AC</span></div>
-        <input name="entity[ac]" type="number" value={@form_data["ac"]} class="input input-bordered" />
-      </label>
-    </div>
+    <label class="form-control">
+      <div class="label"><span class="label-text">Name *</span></div>
+      <input name="entity[name]" value={@form_data["name"]} class="input input-bordered" required />
+    </label>
     """
   end
 
