@@ -219,10 +219,21 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
   # ── Helpers ─────────────────────────────────────────────────────────────────
 
   defp collect_maps(session, scenes) do
-    from_session = (session.map_ids || [])
-                   |> Enum.map(&Entities.get_entity("map", &1))
-                   |> Enum.reject(&is_nil/1)
+    # Migration shim: old-style frontmatter map_ids
+    from_frontmatter = (session.map_ids || [])
+                       |> Enum.map(&Entities.get_entity("map", &1))
+                       |> Enum.reject(&is_nil/1)
 
+    # New-style: ~[...]{map:id} refs in body and scene notes
+    sources = [session.body_raw || ""] ++ Enum.map(scenes, &(&1["notes"] || ""))
+    from_refs =
+      sources
+      |> Enum.flat_map(&Markdown.extract_entity_refs/1)
+      |> Enum.filter(&(&1.type == "map"))
+      |> Enum.map(fn %{id: id} -> Entities.get_entity("map", id) end)
+      |> Enum.reject(&is_nil/1)
+
+    # Existing: scene entity_ids (type:id refs in scene sidebar)
     from_scenes =
       scenes
       |> Enum.flat_map(fn s -> s["entity_ids"] || [] end)
@@ -230,7 +241,7 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
       |> Enum.map(fn "map:" <> id -> Entities.get_entity("map", id) end)
       |> Enum.reject(&is_nil/1)
 
-    (from_session ++ from_scenes)
+    (from_frontmatter ++ from_refs ++ from_scenes)
     |> Enum.uniq_by(& &1.id)
   end
 
