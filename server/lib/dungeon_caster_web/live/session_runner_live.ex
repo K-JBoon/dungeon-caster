@@ -1,6 +1,7 @@
 defmodule DungeonCasterWeb.SessionRunnerLive do
   use DungeonCasterWeb, :live_view
   alias DungeonCaster.{Entities, Session.Server, Audio}
+  alias DungeonCaster.Markdown
 
   def mount(%{"id" => session_id}, _session, socket) do
     Phoenix.PubSub.subscribe(DungeonCaster.PubSub, "session:live:#{session_id}")
@@ -316,7 +317,7 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
 
           <%= if scene["notes"] && scene["notes"] != "" do %>
             <div class="prose max-w-none mb-4">
-              <%= Phoenix.HTML.raw(Earmark.as_html!(scene["notes"] || "")) %>
+              <%= Phoenix.HTML.raw(Markdown.render(scene["notes"] || "")) %>
             </div>
           <% end %>
 

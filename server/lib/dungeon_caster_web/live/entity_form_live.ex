@@ -1,6 +1,7 @@
 defmodule DungeonCasterWeb.EntityFormLive do
   use DungeonCasterWeb, :live_view
   alias DungeonCaster.Entities
+  alias DungeonCaster.Markdown
 
   @type_dirs %{
     "npc" => "npcs", "location" => "locations", "faction" => "factions",
@@ -197,7 +198,7 @@ defmodule DungeonCasterWeb.EntityFormLive do
   # ── DB attrs builders ────────────────────────────────────────────────────────
 
   defp fields_to_db_attrs("npc", id, fields, body, file_path) do
-    {:ok, html, _} = Earmark.as_html(body)
+    html = Markdown.render(body)
     %{"id" => id, "name" => fields["name"] || "", "status" => fields["status"] || "alive",
       "role" => fields["role"] || "unknown", "race" => fields["race"],
       "class" => fields["class"], "faction_ids" => parse_list(fields["faction_ids"]),
@@ -206,21 +207,21 @@ defmodule DungeonCasterWeb.EntityFormLive do
   end
 
   defp fields_to_db_attrs("location", id, fields, body, file_path) do
-    {:ok, html, _} = Earmark.as_html(body)
+    html = Markdown.render(body)
     %{"id" => id, "name" => fields["name"] || "", "location_type" => fields["location_type"] || "city",
       "faction_ids" => parse_list(fields["faction_ids"]),
       "body_raw" => body, "body_html" => html, "file_path" => file_path, "tags" => []}
   end
 
   defp fields_to_db_attrs("faction", id, fields, body, file_path) do
-    {:ok, html, _} = Earmark.as_html(body)
+    html = Markdown.render(body)
     %{"id" => id, "name" => fields["name"] || "", "status" => fields["status"] || "active",
       "member_ids" => parse_list(fields["member_ids"]),
       "body_raw" => body, "body_html" => html, "file_path" => file_path, "tags" => []}
   end
 
   defp fields_to_db_attrs("stat-block", id, fields, body, file_path) do
-    {:ok, html, _} = Earmark.as_html(body)
+    html = Markdown.render(body)
     %{"id" => id, "name" => fields["name"] || "", "cr" => fields["cr"] || "1",
       "size" => fields["size"] || "medium", "creature_type" => fields["creature_type"] || "humanoid",
       "source" => fields["source"] || "homebrew", "hp" => parse_int(fields["hp"]),
@@ -229,14 +230,14 @@ defmodule DungeonCasterWeb.EntityFormLive do
   end
 
   defp fields_to_db_attrs("map", id, fields, body, file_path) do
-    {:ok, html, _} = Earmark.as_html(body)
+    html = Markdown.render(body)
     %{"id" => id, "name" => fields["name"] || "", "map_type" => fields["map_type"] || "battle",
       "asset_path" => fields["asset_path"] || "",
       "body_raw" => body, "body_html" => html, "file_path" => file_path, "tags" => []}
   end
 
   defp fields_to_db_attrs("session", id, fields, body, file_path) do
-    {:ok, html, _} = Earmark.as_html(body)
+    html = Markdown.render(body)
     %{"id" => id, "title" => fields["title"] || "", "session_number" => parse_int(fields["session_number"]) || 1,
       "status" => fields["status"] || "planned",
       "body_raw" => body, "body_html" => html, "file_path" => file_path, "tags" => [],
@@ -244,7 +245,7 @@ defmodule DungeonCasterWeb.EntityFormLive do
   end
 
   defp fields_to_db_attrs(type, id, fields, body, file_path) do
-    {:ok, html, _} = Earmark.as_html(body)
+    html = Markdown.render(body)
     %{"id" => id, "name" => fields["name"] || "", "type" => type,
       "body_raw" => body, "body_html" => html, "file_path" => file_path}
   end
@@ -318,10 +319,7 @@ defmodule DungeonCasterWeb.EntityFormLive do
   defp back_path(type, entity), do: "/entities/#{type}/#{entity.id}"
 
   defp render_preview(body) do
-    case Earmark.as_html(body) do
-      {:ok, html, _} -> html
-      _ -> "<p>Preview unavailable</p>"
-    end
+    Markdown.render(body)
   end
 
   # ── Render ───────────────────────────────────────────────────────────────────
