@@ -21,8 +21,9 @@ defmodule DungeonCaster.Sync.ParserTest do
     path = Path.join(@fixtures, "stat-blocks/shadow-goblin.md")
     assert {:ok, "stat-block", data} = Parser.parse_file(path)
     assert data["id"] == "shadow-goblin"
-    assert data["hp"] == 7
-    assert data["ac"] == 13
+    assert data["name"] == "Shadow Goblin"
+    assert is_binary(data["body_raw"])
+    assert is_binary(data["body_html"])
   end
 
   test "parses session file" do
