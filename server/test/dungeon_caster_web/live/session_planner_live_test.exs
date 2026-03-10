@@ -42,7 +42,7 @@ defmodule DungeonCasterWeb.SessionPlannerLiveTest do
   test "Go Live button starts session and redirects to runner", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/sessions/session-planner-01/plan")
     assert {:error, {:live_redirect, %{to: path}}} =
-      view |> element("button", "Go Live") |> render_click()
+      view |> element("button", "▶ Live") |> render_click()
     assert path == "/sessions/session-planner-01/run"
     # Clean up
     try do
