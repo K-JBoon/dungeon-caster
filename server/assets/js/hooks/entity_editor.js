@@ -212,6 +212,12 @@ export const EntityEditor = {
   _selectItem({ id, type, name }) {
     this._hideDropdown()
     if (!this._pendingNode) return
+    // Guard against stale node (removed from DOM between trigger and selection)
+    if (!this._pendingNode.parentNode) {
+      this._pendingQuery = null
+      this._pendingNode = null
+      return
+    }
 
     const node = this._pendingNode
     const triggerStart = this._pendingOffset

@@ -4,6 +4,8 @@ const EntityPopover = {
   _offsetIndex: 0,
 
   init() {
+    if (this._initialized) return
+    this._initialized = true
     window.addEventListener('phx:entity:popover-open', (e) => {
       this.open(e.detail)
     })
