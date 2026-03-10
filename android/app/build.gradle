@@ -10,11 +10,11 @@ if (localPropsFile.exists()) {
 }
 
 android {
-    namespace 'com.campaigntool'
+    namespace 'com.dungeoncaster'
     compileSdk 34
 
     defaultConfig {
-        applicationId "com.campaigntool"
+        applicationId "com.dungeoncaster"
         minSdk 26
         targetSdk 34
         versionCode 1

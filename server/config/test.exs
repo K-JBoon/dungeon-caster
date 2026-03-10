@@ -5,14 +5,14 @@ import Config
 # The MIX_TEST_PARTITION environment variable can be used
 # to provide built-in test partitioning in CI environment.
 # Run `mix help test` for more information.
-config :campaign_tool, CampaignTool.Repo,
-  database: Path.expand("../campaign_tool_test.db", __DIR__),
+config :dungeon_caster, DungeonCaster.Repo,
+  database: Path.expand("../dungeon_caster_test.db", __DIR__),
   pool_size: 5,
   pool: Ecto.Adapters.SQL.Sandbox
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
-config :campaign_tool, CampaignToolWeb.Endpoint,
+config :dungeon_caster, DungeonCasterWeb.Endpoint,
   http: [ip: {127, 0, 0, 1}, port: 4002],
   secret_key_base: "9yxlvKSis3qqMSiFUm0DWfnteMc2FuOXg7v7SIFLhYDHQh/nFUEG6dEvxeU0O7RZ",
   server: false
@@ -31,5 +31,5 @@ config :phoenix_live_view,
 config :phoenix,
   sort_verified_routes_query_params: true
 
-config :campaign_tool, :campaign_dir, "/tmp/campaign_test"
-config :campaign_tool, :ssh_key_path, nil
+config :dungeon_caster, :campaign_dir, "/tmp/campaign_test"
+config :dungeon_caster, :ssh_key_path, nil

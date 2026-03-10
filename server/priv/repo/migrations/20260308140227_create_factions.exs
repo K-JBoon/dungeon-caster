@@ -1,4 +1,4 @@
-defmodule CampaignTool.Repo.Migrations.CreateFactions do
+defmodule DungeonCaster.Repo.Migrations.CreateFactions do
   use Ecto.Migration
 
   def change do

@@ -1,4 +1,4 @@
-# CampaignTool
+# DungeonCaster
 
 To start your Phoenix server:
 

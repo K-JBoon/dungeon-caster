@@ -12,28 +12,28 @@ import Config
 # If you use `mix release`, you need to explicitly enable the server
 # by passing the PHX_SERVER=true when you start it:
 #
-#     PHX_SERVER=true bin/campaign_tool start
+#     PHX_SERVER=true bin/dungeon_caster start
 #
 # Alternatively, you can use `mix phx.gen.release` to generate a `bin/server`
 # script that automatically sets the env var above.
 if System.get_env("PHX_SERVER") do
-  config :campaign_tool, CampaignToolWeb.Endpoint, server: true
+  config :dungeon_caster, DungeonCasterWeb.Endpoint, server: true
 end
 
-config :campaign_tool, CampaignToolWeb.Endpoint,
+config :dungeon_caster, DungeonCasterWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
 if config_env() == :prod do
-  config :campaign_tool, CampaignTool.Repo,
+  config :dungeon_caster, DungeonCaster.Repo,
     database: System.fetch_env!("DATABASE_PATH")
 
-  config :campaign_tool, :campaign_dir,
+  config :dungeon_caster, :campaign_dir,
     System.fetch_env!("CAMPAIGN_DIR")
 
-  config :campaign_tool, :ssh_key_path,
+  config :dungeon_caster, :ssh_key_path,
     System.get_env("SSH_KEY_PATH")
 
-  config :campaign_tool, CampaignToolWeb.Endpoint,
+  config :dungeon_caster, DungeonCasterWeb.Endpoint,
     url: [host: System.fetch_env!("PHX_HOST"), port: 443, scheme: "https"],
     http: [port: String.to_integer(System.get_env("PORT", "4000"))],
     secret_key_base: System.fetch_env!("SECRET_KEY_BASE"),
@@ -44,7 +44,7 @@ if config_env() == :prod do
   # To get SSL working, you will need to add the `https` key
   # to your endpoint configuration:
   #
-  #     config :campaign_tool, CampaignToolWeb.Endpoint,
+  #     config :dungeon_caster, DungeonCasterWeb.Endpoint,
   #       https: [
   #         ...,
   #         port: 443,
@@ -66,7 +66,7 @@ if config_env() == :prod do
   # We also recommend setting `force_ssl` in your config/prod.exs,
   # ensuring no data is ever sent via http, always redirecting to https:
   #
-  #     config :campaign_tool, CampaignToolWeb.Endpoint,
+  #     config :dungeon_caster, DungeonCasterWeb.Endpoint,
   #       force_ssl: [hsts: true]
   #
   # Check `Plug.SSL` for all available options in `force_ssl`.

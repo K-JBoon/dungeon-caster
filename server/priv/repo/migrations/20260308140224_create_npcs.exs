@@ -1,4 +1,4 @@
-defmodule CampaignTool.Repo.Migrations.CreateNpcs do
+defmodule DungeonCaster.Repo.Migrations.CreateNpcs do
   use Ecto.Migration
 
   def change do

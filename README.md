@@ -1,4 +1,4 @@
-# Campaign Tool
+# Dungeon Caster
 
 A D&D session management tool for running homebrew campaigns. A Phoenix/LiveView server indexes your campaign Markdown files and provides a browser UI for planning and running sessions. An Android WebView shell acts as the DM tablet, and a Chromecast receiver displays the battlemap with fog of war on a projector.
 

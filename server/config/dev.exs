@@ -1,8 +1,8 @@
 import Config
 
 # Configure your database
-config :campaign_tool, CampaignTool.Repo,
-  database: Path.expand("../campaign_tool_dev.db", __DIR__),
+config :dungeon_caster, DungeonCaster.Repo,
+  database: Path.expand("../dungeon_caster_dev.db", __DIR__),
   pool_size: 5,
   stacktrace: true,
   show_sensitive_data_on_connection_error: true
@@ -13,7 +13,7 @@ config :campaign_tool, CampaignTool.Repo,
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we can use it
 # to bundle .js and .css sources.
-config :campaign_tool, CampaignToolWeb.Endpoint,
+config :dungeon_caster, DungeonCasterWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
   http: [ip: {0, 0, 0, 0}],
@@ -22,8 +22,8 @@ config :campaign_tool, CampaignToolWeb.Endpoint,
   debug_errors: true,
   secret_key_base: "ZVHtVdO48oIn/4SQpwv3F/QBKFw6hbzEGFMdEhgcIxX2zpcbk/NqEyZZOBc1eusu",
   watchers: [
-    esbuild: {Esbuild, :install_and_run, [:campaign_tool, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:campaign_tool, ~w(--watch)]}
+    esbuild: {Esbuild, :install_and_run, [:dungeon_caster, ~w(--sourcemap=inline --watch)]},
+    tailwind: {Tailwind, :install_and_run, [:dungeon_caster, ~w(--watch)]}
   ]
 
 # ## SSL Support
@@ -50,7 +50,7 @@ config :campaign_tool, CampaignToolWeb.Endpoint,
 # different ports.
 
 # Reload browser tabs when matching files change.
-config :campaign_tool, CampaignToolWeb.Endpoint,
+config :dungeon_caster, DungeonCasterWeb.Endpoint,
   live_reload: [
     web_console_logger: true,
     patterns: [
@@ -59,13 +59,13 @@ config :campaign_tool, CampaignToolWeb.Endpoint,
       # Gettext translations
       ~r"priv/gettext/.*\.po$"E,
       # Router, Controllers, LiveViews and LiveComponents
-      ~r"lib/campaign_tool_web/router\.ex$"E,
-      ~r"lib/campaign_tool_web/(controllers|live|components)/.*\.(ex|heex)$"E
+      ~r"lib/dungeon_caster_web/router\.ex$"E,
+      ~r"lib/dungeon_caster_web/(controllers|live|components)/.*\.(ex|heex)$"E
     ]
   ]
 
 # Enable dev routes for dashboard and mailbox
-config :campaign_tool, dev_routes: true
+config :dungeon_caster, dev_routes: true
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :default_formatter, format: "[$level] $message\n"
@@ -85,7 +85,7 @@ config :phoenix_live_view,
   # Enable helpful, but potentially expensive runtime checks
   enable_expensive_runtime_checks: true
 
-config :campaign_tool, :campaign_dir,
+config :dungeon_caster, :campaign_dir,
   System.get_env("CAMPAIGN_DIR", Path.expand("~/campaign"))
 
-config :campaign_tool, :ssh_key_path, nil
+config :dungeon_caster, :ssh_key_path, nil

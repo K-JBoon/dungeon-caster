@@ -22,7 +22,7 @@ import "phoenix_html"
 // Establish Phoenix Socket and LiveView configuration.
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
-import {hooks as colocatedHooks} from "phoenix-colocated/campaign_tool"
+import {hooks as colocatedHooks} from "phoenix-colocated/dungeon_caster"
 import {FogEditor} from "./hooks/fog_editor"
 import {SortableScenes} from "./hooks/sortable_scenes"
 import topbar from "../vendor/topbar"

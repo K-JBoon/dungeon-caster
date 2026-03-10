@@ -1,4 +1,4 @@
-defmodule CampaignTool.Repo.Migrations.CreateEntitiesFts do
+defmodule DungeonCaster.Repo.Migrations.CreateEntitiesFts do
   use Ecto.Migration
 
   def up do

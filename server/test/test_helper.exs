@@ -1,2 +1,2 @@
 ExUnit.start()
-Ecto.Adapters.SQL.Sandbox.mode(CampaignTool.Repo, :manual)
+Ecto.Adapters.SQL.Sandbox.mode(DungeonCaster.Repo, :manual)

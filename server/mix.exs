@@ -1,9 +1,9 @@
-defmodule CampaignTool.MixProject do
+defmodule DungeonCaster.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :campaign_tool,
+      app: :dungeon_caster,
       version: "0.1.0",
       elixir: "~> 1.15",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -20,7 +20,7 @@ defmodule CampaignTool.MixProject do
   # Type `mix help compile.app` for more information.
   def application do
     [
-      mod: {CampaignTool.Application, []},
+      mod: {DungeonCaster.Application, []},
       extra_applications: [:logger, :runtime_tools]
     ]
   end
@@ -83,10 +83,10 @@ defmodule CampaignTool.MixProject do
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
       "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
-      "assets.build": ["compile", "tailwind campaign_tool", "esbuild campaign_tool"],
+      "assets.build": ["compile", "tailwind dungeon_caster", "esbuild dungeon_caster"],
       "assets.deploy": [
-        "tailwind campaign_tool --minify",
-        "esbuild campaign_tool --minify",
+        "tailwind dungeon_caster --minify",
+        "esbuild dungeon_caster --minify",
         "phx.digest"
       ],
       precommit: ["compile --warnings-as-errors", "deps.unlock --unused", "format", "test"]

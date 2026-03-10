@@ -1,0 +1,25 @@
+# Gradle build outputs
+.gradle/
+build/
+app/build/
+
+# Local config (machine-specific)
+local.properties
+
+# IDE files
+.idea/
+*.iml
+
+# Keystore files
+*.jks
+*.keystore
+
+# Generated APKs/AABs
+*.apk
+*.aab
+
+# Kotlin incremental compilation
+**/.kotlin/
+
+# Database files
+*.db

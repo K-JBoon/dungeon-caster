@@ -13,5 +13,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "CampaignTool"
+rootProject.name = "DungeonCaster"
 include ':app'

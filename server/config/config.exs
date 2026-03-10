@@ -7,25 +7,25 @@
 # General application configuration
 import Config
 
-config :campaign_tool,
-  ecto_repos: [CampaignTool.Repo],
+config :dungeon_caster,
+  ecto_repos: [DungeonCaster.Repo],
   generators: [timestamp_type: :utc_datetime]
 
 # Configure the endpoint
-config :campaign_tool, CampaignToolWeb.Endpoint,
+config :dungeon_caster, DungeonCasterWeb.Endpoint,
   url: [host: "localhost"],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
-    formats: [html: CampaignToolWeb.ErrorHTML, json: CampaignToolWeb.ErrorJSON],
+    formats: [html: DungeonCasterWeb.ErrorHTML, json: DungeonCasterWeb.ErrorJSON],
     layout: false
   ],
-  pubsub_server: CampaignTool.PubSub,
+  pubsub_server: DungeonCaster.PubSub,
   live_view: [signing_salt: "QiORpNzO"]
 
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.25.4",
-  campaign_tool: [
+  dungeon_caster: [
     args:
       ~w(js/app.js --bundle --target=es2022 --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),
     cd: Path.expand("../assets", __DIR__),
@@ -35,7 +35,7 @@ config :esbuild,
 # Configure tailwind (the version is required)
 config :tailwind,
   version: "4.1.12",
-  campaign_tool: [
+  dungeon_caster: [
     args: ~w(
       --input=assets/css/app.css
       --output=priv/static/assets/css/app.css

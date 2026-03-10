@@ -1,4 +1,4 @@
-defmodule CampaignTool.Repo.Migrations.CreateStatBlocks do
+defmodule DungeonCaster.Repo.Migrations.CreateStatBlocks do
   use Ecto.Migration
 
   def change do
