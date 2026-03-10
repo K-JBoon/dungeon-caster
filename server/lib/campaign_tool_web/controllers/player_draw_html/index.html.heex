@@ -87,11 +87,19 @@
     const COLORS = ['#e74c3c','#e67e22','#f1c40f','#2ecc71','#3498db','#9b59b6','#1abc9c','#ffffff'];
     const CELL_SIZE = 20;
 
-    let playerId = localStorage.getItem('draw_player_id');
-    if (!playerId) {
-      playerId = crypto.randomUUID();
-      localStorage.setItem('draw_player_id', playerId);
+    function genUUID() {
+      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+        return crypto.randomUUID();
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
     }
+    let playerId;
+    try {
+      playerId = localStorage.getItem('draw_player_id');
+      if (!playerId) { playerId = genUUID(); localStorage.setItem('draw_player_id', playerId); }
+    } catch(_) { playerId = genUUID(); }
 
     const mapImg   = document.getElementById('map-img');
     const fogCv    = document.getElementById('fog-canvas');
@@ -169,6 +177,27 @@
       else if (fg === 'all_revealed' || fg == null) { fogAll = false; fogPartial = false; fogGrid = {}; }
       else if (fg && fg.type === 'partial_reveal')  { fogAll = false; fogPartial = true; fogGrid = fg.revealed || {}; }
       else                              { fogAll = false; fogPartial = false; fogGrid = fg || {}; }
+    }
+
+    function applyFogDelta(fg) {
+      const m = getGridMetrics(fogCv);
+      if (!m || m.iw === 0) { applyFogState(fg); drawFog(); return; }
+      const cs = m.iw / (gridCols || 1);
+      if (fg.type === 'delta_reveal') {
+        if (fogAll) { fogAll = false; fogPartial = true; fogGrid = {}; }
+        for (const key of fg.cells) {
+          if (fogPartial) fogGrid[key] = true; else delete fogGrid[key];
+          const [r, c] = key.split(',').map(Number);
+          fogCtx.clearRect(m.ox + c * cs, m.oy + r * cs, cs, cs);
+        }
+      } else {
+        fogCtx.fillStyle = 'rgba(0,0,0,0.85)';
+        for (const key of fg.cells) {
+          if (fogPartial) delete fogGrid[key]; else fogGrid[key] = true;
+          const [r, c] = key.split(',').map(Number);
+          fogCtx.fillRect(m.ox + c * cs, m.oy + r * cs, cs, cs);
+        }
+      }
     }
 
     function drawFog() {
@@ -283,8 +312,12 @@
     });
 
     channel.on('fog_update', ({fog_grid}) => {
-      applyFogState(fog_grid);
-      drawFog();
+      if (fog_grid && (fog_grid.type === 'delta_reveal' || fog_grid.type === 'delta_cover')) {
+        applyFogDelta(fog_grid);
+      } else {
+        applyFogState(fog_grid);
+        drawFog();
+      }
     });
 
     channel.on('drawing_stroke', stroke => {
