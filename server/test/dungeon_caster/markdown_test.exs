@@ -32,6 +32,17 @@ defmodule DungeonCaster.MarkdownTest do
     test "handles empty string" do
       assert Markdown.render("") == ""
     end
+
+    test "render/1 handles nil" do
+      assert Markdown.render(nil) == ""
+    end
+
+    test "escapes HTML-special characters in name and ref" do
+      html = Markdown.render(~s(~[O'Brien & Co.]{npc:o-brien}))
+      assert html =~ "entity-badge"
+      # name with & should be escaped in output
+      assert html =~ "&amp;"
+    end
   end
 
   describe "extract_entity_refs/1" do

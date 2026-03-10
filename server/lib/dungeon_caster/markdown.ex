@@ -4,9 +4,12 @@ defmodule DungeonCaster.Markdown do
   @doc """
   Renders markdown to HTML, converting ~[Name]{type:id} refs to clickable badge spans.
   """
+  def render(nil), do: ""
   def render(""), do: ""
   def render(raw) when is_binary(raw) do
     raw
+    # escape: false is required — without it, Earmark escapes the ~[...]{} syntax
+    # before our postprocessor can match it.
     |> Earmark.as_html!(escape: false)
     |> postprocess_entity_refs()
   end
@@ -25,14 +28,18 @@ defmodule DungeonCaster.Markdown do
       end
     end)
     |> Enum.reject(&is_nil/1)
-    |> Enum.uniq_by(fn %{type: t, id: id} -> "#{t}:#{id}" end)
+    |> Enum.uniq_by(fn %{type: t, id: id} -> {t, id} end)
   end
   def extract_entity_refs(_), do: []
 
+  defp escape_html(text), do: text |> Phoenix.HTML.html_escape() |> Phoenix.HTML.safe_to_string()
+
   defp postprocess_entity_refs(html) do
     Regex.replace(@badge_re, html, fn _, name, ref ->
-      ~s(<span class="entity-badge" data-ref="#{ref}" data-display="#{name}" ) <>
-      ~s(phx-click="open_entity_popover" phx-value-ref="#{ref}">#{name}</span>)
+      safe_name = escape_html(name)
+      safe_ref = escape_html(ref)
+      ~s(<span class="entity-badge" data-ref="#{safe_ref}" data-display="#{safe_name}" ) <>
+      ~s(phx-click="open_entity_popover" phx-value-ref="#{safe_ref}">#{safe_name}</span>)
     end)
   end
 end
