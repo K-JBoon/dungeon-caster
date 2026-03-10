@@ -128,23 +128,24 @@
 .entity-badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.1em 0.5em;
+  padding: 0.15em 0.55em;
   margin: 0 0.1em;
   border-radius: 9999px;
-  font-size: 0.85em;
-  font-weight: 500;
-  background-color: oklch(var(--p) / 0.15);
+  font-size: 0.8em;
+  font-weight: 600;
+  background-color: oklch(var(--p) / 0.22);
   color: oklch(var(--p));
-  border: 1px solid oklch(var(--p) / 0.3);
+  border: 1.5px solid oklch(var(--p) / 0.5);
   cursor: pointer;
   white-space: nowrap;
   text-decoration: none;
   transition: background-color 0.15s, border-color 0.15s;
   user-select: none;
+  vertical-align: baseline;
 }
 .entity-badge:hover {
-  background-color: oklch(var(--p) / 0.25);
-  border-color: oklch(var(--p) / 0.5);
+  background-color: oklch(var(--p) / 0.35);
+  border-color: oklch(var(--p) / 0.7);
 }
 
 /* ── Entity Autocomplete Dropdown ─────────────────────────────────────── */
@@ -194,6 +195,7 @@
   position: fixed;
   min-width: 280px;
   min-height: 200px;
+  background: #ffffff; /* solid fallback for WebView */
   background: oklch(var(--b1));
   border: 1px solid oklch(var(--b3));
   border-radius: 1rem;
@@ -283,6 +285,7 @@
 }
 .entity-editor-content:empty::before {
   content: attr(data-placeholder);
-  color: oklch(var(--bc) / 0.3);
+  color: oklch(var(--bc) / 0.35);
+  font-style: italic;
   pointer-events: none;
 }

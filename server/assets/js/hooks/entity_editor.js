@@ -52,9 +52,7 @@ export const EntityEditor = {
     if (last < markdown.length) {
       editor.appendChild(document.createTextNode(markdown.slice(last)))
     }
-    if (editor.childNodes.length === 0) {
-      editor.appendChild(document.createTextNode(''))
-    }
+    // Leave truly empty so :empty::before placeholder CSS fires
   },
 
   _makeBadge(name, ref) {

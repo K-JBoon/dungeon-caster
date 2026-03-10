@@ -83,9 +83,13 @@ defmodule DungeonCasterWeb.SessionPlannerLive do
     end
   end
 
-  def handle_event("search_entities", %{"q" => q}, socket) do
+  def handle_event("search_entities", %{"q" => q}, socket) when byte_size(q) > 1 do
     results = EntityHelpers.search_entities(q)
-    {:reply, %{results: results}, socket}
+    {:reply, %{results: results}, assign(socket, search_results: results, entity_search: q)}
+  end
+
+  def handle_event("search_entities", _, socket) do
+    {:reply, %{results: []}, assign(socket, search_results: [], entity_search: "")}
   end
 
   def handle_event("link_entity", %{"ref" => ref}, socket) do
