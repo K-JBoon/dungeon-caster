@@ -61,8 +61,10 @@ defmodule DungeonCasterWeb.EntityEditorLive do
         <p class="mb-2 text-green-600 text-sm"><%= @flash_msg %></p>
       <% end %>
       <form phx-submit="save">
-        <textarea name="content" rows="40"
-                  class="w-full font-mono text-sm border rounded p-3"><%= @content %></textarea>
+        <div id="entity-raw-editor" phx-hook="EntityEditor" phx-update="ignore">
+          <textarea name="content" rows="40"
+                    class="w-full font-mono text-sm border rounded p-3"><%= @content %></textarea>
+        </div>
         <button type="submit"
                 class="mt-2 px-4 py-2 bg-blue-600 text-white rounded">
           Save

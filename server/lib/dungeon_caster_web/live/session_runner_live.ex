@@ -391,9 +391,11 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
             <button phx-click="close_notes" class="btn btn-ghost btn-sm btn-circle">✕</button>
           </div>
           <form phx-submit="save_notes">
-            <textarea name="notes" rows="5"
-                      class="textarea textarea-bordered w-full mb-3"
-                      placeholder="Notes are appended to the session file with a timestamp..."><%= @notes %></textarea>
+            <div id="session-notes-editor" phx-hook="EntityEditor" phx-update="ignore">
+              <textarea name="notes" rows="5"
+                        class="textarea textarea-bordered w-full mb-3"
+                        placeholder="Notes are appended to the session file with a timestamp..."><%= @notes %></textarea>
+            </div>
             <div class="flex justify-end gap-2">
               <button type="button" phx-click="close_notes" class="btn btn-ghost btn-sm">Cancel</button>
               <button type="submit" class="btn btn-primary btn-sm">Save</button>

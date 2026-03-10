@@ -240,9 +240,11 @@ defmodule DungeonCasterWeb.SessionPlannerLive do
               <input name="title" value={scene["title"]} phx-debounce="500"
                      class="input input-ghost w-full text-lg font-semibold focus:bg-base-200" />
             </div>
-            <textarea name="notes" phx-debounce="800"
-                      class="flex-1 w-full font-mono text-sm p-3 resize-none bg-transparent focus:outline-none"
-                      placeholder="Scene notes (Markdown)..."><%= scene["notes"] %></textarea>
+            <div id={"scene-notes-#{scene["id"]}"} phx-hook="EntityEditor" phx-update="ignore" class="flex-1 flex flex-col min-h-0">
+              <textarea name="notes" phx-debounce="800"
+                        class="flex-1 w-full font-mono text-sm p-3 resize-none bg-transparent focus:outline-none"
+                        placeholder="Scene notes (Markdown)..."><%= scene["notes"] %></textarea>
+            </div>
           </form>
 
           <%!-- Entity linking --%>

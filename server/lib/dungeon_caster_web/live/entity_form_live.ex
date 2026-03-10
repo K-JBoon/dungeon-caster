@@ -381,9 +381,11 @@ defmodule DungeonCasterWeb.EntityFormLive do
               </button>
             </div>
             <%= if @preview_tab == :edit do %>
-              <textarea name="entity[body]" rows="20"
-                        class="w-full font-mono text-sm p-4 bg-transparent focus:outline-none resize-y"
-                        placeholder="Body content in Markdown..."><%= @body %></textarea>
+              <div id="entity-body-editor" phx-hook="EntityEditor" phx-update="ignore">
+                <textarea name="entity[body]" rows="20"
+                          class="w-full font-mono text-sm p-4 bg-transparent focus:outline-none resize-y"
+                          placeholder="Body content in Markdown..."><%= @body %></textarea>
+              </div>
             <% else %>
               <div class="prose max-w-none p-4 min-h-40">
                 <%= Phoenix.HTML.raw(render_preview(@body)) %>
