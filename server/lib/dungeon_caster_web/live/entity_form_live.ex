@@ -2,6 +2,7 @@ defmodule DungeonCasterWeb.EntityFormLive do
   use DungeonCasterWeb, :live_view
   alias DungeonCaster.Entities
   alias DungeonCaster.Markdown
+  alias DungeonCasterWeb.EntityHelpers
 
   @type_dirs %{
     "npc" => "npcs", "location" => "locations", "faction" => "factions",
@@ -47,6 +48,20 @@ defmodule DungeonCasterWeb.EntityFormLive do
 
   def handle_event("validate", _params, socket) do
     {:noreply, socket}
+  end
+
+  def handle_event("open_entity_popover", %{"ref" => ref}, socket) do
+    case EntityHelpers.entity_popover_data(ref) do
+      {:ok, data} ->
+        {:noreply, push_event(socket, "entity:popover-open", data)}
+      :error ->
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event("search_entities", %{"q" => q}, socket) do
+    results = EntityHelpers.search_entities(q)
+    {:reply, %{results: results}, socket}
   end
 
   def handle_event("save", %{"entity" => params}, socket) do

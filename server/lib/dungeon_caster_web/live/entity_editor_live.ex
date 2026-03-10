@@ -1,6 +1,7 @@
 defmodule DungeonCasterWeb.EntityEditorLive do
   use DungeonCasterWeb, :live_view
   alias DungeonCaster.Entities
+  alias DungeonCasterWeb.EntityHelpers
 
   def mount(%{"type" => type, "id" => id}, _session, socket) do
     Phoenix.PubSub.subscribe(DungeonCaster.PubSub, "entities:#{type}")
@@ -26,6 +27,20 @@ defmodule DungeonCasterWeb.EntityEditorLive do
     else
       {:noreply, put_flash(socket, :error, "Invalid file path")}
     end
+  end
+
+  def handle_event("open_entity_popover", %{"ref" => ref}, socket) do
+    case EntityHelpers.entity_popover_data(ref) do
+      {:ok, data} ->
+        {:noreply, push_event(socket, "entity:popover-open", data)}
+      :error ->
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event("search_entities", %{"q" => q}, socket) do
+    results = EntityHelpers.search_entities(q)
+    {:reply, %{results: results}, socket}
   end
 
   def handle_info({:updated, id}, socket) when id == socket.assigns.entity.id do

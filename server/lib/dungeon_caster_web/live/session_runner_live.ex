@@ -2,6 +2,7 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
   use DungeonCasterWeb, :live_view
   alias DungeonCaster.{Entities, Session.Server, Audio}
   alias DungeonCaster.Markdown
+  alias DungeonCasterWeb.EntityHelpers
 
   def mount(%{"id" => session_id}, _session, socket) do
     Phoenix.PubSub.subscribe(DungeonCaster.PubSub, "session:live:#{session_id}")
@@ -176,6 +177,20 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
     Server.set_volume(socket.assigns.session_id, vol)
     state = Server.get_state(socket.assigns.session_id)
     {:noreply, assign(socket, server_state: state)}
+  end
+
+  def handle_event("open_entity_popover", %{"ref" => ref}, socket) do
+    case EntityHelpers.entity_popover_data(ref) do
+      {:ok, data} ->
+        {:noreply, push_event(socket, "entity:popover-open", data)}
+      :error ->
+        {:noreply, socket}
+    end
+  end
+
+  def handle_event("search_entities", %{"q" => q}, socket) do
+    results = EntityHelpers.search_entities(q)
+    {:reply, %{results: results}, socket}
   end
 
   # ── PubSub ─────────────────────────────────────────────────────────────────

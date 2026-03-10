@@ -1,6 +1,7 @@
 defmodule DungeonCasterWeb.SessionPlannerLive do
   use DungeonCasterWeb, :live_view
   alias DungeonCaster.{Entities, Session.Server, Audio}
+  alias DungeonCasterWeb.EntityHelpers
 
   def mount(%{"id" => id}, _session, socket) do
     session = Entities.get_entity!("session", id)
@@ -70,12 +71,18 @@ defmodule DungeonCasterWeb.SessionPlannerLive do
 
   # ── Entity search / link ────────────────────────────────────────────────────
 
-  def handle_event("search_entities", %{"q" => q}, socket) when byte_size(q) > 1 do
-    results = Entities.search(q) |> Enum.take(8)
-    {:noreply, assign(socket, search_results: results, entity_search: q)}
+  def handle_event("open_entity_popover", %{"ref" => ref}, socket) do
+    case EntityHelpers.entity_popover_data(ref) do
+      {:ok, data} ->
+        {:noreply, push_event(socket, "entity:popover-open", data)}
+      :error ->
+        {:noreply, socket}
+    end
   end
-  def handle_event("search_entities", _, socket) do
-    {:noreply, assign(socket, search_results: [], entity_search: "")}
+
+  def handle_event("search_entities", %{"q" => q}, socket) do
+    results = EntityHelpers.search_entities(q)
+    {:reply, %{results: results}, socket}
   end
 
   def handle_event("link_entity", %{"ref" => ref}, socket) do
