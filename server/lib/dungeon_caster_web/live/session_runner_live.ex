@@ -131,22 +131,20 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
     {:noreply, assign(socket, server_state: state)}
   end
 
-  # Read width/height from PNG file header (bytes 16-23) and compute grid dimensions.
-  # Falls back to a sensible default for non-PNG or missing files.
-  defp image_grid_dims(nil), do: {96, 54}
-  defp image_grid_dims(""), do: {96, 54}
-  defp image_grid_dims(asset_path) do
-    campaign_dir = Application.get_env(:dungeon_caster, :campaign_dir) |> Path.expand()
-    path = Path.join([campaign_dir, "maps", asset_path])
-    try do
-      {:ok, fd} = :file.open(String.to_charlist(path), [:read, :binary])
-      {:ok, _} = :file.position(fd, 16)
-      {:ok, <<w::32-big, h::32-big>>} = :file.read(fd, 8)
-      :file.close(fd)
-      {ceil(w / 20), ceil(h / 20)}
-    rescue
-      _ -> {96, 54}
+  # ── Entity popovers / search ────────────────────────────────────────────────
+
+  def handle_event("open_entity_popover", %{"ref" => ref}, socket) do
+    case EntityHelpers.entity_popover_data(ref) do
+      {:ok, data} ->
+        {:noreply, push_event(socket, "entity:popover-open", data)}
+      :error ->
+        {:noreply, socket}
     end
+  end
+
+  def handle_event("search_entities", %{"q" => q}, socket) do
+    results = EntityHelpers.search_entities(q)
+    {:reply, %{results: results}, socket}
   end
 
   # ── Audio events ───────────────────────────────────────────────────────────
@@ -179,20 +177,6 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
     {:noreply, assign(socket, server_state: state)}
   end
 
-  def handle_event("open_entity_popover", %{"ref" => ref}, socket) do
-    case EntityHelpers.entity_popover_data(ref) do
-      {:ok, data} ->
-        {:noreply, push_event(socket, "entity:popover-open", data)}
-      :error ->
-        {:noreply, socket}
-    end
-  end
-
-  def handle_event("search_entities", %{"q" => q}, socket) do
-    results = EntityHelpers.search_entities(q)
-    {:reply, %{results: results}, socket}
-  end
-
   # ── PubSub ─────────────────────────────────────────────────────────────────
 
   def handle_info({"fog_update", :all_fogged}, socket) do
@@ -217,6 +201,24 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
   def handle_info(_, socket), do: {:noreply, socket}
 
   # ── Helpers ─────────────────────────────────────────────────────────────────
+
+  # Read width/height from PNG file header (bytes 16-23) and compute grid dimensions.
+  # Falls back to a sensible default for non-PNG or missing files.
+  defp image_grid_dims(nil), do: {96, 54}
+  defp image_grid_dims(""), do: {96, 54}
+  defp image_grid_dims(asset_path) do
+    campaign_dir = Application.get_env(:dungeon_caster, :campaign_dir) |> Path.expand()
+    path = Path.join([campaign_dir, "maps", asset_path])
+    try do
+      {:ok, fd} = :file.open(String.to_charlist(path), [:read, :binary])
+      {:ok, _} = :file.position(fd, 16)
+      {:ok, <<w::32-big, h::32-big>>} = :file.read(fd, 8)
+      :file.close(fd)
+      {ceil(w / 20), ceil(h / 20)}
+    rescue
+      _ -> {96, 54}
+    end
+  end
 
   defp collect_maps(session, scenes) do
     # Migration shim: old-style frontmatter map_ids
