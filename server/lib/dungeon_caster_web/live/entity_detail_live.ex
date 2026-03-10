@@ -95,16 +95,10 @@ defmodule DungeonCasterWeb.EntityDetailLive do
     """
   end
 
-  defp render_metadata("stat-block", e, _assigns) do
-    assigns = %{e: e}
+  defp render_metadata("stat-block", _e, _assigns) do
+    assigns = %{}
     ~H"""
-    <div class="flex flex-wrap gap-3 items-center">
-      <span class="badge badge-error">CR <%= @e.cr %></span>
-      <span class="badge badge-ghost"><%= @e.size %> <%= @e.creature_type %></span>
-      <%= if @e.hp, do: kv("HP", to_string(@e.hp)) %>
-      <%= if @e.ac, do: kv("AC", to_string(@e.ac)) %>
-      <%= if @e.source, do: kv("Source", @e.source) %>
-    </div>
+    <div></div>
     """
   end
 

@@ -128,15 +128,7 @@ defmodule DungeonCasterWeb.EntityBrowserLive do
   defp render_card("stat-block", e, _assigns) do
     assigns = %{e: e}
     ~H"""
-    <div>
-      <div class="flex items-center justify-between mb-1">
-        <p class="font-medium text-sm truncate flex-1"><%= @e.name %></p>
-        <span class="badge badge-xs badge-error ml-1">CR <%= @e.cr %></span>
-      </div>
-      <p class="text-xs text-base-content/60 truncate">
-        <%= @e.size %> <%= @e.creature_type %>
-      </p>
-    </div>
+    <p class="font-medium text-sm truncate"><%= @e.name %></p>
     """
   end
 
