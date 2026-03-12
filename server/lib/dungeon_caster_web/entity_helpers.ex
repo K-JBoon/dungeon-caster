@@ -1,5 +1,5 @@
 defmodule DungeonCasterWeb.EntityHelpers do
-  alias DungeonCaster.Entities
+  alias DungeonCaster.{Audio, Entities}
 
   @doc """
   Parses "type:id" ref string and loads entity from DB.
@@ -46,8 +46,9 @@ defmodule DungeonCasterWeb.EntityHelpers do
         payload =
           if type == "audio" do
             Map.merge(payload, %{
+              playable: audio_playable?(entity),
               category: entity.category,
-              asset_path: entity.asset_path
+              asset_path: normalized_audio_asset_path(entity.asset_path)
             })
           else
             payload
@@ -58,4 +59,16 @@ defmodule DungeonCasterWeb.EntityHelpers do
         :error
     end
   end
+
+  defp audio_playable?(%{asset_path: asset_path}) when is_binary(asset_path) and asset_path != "" do
+    Audio.audio_file_available?(asset_path)
+  end
+
+  defp audio_playable?(_), do: false
+
+  defp normalized_audio_asset_path(asset_path) when is_binary(asset_path) and asset_path != "" do
+    Audio.asset_url(asset_path) |> String.trim_leading("/audio/")
+  end
+
+  defp normalized_audio_asset_path(_), do: nil
 end

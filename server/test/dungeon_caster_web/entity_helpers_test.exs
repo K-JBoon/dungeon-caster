@@ -1,5 +1,5 @@
 defmodule DungeonCasterWeb.EntityHelpersTest do
-  use DungeonCaster.DataCase, async: true
+  use DungeonCaster.DataCase, async: false
   alias DungeonCaster.Entities
   alias DungeonCasterWeb.EntityHelpers
 
@@ -13,6 +13,27 @@ defmodule DungeonCasterWeb.EntityHelpersTest do
     "body_html" => "<p>Loop for downtime scenes</p>",
     "file_path" => "audio/tavern-theme.md"
   }
+
+  setup do
+    previous_campaign_dir = Application.get_env(:dungeon_caster, :campaign_dir)
+    campaign_dir = Path.join(System.tmp_dir!(), "entity-helpers-#{System.unique_integer([:positive])}")
+
+    File.rm_rf!(campaign_dir)
+    File.mkdir_p!(Path.join(campaign_dir, "audio/music"))
+    Application.put_env(:dungeon_caster, :campaign_dir, campaign_dir)
+
+    on_exit(fn ->
+      File.rm_rf!(campaign_dir)
+
+      if previous_campaign_dir do
+        Application.put_env(:dungeon_caster, :campaign_dir, previous_campaign_dir)
+      else
+        Application.delete_env(:dungeon_caster, :campaign_dir)
+      end
+    end)
+
+    {:ok, campaign_dir: campaign_dir}
+  end
 
   describe "load_entity_from_ref/1" do
     test "returns nil for malformed ref" do
@@ -51,14 +72,16 @@ defmodule DungeonCasterWeb.EntityHelpersTest do
       assert EntityHelpers.entity_popover_data("bad") == :error
     end
 
-    test "returns category and asset_path for audio entities" do
+    test "returns playback metadata for playable audio entities", %{campaign_dir: campaign_dir} do
+      File.write!(Path.join(campaign_dir, "audio/music/tavern-theme.mp3"), "fake mp3 data")
       assert {:ok, audio} = Entities.upsert_entity("audio", @audio_attrs)
 
       assert {:ok,
               %{
                 type: "audio",
+                playable: true,
                 category: "music",
-                asset_path: "audio/music/tavern-theme.mp3"
+                asset_path: "music/tavern-theme.mp3"
               }} = EntityHelpers.entity_popover_data("audio:#{audio.id}")
     end
   end

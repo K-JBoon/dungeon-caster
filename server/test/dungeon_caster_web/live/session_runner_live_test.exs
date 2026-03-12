@@ -191,6 +191,26 @@ defmodule DungeonCasterWeb.SessionRunnerLiveTest do
     assert Server.get_state("run-session-01").audio_state.ambient == "music/prefixed-echo.mp3"
   end
 
+  test "play_audio_entity routes normalized audio popover playback by category", %{conn: conn} do
+    Phoenix.PubSub.subscribe(DungeonCaster.PubSub, "session:live:run-session-01")
+    {:ok, view, _html} = live(conn, "/sessions/run-session-01/run")
+
+    render_hook(view, "play_audio_entity", %{
+      "asset_path" => "audio/music/prefixed-echo.mp3",
+      "category" => "music"
+    })
+
+    assert Server.get_state("run-session-01").audio_state.ambient == "music/prefixed-echo.mp3"
+    assert_receive {"audio_play", %{path: "music/prefixed-echo.mp3", type: "ambient"}}
+
+    render_hook(view, "play_audio_entity", %{
+      "asset_path" => "audio/sfx/storm-bell.mp3",
+      "category" => "sfx"
+    })
+
+    assert_receive {"audio_play", %{path: "sfx/storm-bell.mp3", type: "sfx"}}
+  end
+
   defp html_index(html, text) do
     {index, _len} = :binary.match(html, text)
     index

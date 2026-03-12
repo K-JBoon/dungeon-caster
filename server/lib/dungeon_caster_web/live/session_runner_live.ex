@@ -149,6 +149,24 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
 
   # ── Audio events ───────────────────────────────────────────────────────────
 
+  def handle_event("play_audio_entity", %{"asset_path" => asset_path, "category" => category}, socket) do
+    playback_path = Audio.asset_url(asset_path) |> String.trim_leading("/audio/")
+
+    case category do
+      category when category in ["ambient", "music"] ->
+        Server.play_audio(socket.assigns.session_id, playback_path, :ambient)
+        state = Server.get_state(socket.assigns.session_id)
+        {:noreply, assign(socket, server_state: state)}
+
+      "sfx" ->
+        Server.play_audio(socket.assigns.session_id, playback_path, :sfx)
+        {:noreply, socket}
+
+      _ ->
+        {:noreply, socket}
+    end
+  end
+
   def handle_event("play_ambient", %{"path" => path}, socket) do
     Server.play_audio(socket.assigns.session_id, path, :ambient)
     state = Server.get_state(socket.assigns.session_id)
@@ -301,7 +319,7 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
 
   def render(assigns) do
     ~H"""
-    <div class="flex flex-col bg-base-200" style="height: 100dvh">
+    <div class="flex flex-col bg-base-200" style="height: 100dvh" data-entity-audio-popover-target>
       <%!-- Runner header --%>
       <div class="flex items-center gap-3 px-4 py-2 bg-base-300 border-b border-base-300 shrink-0">
         <.link navigate={"/entities/session/#{@session_id}"}

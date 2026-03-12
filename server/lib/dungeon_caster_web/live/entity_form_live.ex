@@ -86,6 +86,10 @@ defmodule DungeonCasterWeb.EntityFormLive do
     {:reply, %{results: results}, socket}
   end
 
+  def handle_event("play_audio_entity", _params, socket) do
+    {:noreply, put_flash(socket, :info, "Audio previews are only available in the session runner")}
+  end
+
   def handle_event("open_revision_history", _, %{assigns: %{mode: :new}} = socket) do
     {:noreply, put_flash(socket, :error, "History is available after the first save")}
   end
@@ -497,7 +501,7 @@ defmodule DungeonCasterWeb.EntityFormLive do
 
   def render(assigns) do
     ~H"""
-    <div class="p-6 max-w-4xl mx-auto">
+    <div class="p-6 max-w-4xl mx-auto" data-entity-audio-popover-target>
       <div class="flex items-center gap-3 mb-6">
         <.link navigate={back_path(@type, @entity)} class="btn btn-ghost btn-sm">
           <.icon name="hero-arrow-left" class="size-4" />
