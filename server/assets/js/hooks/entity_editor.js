@@ -25,8 +25,14 @@ export const EntityEditor = {
     this._pendingOffset = 0
     this._dropdown = null
     this._searchTimer = null
+    this._isApplyingHistory = false
+    this._history = []
+    this._historyIndex = -1
+
+    this._pushHistory(this.textarea.value, this._getCaretOffset())
 
     editor.addEventListener('input', () => this._onInput())
+    editor.addEventListener('beforeinput', (e) => this._onBeforeInput(e))
     editor.addEventListener('keydown', (e) => this._onKeydown(e))
     editor.addEventListener('click', (e) => this._onClick(e))
   },
@@ -86,12 +92,42 @@ export const EntityEditor = {
 
   _onInput() {
     const md = this._serialize()
-    this.textarea.value = md
-    this.textarea.dispatchEvent(new Event('input', { bubbles: true }))
+    this._syncTextarea(md)
+    if (!this._isApplyingHistory) {
+      this._pushHistory(md, this._getCaretOffset())
+    }
     this._checkTrigger()
   },
 
+  _onBeforeInput(e) {
+    if (e.inputType === 'historyUndo') {
+      e.preventDefault()
+      this._undo()
+    } else if (e.inputType === 'historyRedo') {
+      e.preventDefault()
+      this._redo()
+    }
+  },
+
   _onKeydown(e) {
+    if ((e.metaKey || e.ctrlKey) && !e.altKey) {
+      const key = e.key.toLowerCase()
+      if (key === 'z') {
+        e.preventDefault()
+        if (e.shiftKey) {
+          this._redo()
+        } else {
+          this._undo()
+        }
+        return
+      }
+      if (key === 'y') {
+        e.preventDefault()
+        this._redo()
+        return
+      }
+    }
+
     // Normalize Enter to insert literal newline (avoid browser-specific div/p insertion)
     if (e.key === 'Enter' && !this._dropdown) {
       e.preventDefault()
@@ -243,11 +279,183 @@ export const EntityEditor = {
     this._pendingQuery = null
     this._pendingNode = null
 
-    this.textarea.value = this._serialize()
-    this.textarea.dispatchEvent(new Event('input', { bubbles: true }))
+    const md = this._serialize()
+    this._syncTextarea(md)
+    this._pushHistory(md, this._getCaretOffset())
   },
 
   // ── Utils ─────────────────────────────────────────────────────────────
+
+  _syncTextarea(markdown) {
+    this.textarea.value = markdown
+    this.textarea.dispatchEvent(new Event('input', { bubbles: true }))
+  },
+
+  _pushHistory(markdown, caret) {
+    const snapshot = { markdown, caret }
+    const current = this._history[this._historyIndex]
+    if (current && current.markdown === markdown && current.caret === caret) return
+
+    if (this._historyIndex < this._history.length - 1) {
+      this._history = this._history.slice(0, this._historyIndex + 1)
+    }
+
+    this._history.push(snapshot)
+    if (this._history.length > 200) {
+      this._history.shift()
+    }
+    this._historyIndex = this._history.length - 1
+  },
+
+  _undo() {
+    if (this._historyIndex <= 0) return
+    this._applyHistory(this._historyIndex - 1)
+  },
+
+  _redo() {
+    if (this._historyIndex >= this._history.length - 1) return
+    this._applyHistory(this._historyIndex + 1)
+  },
+
+  _applyHistory(index) {
+    const snapshot = this._history[index]
+    if (!snapshot) return
+
+    this._isApplyingHistory = true
+    this._historyIndex = index
+    this._setContent(this.editor, snapshot.markdown)
+    this._restoreCaretOffset(snapshot.caret)
+    this._syncTextarea(snapshot.markdown)
+    this._hideDropdown()
+    this._pendingQuery = null
+    this._pendingNode = null
+    this._isApplyingHistory = false
+  },
+
+  _getCaretOffset() {
+    const sel = window.getSelection()
+    if (!sel || !sel.rangeCount) return this._serialize().length
+
+    const range = sel.getRangeAt(0)
+    if (!this.editor.contains(range.startContainer)) return this._serialize().length
+
+    let offset = 0
+    let found = false
+
+    const walk = (node) => {
+      if (found) return
+
+      if (node.nodeType === Node.TEXT_NODE) {
+        if (node === range.startContainer) {
+          offset += range.startOffset
+          found = true
+          return
+        }
+        offset += node.textContent.length
+        return
+      }
+
+      if (node.nodeType !== Node.ELEMENT_NODE) return
+
+      if (node.classList && node.classList.contains('entity-badge')) {
+        const token = `~[${node.dataset.display}]{${node.dataset.ref}}`
+        if (node === range.startContainer) {
+          offset += range.startOffset > 0 ? token.length : 0
+          found = true
+          return
+        }
+        offset += token.length
+        return
+      }
+
+      if (node === range.startContainer) {
+        const children = [...node.childNodes]
+        for (let i = 0; i < range.startOffset; i += 1) {
+          offset += this._nodeMarkdownLength(children[i])
+        }
+        found = true
+        return
+      }
+
+      for (const child of node.childNodes) {
+        walk(child)
+        if (found) return
+      }
+    }
+
+    walk(this.editor)
+    return found ? offset : this._serialize().length
+  },
+
+  _restoreCaretOffset(target) {
+    const offset = Math.max(0, target || 0)
+    let consumed = 0
+    let placed = false
+    const sel = window.getSelection()
+    const range = document.createRange()
+
+    const place = (node, nodeOffset) => {
+      range.setStart(node, nodeOffset)
+      range.collapse(true)
+      sel.removeAllRanges()
+      sel.addRange(range)
+      placed = true
+    }
+
+    const walk = (node) => {
+      if (placed) return
+
+      if (node.nodeType === Node.TEXT_NODE) {
+        const length = node.textContent.length
+        if (offset <= consumed + length) {
+          place(node, offset - consumed)
+          return
+        }
+        consumed += length
+        return
+      }
+
+      if (node.nodeType !== Node.ELEMENT_NODE) return
+
+      if (node.classList && node.classList.contains('entity-badge')) {
+        const length = this._nodeMarkdownLength(node)
+        if (offset <= consumed + length) {
+          const parent = node.parentNode
+          const index = [...parent.childNodes].indexOf(node)
+          place(parent, offset === consumed ? index : index + 1)
+          return
+        }
+        consumed += length
+        return
+      }
+
+      for (const child of node.childNodes) {
+        walk(child)
+        if (placed) return
+      }
+    }
+
+    walk(this.editor)
+
+    if (!placed) {
+      place(this.editor, this.editor.childNodes.length)
+    }
+  },
+
+  _nodeMarkdownLength(node) {
+    if (!node) return 0
+    if (node.nodeType === Node.TEXT_NODE) return node.textContent.length
+    if (node.nodeType !== Node.ELEMENT_NODE) return 0
+    if (node.classList && node.classList.contains('entity-badge')) {
+      return `~[${node.dataset.display}]{${node.dataset.ref}}`.length
+    }
+
+    let length = 0
+    for (const child of node.childNodes) {
+      length += this._nodeMarkdownLength(child)
+    }
+    return length
+  },
 
   _caretRect() {
     const sel = window.getSelection()
