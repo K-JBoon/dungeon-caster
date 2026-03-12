@@ -152,6 +152,14 @@ defmodule DungeonCasterWeb.SessionRunnerLiveTest do
     assert html =~ "Audio"
   end
 
+  test "live session header renders the cast action scaffold", %{conn: conn} do
+    {:ok, view, _html} = live(conn, "/sessions/run-session-01/run")
+
+    assert has_element?(view, "#session-cast-action")
+    assert has_element?(view, "#session-cast-action[phx-hook='AndroidCastButton']")
+    assert has_element?(view, "#session-cast-button[hidden]")
+  end
+
   test "plan mode shows scenes", %{conn: conn} do
     {:ok, _view, html} = live(conn, "/sessions/run-session-01/run")
     assert html =~ "Opening"

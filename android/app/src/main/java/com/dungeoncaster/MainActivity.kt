@@ -1,10 +1,10 @@
 package com.dungeoncaster
 
 import android.annotation.SuppressLint
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import android.os.SystemClock
-import android.view.MotionEvent
-import android.view.View
+import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
@@ -18,8 +18,10 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private lateinit var castContext: CastContext
+    private lateinit var castButton: MediaRouteButton
     private val serverUrl = "http://192.168.1.109:4000" // Configure via Settings in future
     private var currentSessionId: String? = null
+    private var castChooserReady = false
 
     private val sessionManagerListener = object : SessionManagerListener<CastSession> {
         override fun onSessionStarted(session: CastSession, sessionId: String) {
@@ -41,24 +43,33 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         castContext = CastContext.getSharedInstance(this)
 
-        val castButton = findViewById<MediaRouteButton>(R.id.media_route_menu_item)
+        castButton = findViewById(R.id.media_route_menu_item)
         CastButtonFactory.setUpMediaRouteButton(applicationContext, castButton)
-
-        val gestureZone = findViewById<View>(R.id.cast_gesture_zone)
-        gestureZone.setOnTouchListener(TripleTapListener { castButton.performClick() })
+        castChooserReady = true
 
         webView = findViewById(R.id.webview)
         webView.settings.javaScriptEnabled = true
         webView.settings.domStorageEnabled = true
+        webView.addJavascriptInterface(AndroidCastBridge(), "AndroidCast")
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, url: String): Boolean {
                 if (url.startsWith(serverUrl)) {
-                    // Extract session_id from URL if navigating to a session
-                    val match = Regex("/sessions/([^/]+)/run").find(url)
-                    currentSessionId = match?.groupValues?.get(1)
-                    return false // load in WebView
+                    updateCurrentSessionId(url)
+                    return false
                 }
-                return false
+
+                startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+                return true
+            }
+
+            override fun onPageFinished(view: WebView, url: String) {
+                super.onPageFinished(view, url)
+                updateCurrentSessionId(url)
+            }
+
+            override fun doUpdateVisitedHistory(view: WebView, url: String?, isReload: Boolean) {
+                super.doUpdateVisitedHistory(view, url, isReload)
+                updateCurrentSessionId(url)
             }
         }
         webView.loadUrl(serverUrl)
@@ -74,23 +85,17 @@ class MainActivity : AppCompatActivity() {
         castContext.sessionManager.removeSessionManagerListener(sessionManagerListener, CastSession::class.java)
     }
 
-    private inner class TripleTapListener(private val onTripleTap: () -> Unit) : View.OnTouchListener {
-        private var tapCount = 0
-        private var lastTapTime = 0L
-        private val windowMs = 600L
+    private inner class AndroidCastBridge {
+        @JavascriptInterface
+        fun isAvailable(): Boolean = castChooserReady
 
-        @SuppressLint("ClickableViewAccessibility")
-        override fun onTouch(v: View, event: MotionEvent): Boolean {
-            if (event.actionMasked != MotionEvent.ACTION_DOWN) return false
-            val now = SystemClock.elapsedRealtime()
-            if (now - lastTapTime > windowMs) tapCount = 0
-            lastTapTime = now
-            tapCount++
-            if (tapCount >= 3) {
-                tapCount = 0
-                onTripleTap()
+        @JavascriptInterface
+        fun openChooser() {
+            if (!castChooserReady) return
+
+            runOnUiThread {
+                castButton.performClick()
             }
-            return true
         }
     }
 
@@ -102,5 +107,15 @@ class MainActivity : AppCompatActivity() {
             "urn:x-cast:com.dungeoncaster",
             """{"session_id":"$sid"}"""
         )
+    }
+
+    private fun updateCurrentSessionId(url: String?) {
+        val sessionPath = url ?: run {
+            currentSessionId = null
+            return
+        }
+
+        val match = Regex("/sessions/([^/]+)/run").find(sessionPath)
+        currentSessionId = match?.groupValues?.get(1)
     }
 }

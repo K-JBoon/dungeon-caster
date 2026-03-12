@@ -77,7 +77,7 @@
   </head>
   <body>
     <div id="map-container">
-      <img id="map-img" src="" alt="" />
+      <img id="map-img" alt="" hidden />
       <canvas id="fog-canvas"></canvas>
       <canvas id="drawing-canvas"></canvas>
       <div id="qr-overlay">
@@ -110,6 +110,11 @@
       let ambientAudio = null;
       let volume = { master: 80, ambient: 80, sfx: 80 };
       let drawStrokes = [];
+
+      function showMapImage(path) {
+        mapImg.src = path;
+        mapImg.hidden = false;
+      }
 
       // ── Canvas sizing ───────────────────────────────────────────────────────────
       function resizeCanvas() {
@@ -282,7 +287,7 @@
         channel.on('map_update', ({ asset, map_id, grid_cols, grid_rows }) => {
           if (grid_cols) gridCols = grid_cols;
           if (grid_rows) gridRows = grid_rows;
-          mapImg.src = '/maps/assets/' + (asset || map_id + '.png');
+          showMapImage('/maps/assets/' + (asset || map_id + '.png'));
           applyFogState('all_fogged');
           drawFog();
           drawStrokes = [];
@@ -350,9 +355,9 @@
             if (initialState.grid_rows) gridRows = initialState.grid_rows;
 
             if (initialState.current_map_asset) {
-              mapImg.src = '/maps/assets/' + initialState.current_map_asset;
+              showMapImage('/maps/assets/' + initialState.current_map_asset);
             } else if (initialState.current_map) {
-              mapImg.src = '/maps/assets/' + initialState.current_map + '.png';
+              showMapImage('/maps/assets/' + initialState.current_map + '.png');
             }
 
             applyFogState(initialState.fog_grid);

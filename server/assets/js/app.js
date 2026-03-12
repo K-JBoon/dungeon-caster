@@ -29,11 +29,59 @@ import {EntityEditor} from "./hooks/entity_editor"
 import EntityPopover from "./entity_popover"
 import topbar from "../vendor/topbar"
 
+const AndroidCastButton = {
+  mounted() {
+    this.button = this.el.querySelector("#session-cast-button")
+
+    this.handleClick = () => {
+      try {
+        window.AndroidCast?.openChooser?.()
+      } catch (_error) {
+        this.button.setAttribute("hidden", "")
+      }
+    }
+
+    this.syncVisibility()
+
+    if (this.button) {
+      this.button.addEventListener("click", this.handleClick)
+    }
+  },
+
+  updated() {
+    this.button = this.el.querySelector("#session-cast-button")
+    this.syncVisibility()
+  },
+
+  destroyed() {
+    if (this.button && this.handleClick) {
+      this.button.removeEventListener("click", this.handleClick)
+    }
+  },
+
+  syncVisibility() {
+    if (!this.button) {
+      return
+    }
+
+    try {
+      if (window.AndroidCast?.isAvailable?.() === true) {
+        this.button.removeAttribute("hidden")
+        return
+      }
+    } catch (_error) {
+      // Fall through and keep the control hidden if the bridge is unavailable.
+    }
+
+    this.button.setAttribute("hidden", "")
+  },
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks, FogEditor, SortableScenes, EntityEditor},
+  hooks: {...colocatedHooks, FogEditor, SortableScenes, EntityEditor, AndroidCastButton},
 })
 
 // Show progress bar on live navigation and form submits
@@ -90,4 +138,3 @@ if (process.env.NODE_ENV === "development") {
     window.liveReloader = reloader
   })
 }
-

@@ -14,10 +14,4 @@
         android:layout_height="0dp"
         android:visibility="gone" />
 
-    <View
-        android:id="@+id/cast_gesture_zone"
-        android:layout_width="72dp"
-        android:layout_height="72dp"
-        android:layout_gravity="top|end" />
-
 </FrameLayout>

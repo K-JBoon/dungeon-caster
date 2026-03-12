@@ -361,6 +361,16 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
           <.icon name="hero-arrow-left" class="size-5" />
         </.link>
         <span class="font-semibold text-sm truncate">{@session.title}</span>
+        <div id="session-cast-action" phx-hook="AndroidCastButton" class="ml-auto shrink-0">
+          <button
+            id="session-cast-button"
+            type="button"
+            class="btn btn-ghost btn-sm btn-circle"
+            hidden
+          >
+            <.icon name="hero-signal" class="size-5" />
+          </button>
+        </div>
       </div>
 
       <%!-- Content area --%>
