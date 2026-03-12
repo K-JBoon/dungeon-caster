@@ -165,6 +165,15 @@ defmodule DungeonCasterWeb.SessionRunnerLiveTest do
     assert html =~ "Opening"
   end
 
+  test "plan mode constrains reading width in a centered container", %{conn: conn} do
+    {:ok, view, _html} = live(conn, "/sessions/run-session-01/run")
+
+    assert has_element?(
+             view,
+             "#session-plan-content.mx-auto.w-full.max-w-4xl"
+           )
+  end
+
   test "audio mode treats legacy music entities as ambient audio", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/sessions/run-session-01/run")
 

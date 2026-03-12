@@ -423,86 +423,93 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
       </div>
 
       <%= if @scenes == [] do %>
-        <div class="flex-1 flex items-center justify-center text-base-content/40">
-          <p>No scenes planned yet. Open the planner to add scenes.</p>
+        <div class="flex-1 px-4 py-4">
+          <div
+            id="session-plan-content"
+            class="mx-auto flex h-full w-full max-w-4xl items-center justify-center text-base-content/40"
+          >
+            <p>No scenes planned yet. Open the planner to add scenes.</p>
+          </div>
         </div>
       <% else %>
         <% scene = Enum.at(@scenes, @scene_index) %>
         <div class="flex-1 overflow-y-auto px-4 py-4">
-          <div class="flex items-center gap-3 mb-4">
-            <button
-              phx-click="prev_scene"
-              class={[
-                "btn btn-circle btn-sm btn-ghost",
-                if(@scene_index == 0, do: "btn-disabled opacity-30", else: "")
-              ]}
-            >
-              ◀
-            </button>
-            <h3 class="flex-1 text-center font-bold text-lg">{scene["title"]}</h3>
-            <button
-              phx-click="next_scene"
-              class={[
-                "btn btn-circle btn-sm btn-ghost",
-                if(@scene_index >= length(@scenes) - 1, do: "btn-disabled opacity-30", else: "")
-              ]}
-            >
-              ▶
-            </button>
-          </div>
-
-          <%= if scene["notes"] && scene["notes"] != "" do %>
-            <div class="prose max-w-none mb-4">
-              {Phoenix.HTML.raw(Markdown.render(scene["notes"] || ""))}
+          <div id="session-plan-content" class="mx-auto w-full max-w-4xl">
+            <div class="mb-4 flex items-center gap-3">
+              <button
+                phx-click="prev_scene"
+                class={[
+                  "btn btn-circle btn-sm btn-ghost",
+                  if(@scene_index == 0, do: "btn-disabled opacity-30", else: "")
+                ]}
+              >
+                ◀
+              </button>
+              <h3 class="flex-1 text-center font-bold text-lg">{scene["title"]}</h3>
+              <button
+                phx-click="next_scene"
+                class={[
+                  "btn btn-circle btn-sm btn-ghost",
+                  if(@scene_index >= length(@scenes) - 1, do: "btn-disabled opacity-30", else: "")
+                ]}
+              >
+                ▶
+              </button>
             </div>
-          <% end %>
 
-          <%= if scene["entity_ids"] && scene["entity_ids"] != [] do %>
-            <div class="space-y-2">
-              <%= for ref <- scene["entity_ids"] do %>
-                <% [type, id] =
-                  case String.split(ref, ":", parts: 2) do
-                    [t, i] -> [t, i]
-                    _ -> ["", ""]
-                  end %>
-                <% entity = if type != "", do: Entities.get_entity(type, id), else: nil %>
-                <%= if entity do %>
-                  <% expanded = MapSet.member?(@expanded_entities, ref) %>
-                  <div>
-                    <button
-                      phx-click="toggle_entity"
-                      phx-value-ref={ref}
-                      class={[
-                        "badge badge-lg gap-1 cursor-pointer w-full justify-start transition-colors",
-                        if(expanded, do: "badge-primary", else: "badge-outline")
-                      ]}
-                    >
-                      <span>{entity_emoji(type)}</span>
-                      <span class="truncate">{entity_display_name(entity)}</span>
-                      <span class={[
-                        "ml-auto transition-transform text-xs",
-                        if(expanded, do: "rotate-180", else: "")
-                      ]}>
-                        ▼
-                      </span>
-                    </button>
-                    <%= if expanded do %>
-                      <div class="card bg-base-100 shadow mt-1">
-                        <div class="card-body py-3 px-4">
-                          <p class="font-semibold text-sm">{entity_display_name(entity)}</p>
-                          <%= if entity.body_html && entity.body_html != "" do %>
-                            <div class="prose prose-sm max-w-none">
-                              {Phoenix.HTML.raw(entity.body_html)}
-                            </div>
-                          <% end %>
+            <%= if scene["notes"] && scene["notes"] != "" do %>
+              <div class="prose mb-4 max-w-none">
+                {Phoenix.HTML.raw(Markdown.render(scene["notes"] || ""))}
+              </div>
+            <% end %>
+
+            <%= if scene["entity_ids"] && scene["entity_ids"] != [] do %>
+              <div class="space-y-2">
+                <%= for ref <- scene["entity_ids"] do %>
+                  <% [type, id] =
+                    case String.split(ref, ":", parts: 2) do
+                      [t, i] -> [t, i]
+                      _ -> ["", ""]
+                    end %>
+                  <% entity = if type != "", do: Entities.get_entity(type, id), else: nil %>
+                  <%= if entity do %>
+                    <% expanded = MapSet.member?(@expanded_entities, ref) %>
+                    <div>
+                      <button
+                        phx-click="toggle_entity"
+                        phx-value-ref={ref}
+                        class={[
+                          "badge badge-lg gap-1 cursor-pointer w-full justify-start transition-colors",
+                          if(expanded, do: "badge-primary", else: "badge-outline")
+                        ]}
+                      >
+                        <span>{entity_emoji(type)}</span>
+                        <span class="truncate">{entity_display_name(entity)}</span>
+                        <span class={[
+                          "ml-auto transition-transform text-xs",
+                          if(expanded, do: "rotate-180", else: "")
+                        ]}>
+                          ▼
+                        </span>
+                      </button>
+                      <%= if expanded do %>
+                        <div class="card bg-base-100 shadow mt-1">
+                          <div class="card-body py-3 px-4">
+                            <p class="font-semibold text-sm">{entity_display_name(entity)}</p>
+                            <%= if entity.body_html && entity.body_html != "" do %>
+                              <div class="prose prose-sm max-w-none">
+                                {Phoenix.HTML.raw(entity.body_html)}
+                              </div>
+                            <% end %>
+                          </div>
                         </div>
-                      </div>
-                    <% end %>
-                  </div>
+                      <% end %>
+                    </div>
+                  <% end %>
                 <% end %>
-              <% end %>
-            </div>
-          <% end %>
+              </div>
+            <% end %>
+          </div>
         </div>
       <% end %>
 
