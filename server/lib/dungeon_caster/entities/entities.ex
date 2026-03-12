@@ -7,6 +7,7 @@ defmodule DungeonCaster.Entities do
   alias DungeonCaster.Entities.Schemas.Session
   alias DungeonCaster.Entities.Schemas.StatBlock
   alias DungeonCaster.Entities.Schemas.MapEntity
+  alias DungeonCaster.Entities.Schemas.Audio
 
   @schema_map %{
     "npc" => Npc,
@@ -14,7 +15,8 @@ defmodule DungeonCaster.Entities do
     "faction" => Faction,
     "session" => Session,
     "stat-block" => StatBlock,
-    "map" => MapEntity
+    "map" => MapEntity,
+    "audio" => Audio
   }
 
   def schema_for(type), do: Map.fetch!(@schema_map, type)
@@ -24,7 +26,7 @@ defmodule DungeonCaster.Entities do
 
     from(e in schema)
     |> maybe_filter_tag(opts[:tag])
-    |> maybe_filter_status(opts[:status])
+    |> maybe_filter_status(schema, opts[:status])
     |> Repo.all()
   end
 
@@ -78,9 +80,13 @@ defmodule DungeonCaster.Entities do
     where(query, [e], like(e.tags, ^"%#{tag}%"))
   end
 
-  defp maybe_filter_status(query, nil), do: query
+  defp maybe_filter_status(query, _schema, nil), do: query
 
-  defp maybe_filter_status(query, status) do
-    where(query, [e], e.status == ^status)
+  defp maybe_filter_status(query, schema, status) do
+    if :status in schema.__schema__(:fields) do
+      where(query, [e], e.status == ^status)
+    else
+      query
+    end
   end
 end
