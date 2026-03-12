@@ -11,7 +11,8 @@ defmodule DungeonCasterWeb.EntityFormLive do
     "faction" => "factions",
     "session" => "sessions",
     "stat-block" => "stat-blocks",
-    "map" => "maps"
+    "map" => "maps",
+    "audio" => "audio"
   }
 
   def mount(%{"type" => type, "id" => id}, _session, socket) do
@@ -32,11 +33,7 @@ defmodule DungeonCasterWeb.EntityFormLive do
         revision_history: empty_revision_history(),
         page_title: "Edit #{entity_name(entity)}"
       )
-      |> allow_upload(:asset,
-        accept: ~w(.jpg .jpeg .png .webp .gif),
-        max_entries: 1,
-        max_file_size: 20_000_000
-      )
+      |> allow_upload(:asset, upload_options(type))
 
     {:ok, socket}
   end
@@ -55,11 +52,7 @@ defmodule DungeonCasterWeb.EntityFormLive do
         revision_history: empty_revision_history(),
         page_title: "New #{String.replace(type, "-", " ") |> String.capitalize()}"
       )
-      |> allow_upload(:asset,
-        accept: ~w(.jpg .jpeg .png .webp .gif),
-        max_entries: 1,
-        max_file_size: 20_000_000
-      )
+      |> allow_upload(:asset, upload_options(type))
 
     {:ok, socket}
   end
@@ -133,17 +126,21 @@ defmodule DungeonCasterWeb.EntityFormLive do
 
     uploaded_path =
       consume_uploaded_entries(socket, :asset, fn %{path: tmp_path}, entry ->
-        asset_dir = Path.join([campaign_dir, @type_dirs[type], "assets"])
+        {asset_dir, relative_path} = upload_destination(type, campaign_dir, entry.client_name)
         File.mkdir_p!(asset_dir)
-        dest = Path.join(asset_dir, entry.client_name)
-        File.cp!(tmp_path, dest)
-        {:ok, Path.join(["assets", entry.client_name])}
+        File.cp!(tmp_path, Path.join(campaign_dir, relative_path))
+        {:ok, relative_path}
       end)
       |> List.first()
 
     params =
       if uploaded_path do
-        asset_key = if type == "map", do: "asset_path", else: "portrait"
+        asset_key =
+          cond do
+            type in ["map", "audio"] -> "asset_path"
+            true -> "portrait"
+          end
+
         Map.put(params, asset_key, uploaded_path)
       else
         params
@@ -235,6 +232,14 @@ defmodule DungeonCasterWeb.EntityFormLive do
     [
       "name: #{fields["name"] || ""}",
       "map_type: #{fields["map_type"] || "battle"}",
+      "asset_path: #{fields["asset_path"] || ""}"
+    ]
+  end
+
+  defp fields_to_yaml("audio", fields) do
+    [
+      "name: #{fields["name"] || ""}",
+      "category: #{fields["category"] || ""}",
       "asset_path: #{fields["asset_path"] || ""}"
     ]
   end
@@ -367,6 +372,21 @@ defmodule DungeonCasterWeb.EntityFormLive do
     }
   end
 
+  defp fields_to_db_attrs("audio", id, fields, body, file_path) do
+    html = Markdown.render(body)
+
+    %{
+      "id" => id,
+      "name" => fields["name"] || "",
+      "category" => fields["category"] || "",
+      "asset_path" => fields["asset_path"] || "",
+      "tags" => [],
+      "body_raw" => body,
+      "body_html" => html,
+      "file_path" => file_path
+    }
+  end
+
   defp fields_to_db_attrs(type, id, fields, body, file_path) do
     html = Markdown.render(body)
 
@@ -387,6 +407,7 @@ defmodule DungeonCasterWeb.EntityFormLive do
   defp default_fields("faction"), do: %{"status" => "active"}
   defp default_fields("stat-block"), do: %{}
   defp default_fields("map"), do: %{"map_type" => "battle"}
+  defp default_fields("audio"), do: %{"category" => "ambient"}
   defp default_fields("session"), do: %{"session_number" => "1", "status" => "planned"}
   defp default_fields(_), do: %{}
 
@@ -421,6 +442,10 @@ defmodule DungeonCasterWeb.EntityFormLive do
 
   defp entity_to_form_data("map", e) do
     %{"name" => e.name, "map_type" => e.map_type, "asset_path" => e.asset_path}
+  end
+
+  defp entity_to_form_data("audio", e) do
+    %{"name" => e.name, "category" => e.category, "asset_path" => e.asset_path}
   end
 
   defp entity_to_form_data("session", e) do
@@ -807,6 +832,32 @@ defmodule DungeonCasterWeb.EntityFormLive do
     """
   end
 
+  defp render_fields("audio", assigns) do
+    ~H"""
+    <div class="grid grid-cols-2 gap-4">
+      <label class="form-control col-span-2 md:col-span-1">
+        <div class="label"><span class="label-text">Name *</span></div>
+        <input name="entity[name]" value={@form_data["name"]} class="input input-bordered" required />
+      </label>
+      <label class="form-control">
+        <div class="label"><span class="label-text">Category *</span></div>
+        <select name="entity[category]" class="select select-bordered" required>
+          <%= for category <- ~w(ambient sfx) do %>
+            <option value={category} selected={@form_data["category"] == category}>{category}</option>
+          <% end %>
+        </select>
+      </label>
+      <label class="form-control col-span-2">
+        <div class="label">
+          <span class="label-text">Audio Asset *</span>
+        </div>
+        <.live_file_input upload={@uploads.asset} class="file-input file-input-bordered w-full" />
+        <input type="hidden" name="entity[asset_path]" value={@form_data["asset_path"] || ""} />
+      </label>
+    </div>
+    """
+  end
+
   defp render_fields(_, assigns) do
     ~H"""
     <label class="form-control">
@@ -814,5 +865,45 @@ defmodule DungeonCasterWeb.EntityFormLive do
       <input name="entity[name]" value={@form_data["name"]} class="input input-bordered" required />
     </label>
     """
+  end
+
+  defp upload_options("audio") do
+    [
+      accept: ~w(.mp3 .wav .aac),
+      max_entries: 1,
+      max_file_size: 20_000_000
+    ]
+  end
+
+  defp upload_options(_type) do
+    [
+      accept: ~w(.jpg .jpeg .png .webp .gif),
+      max_entries: 1,
+      max_file_size: 20_000_000
+    ]
+  end
+
+  defp upload_destination("audio", campaign_dir, client_name) do
+    file_name = normalize_uploaded_filename(client_name)
+    relative_path = Path.join(["audio", "assets", file_name])
+    {Path.join(campaign_dir, "audio/assets"), relative_path}
+  end
+
+  defp upload_destination(type, campaign_dir, client_name) do
+    relative_path = Path.join(["assets", client_name])
+    {Path.join([campaign_dir, @type_dirs[type], "assets"]), relative_path}
+  end
+
+  defp normalize_uploaded_filename(client_name) do
+    ext = client_name |> Path.extname() |> String.downcase()
+
+    base =
+      client_name
+      |> Path.rootname()
+      |> String.downcase()
+      |> String.replace(~r/[^a-z0-9]+/, "-")
+      |> String.trim("-")
+
+    base <> ext
   end
 end
