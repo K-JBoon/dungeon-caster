@@ -2,7 +2,7 @@ defmodule DungeonCasterWeb.DashboardLive do
   use DungeonCasterWeb, :live_view
   alias DungeonCaster.Entities
 
-  @entity_types ~w(npc location faction session stat-block map)
+  @entity_types ~w(npc location faction session stat-block map audio)
 
   @type_meta %{
     "npc"        => %{label: "NPCs",        icon: "hero-user-group",    color: "text-blue-500"},
@@ -10,7 +10,8 @@ defmodule DungeonCasterWeb.DashboardLive do
     "faction"    => %{label: "Factions",    icon: "hero-shield-check",  color: "text-purple-500"},
     "session"    => %{label: "Sessions",    icon: "hero-calendar-days", color: "text-orange-500"},
     "stat-block" => %{label: "Stat Blocks", icon: "hero-book-open",     color: "text-red-500"},
-    "map"        => %{label: "Maps",        icon: "hero-map",           color: "text-teal-500"}
+    "map"        => %{label: "Maps",        icon: "hero-map",           color: "text-teal-500"},
+    "audio"      => %{label: "Audio",       icon: "hero-speaker-wave",  color: "text-amber-500"}
   }
 
   def mount(_params, _session, socket) do

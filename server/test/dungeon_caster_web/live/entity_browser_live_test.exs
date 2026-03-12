@@ -15,6 +15,17 @@ defmodule DungeonCasterWeb.EntityBrowserLiveTest do
       "body_html" => "",
       "file_path" => "/tmp/browser-test-npc.md"
     })
+
+    Entities.upsert_entity("audio", %{
+      "id" => "browser-test-audio",
+      "name" => "Browser Test Audio",
+      "category" => "ambient",
+      "asset_path" => "audio/assets/browser-test-track.mp3",
+      "body_raw" => "",
+      "body_html" => "",
+      "file_path" => "/tmp/browser-test-audio.md"
+    })
+
     :ok
   end
 
@@ -38,5 +49,13 @@ defmodule DungeonCasterWeb.EntityBrowserLiveTest do
     })
     Phoenix.PubSub.broadcast(DungeonCaster.PubSub, "entities:npc", {:updated, "pubsub-test-npc"})
     assert render(view) =~ "PubSub NPC"
+  end
+
+  test "renders audio cards with category and asset filename", %{conn: conn} do
+    {:ok, _view, html} = live(conn, "/entities/audio")
+
+    assert html =~ "Browser Test Audio"
+    assert html =~ "ambient"
+    assert html =~ "browser-test-track.mp3"
   end
 end

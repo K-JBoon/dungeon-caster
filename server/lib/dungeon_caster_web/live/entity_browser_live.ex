@@ -163,6 +163,21 @@ defmodule DungeonCasterWeb.EntityBrowserLive do
     """
   end
 
+  defp render_card("audio", e, _assigns) do
+    assigns = %{e: e}
+    ~H"""
+    <div>
+      <p class="font-medium text-sm truncate"><%= @e.name %></p>
+      <div class="flex gap-1 mt-1 flex-wrap items-center">
+        <span class="badge badge-xs badge-ghost"><%= @e.category %></span>
+        <%= if @e.asset_path && @e.asset_path != "" do %>
+          <span class="text-base-content/50 text-xs truncate"><%= Path.basename(@e.asset_path) %></span>
+        <% end %>
+      </div>
+    </div>
+    """
+  end
+
   defp render_card(_, e, _assigns) do
     assigns = %{e: e}
     ~H"<p class='font-medium text-sm truncate'><%= @e.name %></p>"

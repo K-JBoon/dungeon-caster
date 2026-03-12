@@ -1,5 +1,6 @@
 defmodule DungeonCasterWeb.EntityDetailLive do
   use DungeonCasterWeb, :live_view
+  alias DungeonCaster.Audio
   alias DungeonCaster.Entities
 
   def mount(%{"type" => type, "id" => id}, _session, socket) do
@@ -124,6 +125,27 @@ defmodule DungeonCasterWeb.EntityDetailLive do
       <.link navigate={"/sessions/#{@e.id}/plan"} class="btn btn-primary btn-sm ml-auto">
         Open Planner →
       </.link>
+    </div>
+    """
+  end
+
+  defp render_metadata("audio", e, _assigns) do
+    assigns = %{e: e, file_available?: Audio.audio_file_available?(e.asset_path)}
+    ~H"""
+    <div class="flex flex-col gap-3">
+      <div class="flex flex-wrap gap-2 items-center">
+        <span class="badge badge-ghost"><%= @e.category %></span>
+      </div>
+      <%= if @e.asset_path && @e.asset_path != "" do %>
+        <div class="flex flex-wrap gap-2 items-center">
+          <%= kv("File", @e.asset_path) %>
+        </div>
+      <% end %>
+      <%= if @e.asset_path && @e.asset_path != "" && not @file_available? do %>
+        <div class="text-warning text-sm font-medium">
+          Audio file missing
+        </div>
+      <% end %>
     </div>
     """
   end
