@@ -2,7 +2,7 @@ defmodule DungeonCaster.Sync.GitWorker do
   use GenServer
   require Logger
 
-  @debounce_ms 5_000
+  @debounce_ms 300_000
 
   def start_link(_opts) do
     GenServer.start_link(__MODULE__, %{timer: nil}, name: __MODULE__)
@@ -27,11 +27,16 @@ defmodule DungeonCaster.Sync.GitWorker do
       # git diff --cached --quiet exits 1 when there ARE staged changes
       # OR git add failed
       _ ->
-        case System.cmd("git", ["commit", "-m", "Dungeon Caster auto-save"], cd: dir, env: env, stderr_to_stdout: true) do
+        case System.cmd("git", ["commit", "-m", "Dungeon Caster auto-save"],
+               cd: dir,
+               env: env,
+               stderr_to_stdout: true
+             ) do
           {_, 0} ->
             Logger.info("GitWorker: committed changes in #{dir}")
             push(dir, env)
             :ok
+
           {output, code} ->
             Logger.warning("GitWorker: commit failed (#{code}): #{String.trim(output)}")
             :ok
@@ -60,14 +65,18 @@ defmodule DungeonCaster.Sync.GitWorker do
   # Private
 
   defp build_env(nil), do: []
+
   defp build_env(ssh_key_path) do
     [{"GIT_SSH_COMMAND", "ssh -i #{ssh_key_path} -o StrictHostKeyChecking=no -o BatchMode=yes"}]
   end
 
   defp push(dir, env) do
     case System.cmd("git", ["push"], cd: dir, env: env, stderr_to_stdout: true) do
-      {_, 0} -> Logger.info("GitWorker: pushed to remote")
-      {output, code} -> Logger.debug("GitWorker: push skipped or failed (#{code}): #{String.trim(output)}")
+      {_, 0} ->
+        Logger.info("GitWorker: pushed to remote")
+
+      {output, code} ->
+        Logger.debug("GitWorker: push skipped or failed (#{code}): #{String.trim(output)}")
     end
   end
 end

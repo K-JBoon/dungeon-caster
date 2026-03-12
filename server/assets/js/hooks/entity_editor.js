@@ -31,6 +31,11 @@ export const EntityEditor = {
 
     this._pushHistory(this.textarea.value, this._getCaretOffset())
 
+    this.handleEvent('entity_editor:set_content', ({id, content}) => {
+      if (id !== this.el.id) return
+      this._setExternalContent(content || '')
+    })
+
     editor.addEventListener('input', () => this._onInput())
     editor.addEventListener('beforeinput', (e) => this._onBeforeInput(e))
     editor.addEventListener('keydown', (e) => this._onKeydown(e))
@@ -289,6 +294,17 @@ export const EntityEditor = {
   _syncTextarea(markdown) {
     this.textarea.value = markdown
     this.textarea.dispatchEvent(new Event('input', { bubbles: true }))
+  },
+
+  _setExternalContent(markdown) {
+    this._hideDropdown()
+    this._pendingQuery = null
+    this._pendingNode = null
+    this._setContent(this.editor, markdown)
+    this._restoreCaretOffset(markdown.length)
+    this._syncTextarea(markdown)
+    this._pushHistory(markdown, this._getCaretOffset())
+    this.editor.focus()
   },
 
   _pushHistory(markdown, caret) {

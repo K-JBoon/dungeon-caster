@@ -418,6 +418,93 @@ defmodule DungeonCasterWeb.CoreComponents do
     """
   end
 
+  attr :history, :map, required: true
+
+  def revision_history_modal(assigns) do
+    assigns =
+      assigns
+      |> assign(
+        :selected_revision,
+        Enum.find(assigns.history.revisions, &(&1.sha == assigns.history.selected_sha))
+      )
+
+    ~H"""
+    <%= if @history.open do %>
+      <div class="fixed inset-0 z-40 bg-black/55" phx-click="close_revision_history"></div>
+      <div class="fixed inset-x-3 top-6 bottom-6 z-50 mx-auto flex max-w-6xl overflow-hidden rounded-2xl border border-base-300 bg-base-100 shadow-2xl">
+        <div class="flex w-80 shrink-0 flex-col border-r border-base-300 bg-base-200/40">
+          <div class="flex items-center justify-between border-b border-base-300 px-4 py-3">
+            <div>
+              <h3 class="font-semibold">{@history.title}</h3>
+              <p class="text-xs text-base-content/60">Git-backed revisions</p>
+            </div>
+            <button
+              type="button"
+              class="btn btn-ghost btn-sm btn-circle"
+              phx-click="close_revision_history"
+            >
+              ✕
+            </button>
+          </div>
+          <div class="overflow-y-auto px-2 py-2">
+            <button
+              :for={revision <- @history.revisions}
+              type="button"
+              phx-click="select_revision"
+              phx-value-sha={revision.sha}
+              class={[
+                "mb-2 w-full rounded-xl border px-3 py-3 text-left transition-colors",
+                @history.selected_sha == revision.sha && "border-primary bg-primary/10",
+                @history.selected_sha != revision.sha &&
+                  "border-base-300 bg-base-100 hover:border-base-content/30"
+              ]}
+            >
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  <p class="truncate text-sm font-medium">{revision.summary}</p>
+                  <p class="text-xs text-base-content/60">{revision.display_time}</p>
+                </div>
+                <span :if={revision.count > 1} class="badge badge-outline badge-sm shrink-0">
+                  {revision.count} revs
+                </span>
+              </div>
+              <p :if={revision.count > 1} class="mt-1 text-xs text-base-content/50">
+                Consolidated autosaves through {revision.display_range_end}
+              </p>
+              <p class="mt-2 font-mono text-[11px] text-base-content/40">
+                {String.slice(revision.sha, 0, 12)}
+              </p>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex min-w-0 flex-1 flex-col">
+          <div class="flex items-center justify-between border-b border-base-300 px-4 py-3">
+            <div>
+              <p class="text-sm font-medium">{@selected_revision && @selected_revision.summary}</p>
+              <p :if={@selected_revision} class="text-xs text-base-content/60">
+                {@selected_revision.display_time}
+              </p>
+            </div>
+            <button
+              :if={@selected_revision}
+              type="button"
+              class="btn btn-primary btn-sm"
+              phx-click="restore_revision"
+              phx-value-sha={@selected_revision.sha}
+            >
+              Restore Into Editor
+            </button>
+          </div>
+          <div class="min-h-0 flex-1 overflow-auto bg-base-300/20">
+            <pre class="min-h-full whitespace-pre-wrap break-words p-4 font-mono text-sm leading-6"><%= @history.preview %></pre>
+          </div>
+        </div>
+      </div>
+    <% end %>
+    """
+  end
+
   @doc """
   Renders a [Heroicon](https://heroicons.com).
 
