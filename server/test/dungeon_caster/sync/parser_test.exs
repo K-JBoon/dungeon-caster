@@ -33,6 +33,14 @@ defmodule DungeonCaster.Sync.ParserTest do
     assert data["session_number"] == 1
   end
 
+  test "parses audio file" do
+    path = Path.join(@fixtures, "audio/tavern-theme.md")
+
+    assert {:ok, "audio", data} = Parser.parse_file(path)
+    assert data["category"] == "music"
+    assert data["asset_path"] == "audio/music/tavern-theme.mp3"
+  end
+
   test "returns error for missing file" do
     assert {:error, _} = Parser.parse_file("/nonexistent/path.md")
   end

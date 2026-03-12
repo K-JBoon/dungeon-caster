@@ -11,6 +11,7 @@ defmodule DungeonCaster.Sync.Supervisor do
       DungeonCaster.Sync.GitWorker,
       DungeonCaster.Sync.FileWatcher
     ]
+
     # rest_for_one: if IndexWorker or GitWorker crashes, FileWatcher (listed after
     # them) is also restarted — ensuring FileWatcher never runs with a dead worker.
     # Order matters: workers start before watcher so watcher can call them.

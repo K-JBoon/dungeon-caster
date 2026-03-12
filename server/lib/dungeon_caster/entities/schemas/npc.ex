@@ -25,8 +25,21 @@ defmodule DungeonCaster.Entities.Schemas.Npc do
   def changeset(npc, attrs) do
     npc
     |> cast(attrs, [
-      :id, :name, :status, :role, :race, :class, :level, :location_id,
-      :faction_ids, :portrait, :stat_block_id, :tags, :body_raw, :body_html, :file_path
+      :id,
+      :name,
+      :status,
+      :role,
+      :race,
+      :class,
+      :level,
+      :location_id,
+      :faction_ids,
+      :portrait,
+      :stat_block_id,
+      :tags,
+      :body_raw,
+      :body_html,
+      :file_path
     ])
     |> validate_required([:id, :name, :status, :role])
   end

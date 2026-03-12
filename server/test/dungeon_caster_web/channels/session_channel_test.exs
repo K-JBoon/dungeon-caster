@@ -5,6 +5,7 @@ defmodule DungeonCasterWeb.SessionChannelTest do
   setup do
     sid = "channel-test-#{:rand.uniform(99_999)}"
     {:ok, _} = Server.start_link(sid)
+
     on_exit(fn ->
       try do
         Server.stop(sid)
@@ -12,6 +13,7 @@ defmodule DungeonCasterWeb.SessionChannelTest do
         :exit, _ -> :ok
       end
     end)
+
     {:ok, sid: sid}
   end
 
@@ -50,7 +52,14 @@ defmodule DungeonCasterWeb.SessionChannelTest do
       |> socket("user_id", %{})
       |> subscribe_and_join(DungeonCasterWeb.SessionChannel, "session:live:#{sid}")
 
-    stroke = %{"player_id" => "p1", "color" => "#ff0000", "size" => 6, "erase" => false, "points" => []}
+    stroke = %{
+      "player_id" => "p1",
+      "color" => "#ff0000",
+      "size" => 6,
+      "erase" => false,
+      "points" => []
+    }
+
     push(socket, "drawing_stroke", stroke)
     # give GenServer time to process
     Process.sleep(50)

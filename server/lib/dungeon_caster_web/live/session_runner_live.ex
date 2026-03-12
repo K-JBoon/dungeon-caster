@@ -1,6 +1,6 @@
 defmodule DungeonCasterWeb.SessionRunnerLive do
   use DungeonCasterWeb, :live_view
-  alias DungeonCaster.{Entities, Session.Server, Audio}
+  alias DungeonCaster.{Audio, Entities, Session.Server}
   alias DungeonCaster.Maps.ImageGrid
   alias DungeonCaster.Markdown
   alias DungeonCasterWeb.EntityHelpers
@@ -8,13 +8,14 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
   def mount(%{"id" => session_id}, _session, socket) do
     Phoenix.PubSub.subscribe(DungeonCaster.PubSub, "session:live:#{session_id}")
     session = Entities.get_entity!("session", session_id)
+
     case Registry.lookup(DungeonCaster.Session.Registry, session_id) do
       [] -> Server.start_link(session_id)
       _ -> :ok
     end
+
     server_state = Server.get_state(session_id)
-    music = Audio.list_music()
-    sfx = Audio.list_sfx()
+    {ambient_audio, sfx_audio} = load_audio_entities()
     scenes = parse_scenes(session)
     session_maps = collect_maps(session, scenes)
 
@@ -31,8 +32,8 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
        server_state: server_state,
        fog_mode: :eraser,
        session_maps: session_maps,
-       music: music,
-       sfx: sfx
+       ambient_audio: ambient_audio,
+       sfx_audio: sfx_audio
      )}
   end
 
@@ -43,24 +44,31 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
   end
 
   def handle_event("prev_scene", _, socket) do
-    {:noreply, assign(socket,
-      scene_index: max(0, socket.assigns.scene_index - 1),
-      expanded_entities: MapSet.new())}
+    {:noreply,
+     assign(socket,
+       scene_index: max(0, socket.assigns.scene_index - 1),
+       expanded_entities: MapSet.new()
+     )}
   end
 
   def handle_event("next_scene", _, socket) do
     max_idx = max(0, length(socket.assigns.scenes) - 1)
-    {:noreply, assign(socket,
-      scene_index: min(max_idx, socket.assigns.scene_index + 1),
-      expanded_entities: MapSet.new())}
+
+    {:noreply,
+     assign(socket,
+       scene_index: min(max_idx, socket.assigns.scene_index + 1),
+       expanded_entities: MapSet.new()
+     )}
   end
 
   def handle_event("toggle_entity", %{"ref" => ref}, socket) do
     expanded = socket.assigns.expanded_entities
+
     new_expanded =
       if MapSet.member?(expanded, ref),
         do: MapSet.delete(expanded, ref),
         else: MapSet.put(expanded, ref)
+
     {:noreply, assign(socket, expanded_entities: new_expanded)}
   end
 
@@ -111,9 +119,12 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
 
   def handle_event("set_map", %{"map_id" => map_id}, socket) do
     map_entity = Enum.find(socket.assigns.session_maps, &(&1.id == map_id))
-    asset = if map_entity && map_entity.asset_path != "",
-      do: Path.basename(map_entity.asset_path),
-      else: map_id <> ".png"
+
+    asset =
+      if map_entity && map_entity.asset_path != "",
+        do: Path.basename(map_entity.asset_path),
+        else: map_id <> ".png"
+
     {grid_cols, grid_rows} = image_grid_dims(map_entity && map_entity.asset_path)
     Server.set_map(socket.assigns.session_id, map_id, asset, grid_cols, grid_rows)
     state = Server.get_state(socket.assigns.session_id)
@@ -138,6 +149,7 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
     case EntityHelpers.entity_popover_data(ref) do
       {:ok, data} ->
         {:noreply, push_event(socket, "entity:popover-open", data)}
+
       :error ->
         {:noreply, socket}
     end
@@ -149,6 +161,28 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
   end
 
   # ── Audio events ───────────────────────────────────────────────────────────
+
+  def handle_event(
+        "play_audio_entity",
+        %{"asset_path" => asset_path, "category" => category},
+        socket
+      ) do
+    playback_path = Audio.asset_url(asset_path) |> String.trim_leading("/audio/")
+
+    case category do
+      category when category in ["ambient", "music"] ->
+        Server.play_audio(socket.assigns.session_id, playback_path, :ambient)
+        state = Server.get_state(socket.assigns.session_id)
+        {:noreply, assign(socket, server_state: state)}
+
+      "sfx" ->
+        Server.play_audio(socket.assigns.session_id, playback_path, :sfx)
+        {:noreply, socket}
+
+      _ ->
+        {:noreply, socket}
+    end
+  end
 
   def handle_event("play_ambient", %{"path" => path}, socket) do
     Server.play_audio(socket.assigns.session_id, path, :ambient)
@@ -173,6 +207,7 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
       ambient: String.to_integer(a),
       sfx: String.to_integer(s)
     }
+
     Server.set_volume(socket.assigns.session_id, vol)
     state = Server.get_state(socket.assigns.session_id)
     {:noreply, assign(socket, server_state: state)}
@@ -183,22 +218,28 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
   def handle_info({"fog_update", :all_fogged}, socket) do
     {:noreply, push_event(socket, "fog_state", %{fog_grid: "all_fogged"})}
   end
+
   def handle_info({"fog_update", {:partial_reveal, revealed}}, socket) do
-    {:noreply, push_event(socket, "fog_state", %{fog_grid: %{mode: "partial_reveal", revealed: revealed}})}
+    {:noreply,
+     push_event(socket, "fog_state", %{fog_grid: %{mode: "partial_reveal", revealed: revealed}})}
   end
+
   # Delta updates from brush strokes — fog editor already updated its local state,
   # so no push_event needed here.
   def handle_info({"fog_update", {:delta_reveal, _}}, socket), do: {:noreply, socket}
   def handle_info({"fog_update", {:delta_cover, _}}, socket), do: {:noreply, socket}
+
   def handle_info({"fog_update", fog_grid}, socket) do
     {:noreply, push_event(socket, "fog_state", %{fog_grid: fog_grid})}
   end
+
   def handle_info({"qr_toggle", _}, socket) do
     # Refresh server_state so the QR toolbar button active state stays in sync
     # when the toggle is triggered by an external source (e.g. map change)
     state = Server.get_state(socket.assigns.session_id)
     {:noreply, assign(socket, server_state: state)}
   end
+
   def handle_info(_, socket), do: {:noreply, socket}
 
   # ── Helpers ─────────────────────────────────────────────────────────────────
@@ -207,6 +248,7 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
   # Falls back to a sensible default for missing or unreadable files.
   defp image_grid_dims(nil), do: {96, 54}
   defp image_grid_dims(""), do: {96, 54}
+
   defp image_grid_dims(asset_path) do
     campaign_dir = Application.get_env(:dungeon_caster, :campaign_dir) |> Path.expand()
     path = Path.join([campaign_dir, "maps", asset_path])
@@ -215,12 +257,14 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
 
   defp collect_maps(session, scenes) do
     # Migration shim: old-style frontmatter map_ids
-    from_frontmatter = (session.map_ids || [])
-                       |> Enum.map(&Entities.get_entity("map", &1))
-                       |> Enum.reject(&is_nil/1)
+    from_frontmatter =
+      (session.map_ids || [])
+      |> Enum.map(&Entities.get_entity("map", &1))
+      |> Enum.reject(&is_nil/1)
 
     # New-style: ~[...]{map:id} refs in body and scene notes
     sources = [session.body_raw || ""] ++ Enum.map(scenes, &(&1["notes"] || ""))
+
     from_refs =
       sources
       |> Enum.flat_map(&Markdown.extract_entity_refs/1)
@@ -242,14 +286,54 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
 
   defp parse_scenes(session) do
     case session.scenes do
-      nil -> []
+      nil ->
+        []
+
       json when is_binary(json) ->
         case Jason.decode(json) do
           {:ok, list} when is_list(list) -> list
           _ -> []
         end
-      list when is_list(list) -> list
+
+      list when is_list(list) ->
+        list
     end
+  end
+
+  defp load_audio_entities do
+    Entities.list_entities("audio")
+    |> Enum.filter(&audio_playable?/1)
+    |> Enum.map(&with_playback_path/1)
+    |> Enum.reduce({[], []}, fn entity, {ambient, sfx} ->
+      case entity.category do
+        category when category in ["ambient", "music"] -> {[entity | ambient], sfx}
+        "sfx" -> {ambient, [entity | sfx]}
+        _ -> {ambient, sfx}
+      end
+    end)
+    |> then(fn {ambient, sfx} -> {sort_audio_entities(ambient), sort_audio_entities(sfx)} end)
+  end
+
+  defp audio_playable?(%{asset_path: asset_path})
+       when is_binary(asset_path) and asset_path != "" do
+    Audio.audio_file_available?(asset_path)
+  end
+
+  defp audio_playable?(_), do: false
+
+  defp with_playback_path(%{asset_path: asset_path} = entity) do
+    Map.put(entity, :playback_path, Audio.asset_url(asset_path) |> String.trim_leading("/audio/"))
+  end
+
+  defp sort_audio_entities(entities) do
+    Enum.sort_by(entities, fn entity ->
+      {
+        entity
+        |> entity_display_name()
+        |> String.downcase(),
+        entity.playback_path
+      }
+    end)
   end
 
   defp entity_display_name(%{name: n}) when is_binary(n), do: n
@@ -267,36 +351,49 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
 
   def render(assigns) do
     ~H"""
-    <div class="flex flex-col bg-base-200" style="height: 100dvh">
+    <div class="flex flex-col bg-base-200" style="height: 100dvh" data-entity-audio-popover-target>
       <%!-- Runner header --%>
       <div class="flex items-center gap-3 px-4 py-2 bg-base-300 border-b border-base-300 shrink-0">
-        <.link navigate={"/entities/session/#{@session_id}"}
-               class="btn btn-ghost btn-sm btn-circle">
+        <.link
+          navigate={"/entities/session/#{@session_id}"}
+          class="btn btn-ghost btn-sm btn-circle"
+        >
           <.icon name="hero-arrow-left" class="size-5" />
         </.link>
-        <span class="font-semibold text-sm truncate"><%= @session.title %></span>
+        <span class="font-semibold text-sm truncate">{@session.title}</span>
       </div>
 
       <%!-- Content area --%>
       <div class="flex-1 overflow-hidden">
         <%= case @mode do %>
-          <% :plan -> %> <%= render_plan(assigns) %>
-          <% :map -> %> <%= render_map(assigns) %>
-          <% :audio -> %> <%= render_audio(assigns) %>
+          <% :plan -> %>
+            {render_plan(assigns)}
+          <% :map -> %>
+            {render_map(assigns)}
+          <% :audio -> %>
+            {render_audio(assigns)}
         <% end %>
       </div>
 
       <%!-- Bottom nav --%>
-      <nav class="flex shrink-0 bg-base-300 border-t border-base-300"
-           style="padding-bottom: env(safe-area-inset-bottom, 0)">
+      <nav
+        class="flex shrink-0 bg-base-300 border-t border-base-300"
+        style="padding-bottom: env(safe-area-inset-bottom, 0)"
+      >
         <%= for {mode, label, icon} <- [{:plan, "Plan", "📋"}, {:map, "Map", "🗺"}, {:audio, "Audio", "🎵"}] do %>
-          <button phx-click="set_mode" phx-value-mode={mode}
-                  class={["flex-1 flex flex-col items-center py-3 gap-0.5 text-xs font-medium transition-colors",
-                          if(@mode == mode,
-                            do: "text-primary border-t-2 border-primary -mt-px",
-                            else: "text-base-content/60 hover:text-base-content")]}>
-            <span class="text-xl leading-none"><%= icon %></span>
-            <span><%= label %></span>
+          <button
+            phx-click="set_mode"
+            phx-value-mode={mode}
+            class={[
+              "flex-1 flex flex-col items-center py-3 gap-0.5 text-xs font-medium transition-colors",
+              if(@mode == mode,
+                do: "text-primary border-t-2 border-primary -mt-px",
+                else: "text-base-content/60 hover:text-base-content"
+              )
+            ]}
+          >
+            <span class="text-xl leading-none">{icon}</span>
+            <span>{label}</span>
           </button>
         <% end %>
       </nav>
@@ -311,7 +408,7 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
     <div class="flex flex-col h-full relative">
       <div class="px-4 py-3 border-b border-base-300 shrink-0">
         <p class="text-xs text-base-content/50">
-          Scene <%= @scene_index + 1 %> of <%= max(1, length(@scenes)) %>
+          Scene {@scene_index + 1} of {max(1, length(@scenes))}
         </p>
       </div>
 
@@ -323,51 +420,69 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
         <% scene = Enum.at(@scenes, @scene_index) %>
         <div class="flex-1 overflow-y-auto px-4 py-4">
           <div class="flex items-center gap-3 mb-4">
-            <button phx-click="prev_scene"
-                    class={["btn btn-circle btn-sm btn-ghost",
-                            if(@scene_index == 0, do: "btn-disabled opacity-30", else: "")]}>
+            <button
+              phx-click="prev_scene"
+              class={[
+                "btn btn-circle btn-sm btn-ghost",
+                if(@scene_index == 0, do: "btn-disabled opacity-30", else: "")
+              ]}
+            >
               ◀
             </button>
-            <h3 class="flex-1 text-center font-bold text-lg"><%= scene["title"] %></h3>
-            <button phx-click="next_scene"
-                    class={["btn btn-circle btn-sm btn-ghost",
-                            if(@scene_index >= length(@scenes) - 1, do: "btn-disabled opacity-30", else: "")]}>
+            <h3 class="flex-1 text-center font-bold text-lg">{scene["title"]}</h3>
+            <button
+              phx-click="next_scene"
+              class={[
+                "btn btn-circle btn-sm btn-ghost",
+                if(@scene_index >= length(@scenes) - 1, do: "btn-disabled opacity-30", else: "")
+              ]}
+            >
               ▶
             </button>
           </div>
 
           <%= if scene["notes"] && scene["notes"] != "" do %>
             <div class="prose max-w-none mb-4">
-              <%= Phoenix.HTML.raw(Markdown.render(scene["notes"] || "")) %>
+              {Phoenix.HTML.raw(Markdown.render(scene["notes"] || ""))}
             </div>
           <% end %>
 
           <%= if scene["entity_ids"] && scene["entity_ids"] != [] do %>
             <div class="space-y-2">
               <%= for ref <- scene["entity_ids"] do %>
-                <% [type, id] = case String.split(ref, ":", parts: 2) do
-                     [t, i] -> [t, i]
-                     _ -> ["", ""]
-                   end %>
+                <% [type, id] =
+                  case String.split(ref, ":", parts: 2) do
+                    [t, i] -> [t, i]
+                    _ -> ["", ""]
+                  end %>
                 <% entity = if type != "", do: Entities.get_entity(type, id), else: nil %>
                 <%= if entity do %>
                   <% expanded = MapSet.member?(@expanded_entities, ref) %>
                   <div>
-                    <button phx-click="toggle_entity" phx-value-ref={ref}
-                            class={["badge badge-lg gap-1 cursor-pointer w-full justify-start transition-colors",
-                                    if(expanded, do: "badge-primary", else: "badge-outline")]}>
-                      <span><%= entity_emoji(type) %></span>
-                      <span class="truncate"><%= entity_display_name(entity) %></span>
-                      <span class={["ml-auto transition-transform text-xs",
-                                    if(expanded, do: "rotate-180", else: "")]}>▼</span>
+                    <button
+                      phx-click="toggle_entity"
+                      phx-value-ref={ref}
+                      class={[
+                        "badge badge-lg gap-1 cursor-pointer w-full justify-start transition-colors",
+                        if(expanded, do: "badge-primary", else: "badge-outline")
+                      ]}
+                    >
+                      <span>{entity_emoji(type)}</span>
+                      <span class="truncate">{entity_display_name(entity)}</span>
+                      <span class={[
+                        "ml-auto transition-transform text-xs",
+                        if(expanded, do: "rotate-180", else: "")
+                      ]}>
+                        ▼
+                      </span>
                     </button>
                     <%= if expanded do %>
                       <div class="card bg-base-100 shadow mt-1">
                         <div class="card-body py-3 px-4">
-                          <p class="font-semibold text-sm"><%= entity_display_name(entity) %></p>
+                          <p class="font-semibold text-sm">{entity_display_name(entity)}</p>
                           <%= if entity.body_html && entity.body_html != "" do %>
                             <div class="prose prose-sm max-w-none">
-                              <%= Phoenix.HTML.raw(entity.body_html) %>
+                              {Phoenix.HTML.raw(entity.body_html)}
                             </div>
                           <% end %>
                         </div>
@@ -382,28 +497,37 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
       <% end %>
 
       <%!-- Notes FAB --%>
-      <button phx-click="open_notes"
-              class="fixed bottom-20 right-4 btn btn-primary btn-circle shadow-lg z-10 text-xl">
+      <button
+        phx-click="open_notes"
+        class="fixed bottom-20 right-4 btn btn-primary btn-circle shadow-lg z-10 text-xl"
+      >
         📝
       </button>
 
       <%!-- Notes bottom sheet --%>
       <%= if @notes_open do %>
         <div class="fixed inset-0 bg-black/40 z-20" phx-click="close_notes"></div>
-        <div class="fixed bottom-0 left-0 right-0 bg-base-100 rounded-t-2xl shadow-2xl p-4 z-30"
-             style="padding-bottom: max(1rem, env(safe-area-inset-bottom))">
+        <div
+          class="fixed bottom-0 left-0 right-0 bg-base-100 rounded-t-2xl shadow-2xl p-4 z-30"
+          style="padding-bottom: max(1rem, env(safe-area-inset-bottom))"
+        >
           <div class="flex items-center justify-between mb-3">
             <h3 class="font-semibold">Session Notes</h3>
             <button phx-click="close_notes" class="btn btn-ghost btn-sm btn-circle">✕</button>
           </div>
           <form phx-submit="save_notes">
             <div id="session-notes-editor" phx-hook="EntityEditor" phx-update="ignore">
-              <textarea name="notes" rows="5"
-                        class="textarea textarea-bordered w-full mb-3"
-                        placeholder="Notes are appended to the session file with a timestamp..."><%= @notes %></textarea>
+              <textarea
+                name="notes"
+                rows="5"
+                class="textarea textarea-bordered w-full mb-3"
+                placeholder="Notes are appended to the session file with a timestamp..."
+              ><%= @notes %></textarea>
             </div>
             <div class="flex justify-end gap-2">
-              <button type="button" phx-click="close_notes" class="btn btn-ghost btn-sm">Cancel</button>
+              <button type="button" phx-click="close_notes" class="btn btn-ghost btn-sm">
+                Cancel
+              </button>
               <button type="submit" class="btn btn-primary btn-sm">Save</button>
             </div>
           </form>
@@ -424,7 +548,7 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
             <option value="">Select map...</option>
             <%= for map <- @session_maps do %>
               <option value={map.id} selected={@server_state.current_map == map.id}>
-                <%= map.name %>
+                {map.name}
               </option>
             <% end %>
           </select>
@@ -432,18 +556,36 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
 
         <div class="flex items-center gap-1">
           <.icon name="hero-paint-brush" class="size-4 opacity-60" />
-          <input type="range" id="brush-radius" min="0" max="8" value="0"
-                 class="range range-xs range-primary w-20" />
+          <input
+            type="range"
+            id="brush-radius"
+            min="0"
+            max="8"
+            value="0"
+            class="range range-xs range-primary w-20"
+          />
         </div>
 
         <%!-- Brush / Eraser toggle --%>
         <div class="join">
-          <button phx-click="set_fog_mode" phx-value-mode="brush"
-                  class={["join-item btn btn-xs", if(@fog_mode == :brush, do: "btn-primary", else: "btn-ghost")]}>
+          <button
+            phx-click="set_fog_mode"
+            phx-value-mode="brush"
+            class={[
+              "join-item btn btn-xs",
+              if(@fog_mode == :brush, do: "btn-primary", else: "btn-ghost")
+            ]}
+          >
             🖌 Brush
           </button>
-          <button phx-click="set_fog_mode" phx-value-mode="eraser"
-                  class={["join-item btn btn-xs", if(@fog_mode == :eraser, do: "btn-primary", else: "btn-ghost")]}>
+          <button
+            phx-click="set_fog_mode"
+            phx-value-mode="eraser"
+            class={[
+              "join-item btn btn-xs",
+              if(@fog_mode == :eraser, do: "btn-primary", else: "btn-ghost")
+            ]}
+          >
             ⬜ Eraser
           </button>
         </div>
@@ -457,8 +599,13 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
         </button>
 
         <%!-- QR code toggle --%>
-        <button phx-click="toggle_player_qr"
-                class={["btn btn-xs", if(@server_state.show_player_qr, do: "btn-primary", else: "btn-ghost")]}>
+        <button
+          phx-click="toggle_player_qr"
+          class={[
+            "btn btn-xs",
+            if(@server_state.show_player_qr, do: "btn-primary", else: "btn-ghost")
+          ]}
+        >
           📱 QR
         </button>
 
@@ -471,17 +618,21 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
       <div class="flex-1 relative overflow-hidden bg-black">
         <%= if @server_state.current_map do %>
           <% map_entity = Enum.find(@session_maps, &(&1.id == @server_state.current_map)) %>
-          <img id="map-bg"
-               src={"/maps/assets/#{if map_entity && map_entity.asset_path && map_entity.asset_path != "", do: Path.basename(map_entity.asset_path), else: @server_state.current_map <> ".png"}"}
-               class="absolute inset-0 w-full h-full object-contain" />
-          <canvas id="fog-editor"
+          <img
+            id="map-bg"
+            src={"/maps/assets/#{if map_entity && map_entity.asset_path && map_entity.asset_path != "", do: Path.basename(map_entity.asset_path), else: @server_state.current_map <> ".png"}"}
+            class="absolute inset-0 w-full h-full object-contain"
+          />
+          <canvas
+            id="fog-editor"
             data-session-id={@session_id}
             data-cell-size="20"
             data-grid-cols={@server_state.grid_cols}
             data-grid-rows={@server_state.grid_rows}
             data-fog-mode={@fog_mode}
             phx-hook="FogEditor"
-            class="absolute inset-0 w-full h-full cursor-crosshair touch-none">
+            class="absolute inset-0 w-full h-full cursor-crosshair touch-none"
+          >
           </canvas>
         <% else %>
           <div class="absolute inset-0 flex items-center justify-center text-white/40">
@@ -502,7 +653,9 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
     ~H"""
     <div class="overflow-y-auto h-full px-4 py-4 space-y-6">
       <div>
-        <h3 class="text-sm font-semibold uppercase tracking-wider text-base-content/50 mb-3">Volume</h3>
+        <h3 class="text-sm font-semibold uppercase tracking-wider text-base-content/50 mb-3">
+          Volume
+        </h3>
         <form phx-change="set_volume" class="space-y-3">
           <%= for {label, key, val} <- [
             {"Master", "master", @server_state.audio_state.volume.master},
@@ -510,36 +663,48 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
             {"SFX", "sfx", @server_state.audio_state.volume.sfx}
           ] do %>
             <div class="flex items-center gap-3">
-              <span class="text-sm w-16 shrink-0"><%= label %></span>
-              <input type="range" name={key} min="0" max="100" value={val}
-                     class="range range-primary range-sm flex-1" />
-              <span class="text-sm w-10 text-right text-base-content/60"><%= val %>%</span>
+              <span class="text-sm w-16 shrink-0">{label}</span>
+              <input
+                type="range"
+                name={key}
+                min="0"
+                max="100"
+                value={val}
+                class="range range-primary range-sm flex-1"
+              />
+              <span class="text-sm w-10 text-right text-base-content/60">{val}%</span>
             </div>
           <% end %>
         </form>
       </div>
 
       <div>
-        <h3 class="text-sm font-semibold uppercase tracking-wider text-base-content/50 mb-3">Ambient</h3>
+        <h3 class="text-sm font-semibold uppercase tracking-wider text-base-content/50 mb-3">
+          Ambient
+        </h3>
         <ul class="space-y-1">
-          <%= for track <- @music do %>
-            <% playing = @server_state.audio_state.ambient == track.path %>
-            <li class={["flex items-center gap-2 px-3 py-2 rounded-lg transition-colors",
-                        if(playing, do: "bg-primary/10 text-primary", else: "hover:bg-base-200")]}>
-              <button phx-click={if playing, do: "stop_ambient", else: "play_ambient"}
-                      phx-value-path={track.path}
-                      class="flex-1 flex items-center gap-2 text-left text-sm">
-                <span class="text-base"><%= if playing, do: "■", else: "▶" %></span>
-                <span class="truncate"><%= track.name %></span>
+          <%= for track <- @ambient_audio do %>
+            <% playing = @server_state.audio_state.ambient == track.playback_path %>
+            <li class={[
+              "flex items-center gap-2 px-3 py-2 rounded-lg transition-colors",
+              if(playing, do: "bg-primary/10 text-primary", else: "hover:bg-base-200")
+            ]}>
+              <button
+                phx-click={if playing, do: "stop_ambient", else: "play_ambient"}
+                phx-value-path={track.playback_path}
+                class="flex-1 flex items-center gap-2 text-left text-sm"
+              >
+                <span class="text-base">{if playing, do: "■", else: "▶"}</span>
+                <span class="truncate">{track.name}</span>
               </button>
               <%= if playing do %>
                 <button phx-click="stop_ambient" class="btn btn-ghost btn-xs">Stop</button>
               <% end %>
             </li>
           <% end %>
-          <%= if @music == [] do %>
+          <%= if @ambient_audio == [] do %>
             <li class="text-base-content/40 text-sm px-3 py-2">
-              No audio files in ~/campaign/audio/music/
+              No ambient audio entities found.
             </li>
           <% end %>
         </ul>
@@ -547,21 +712,19 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
 
       <div>
         <h3 class="text-sm font-semibold uppercase tracking-wider text-base-content/50 mb-3">SFX</h3>
-        <%= for {section, sfx_list} <- Enum.group_by(@sfx, & &1.section) do %>
-          <div class="mb-4">
-            <p class="text-xs text-base-content/40 uppercase tracking-wider mb-2"><%= section %></p>
-            <div class="flex flex-wrap gap-2">
-              <%= for sfx <- sfx_list do %>
-                <button phx-click="play_sfx" phx-value-path={sfx.path}
-                        class="btn btn-sm bg-base-300 hover:bg-primary hover:text-primary-content border-0 transition-colors">
-                  <%= sfx.name %>
-                </button>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-        <%= if @sfx == [] do %>
-          <p class="text-base-content/40 text-sm">No SFX in ~/campaign/audio/sfx/</p>
+        <div class="flex flex-wrap gap-2">
+          <%= for sfx <- @sfx_audio do %>
+            <button
+              phx-click="play_sfx"
+              phx-value-path={sfx.playback_path}
+              class="btn btn-sm bg-base-300 hover:bg-primary hover:text-primary-content border-0 transition-colors"
+            >
+              {sfx.name}
+            </button>
+          <% end %>
+        </div>
+        <%= if @sfx_audio == [] do %>
+          <p class="text-base-content/40 text-sm">No SFX audio entities found.</p>
         <% end %>
       </div>
     </div>

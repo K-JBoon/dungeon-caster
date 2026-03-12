@@ -14,15 +14,18 @@ defmodule DungeonCaster.Entities.Types.StringList do
       _ -> :error
     end
   end
+
   def dump(_), do: :error
 
   def load(nil), do: {:ok, []}
+
   def load(json) when is_binary(json) do
     case Jason.decode(json) do
       {:ok, list} when is_list(list) -> {:ok, list}
       _ -> :error
     end
   end
+
   def load(_), do: :error
 
   def equal?(a, b), do: a == b

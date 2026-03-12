@@ -14,6 +14,7 @@ defmodule DungeonCasterWeb.MapViewerLiveTest do
       "body_html" => "",
       "file_path" => "/tmp/test-map.md"
     })
+
     :ok
   end
 

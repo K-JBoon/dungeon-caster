@@ -29,18 +29,21 @@ defmodule DungeonCasterWeb.Layouts do
           {"stat-block", "Stat Blocks", "hero-book-open"},
           {"map", "Maps", "hero-map"}
         ] do %>
-          <.link navigate={"/entities/#{type}"}
-                 class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-base-100 transition-colors">
+          <.link
+            navigate={"/entities/#{type}"}
+            class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-base-100 transition-colors"
+          >
             <.icon name={icon} class="size-4 opacity-70" />
-            <%= label %>
+            {label}
           </.link>
         <% end %>
         <div class="divider my-1" />
         <p class="text-xs uppercase tracking-wider text-base-content/50 px-2 mb-1">Sessions</p>
-        <.link navigate="/entities/session"
-               class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-base-100 transition-colors">
-          <.icon name="hero-calendar-days" class="size-4 opacity-70" />
-          Sessions
+        <.link
+          navigate="/entities/session"
+          class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-base-100 transition-colors"
+        >
+          <.icon name="hero-calendar-days" class="size-4 opacity-70" /> Sessions
         </.link>
         <div class="mt-auto pt-4">
           <.theme_toggle />

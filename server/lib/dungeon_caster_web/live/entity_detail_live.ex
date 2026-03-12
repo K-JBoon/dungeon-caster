@@ -1,5 +1,6 @@
 defmodule DungeonCasterWeb.EntityDetailLive do
   use DungeonCasterWeb, :live_view
+  alias DungeonCaster.Audio
   alias DungeonCaster.Entities
 
   def mount(%{"type" => type, "id" => id}, _session, socket) do
@@ -12,6 +13,7 @@ defmodule DungeonCasterWeb.EntityDetailLive do
     entity = Entities.get_entity!(socket.assigns.type, id)
     {:noreply, assign(socket, entity: entity)}
   end
+
   def handle_info(_, socket), do: {:noreply, socket}
 
   def handle_event("delete", _, socket) do
@@ -34,11 +36,13 @@ defmodule DungeonCasterWeb.EntityDetailLive do
     <div class="p-6 max-w-4xl mx-auto">
       <div class="flex items-start justify-between mb-4">
         <div>
-          <.link navigate={"/entities/#{@type}"}
-                 class="text-sm text-base-content/60 hover:text-base-content">
-            ← <%= String.replace(@type, "-", " ") |> String.capitalize() %>s
+          <.link
+            navigate={"/entities/#{@type}"}
+            class="text-sm text-base-content/60 hover:text-base-content"
+          >
+            ← {String.replace(@type, "-", " ") |> String.capitalize()}s
           </.link>
-          <h1 class="text-2xl font-bold mt-1"><%= entity_name(@entity) %></h1>
+          <h1 class="text-2xl font-bold mt-1">{entity_name(@entity)}</h1>
         </div>
         <div class="flex gap-2 shrink-0">
           <.link navigate={"/entities/#{@type}/#{@entity.id}/edit"} class="btn btn-primary btn-sm">
@@ -47,9 +51,11 @@ defmodule DungeonCasterWeb.EntityDetailLive do
           <.link navigate={"/entities/#{@type}/#{@entity.id}/edit/raw"} class="btn btn-ghost btn-sm">
             Raw
           </.link>
-          <button phx-click="delete"
-                  data-confirm={"Delete #{entity_name(@entity)}? This cannot be undone."}
-                  class="btn btn-error btn-sm btn-outline">
+          <button
+            phx-click="delete"
+            data-confirm={"Delete #{entity_name(@entity)}? This cannot be undone."}
+            class="btn btn-error btn-sm btn-outline"
+          >
             Delete
           </button>
         </div>
@@ -58,7 +64,7 @@ defmodule DungeonCasterWeb.EntityDetailLive do
       <%!-- Metadata card --%>
       <div class="card bg-base-100 shadow mb-4">
         <div class="card-body py-4">
-          <%= render_metadata(@type, @entity, assigns) %>
+          {render_metadata(@type, @entity, assigns)}
         </div>
       </div>
 
@@ -66,7 +72,7 @@ defmodule DungeonCasterWeb.EntityDetailLive do
       <%= if @entity.body_html && @entity.body_html != "" do %>
         <div class="card bg-base-100 shadow">
           <div class="card-body prose max-w-none">
-            <%= Phoenix.HTML.raw(@entity.body_html) %>
+            {Phoenix.HTML.raw(@entity.body_html)}
           </div>
         </div>
       <% end %>
@@ -76,6 +82,7 @@ defmodule DungeonCasterWeb.EntityDetailLive do
 
   defp render_metadata("npc", e, _assigns) do
     assigns = %{e: e}
+
     ~H"""
     <div class="flex gap-4 items-start">
       <%= if @e.portrait do %>
@@ -86,10 +93,10 @@ defmodule DungeonCasterWeb.EntityDetailLive do
         </div>
       <% end %>
       <div class="flex flex-wrap gap-2 items-center">
-        <span class="badge badge-ghost"><%= @e.status %></span>
-        <%= if @e.role, do: kv("Role", @e.role) %>
-        <%= if @e.race, do: kv("Race", @e.race) %>
-        <%= if @e.class, do: kv("Class", @e.class) %>
+        <span class="badge badge-ghost">{@e.status}</span>
+        {if @e.role, do: kv("Role", @e.role)}
+        {if @e.race, do: kv("Race", @e.race)}
+        {if @e.class, do: kv("Class", @e.class)}
       </div>
     </div>
     """
@@ -97,6 +104,7 @@ defmodule DungeonCasterWeb.EntityDetailLive do
 
   defp render_metadata("stat-block", _e, _assigns) do
     assigns = %{}
+
     ~H"""
     <div></div>
     """
@@ -104,23 +112,27 @@ defmodule DungeonCasterWeb.EntityDetailLive do
 
   defp render_metadata("map", e, _assigns) do
     assigns = %{e: e}
+
     ~H"""
     <div>
       <%= if @e.asset_path && @e.asset_path != "" do %>
-        <img src={"/maps/assets/#{Path.basename(@e.asset_path)}"}
-             class="w-full max-h-64 object-contain rounded mb-3 bg-base-300" />
+        <img
+          src={"/maps/assets/#{Path.basename(@e.asset_path)}"}
+          class="w-full max-h-64 object-contain rounded mb-3 bg-base-300"
+        />
       <% end %>
-      <span class="badge badge-ghost"><%= @e.map_type %></span>
+      <span class="badge badge-ghost">{@e.map_type}</span>
     </div>
     """
   end
 
   defp render_metadata("session", e, _assigns) do
     assigns = %{e: e}
+
     ~H"""
     <div class="flex flex-wrap gap-3 items-center">
-      <span class="badge badge-outline">#<%= @e.session_number %></span>
-      <span class="badge badge-ghost"><%= @e.status %></span>
+      <span class="badge badge-outline">#{@e.session_number}</span>
+      <span class="badge badge-ghost">{@e.status}</span>
       <.link navigate={"/sessions/#{@e.id}/plan"} class="btn btn-primary btn-sm ml-auto">
         Open Planner →
       </.link>
@@ -128,21 +140,45 @@ defmodule DungeonCasterWeb.EntityDetailLive do
     """
   end
 
+  defp render_metadata("audio", e, _assigns) do
+    assigns = %{e: e, file_available?: Audio.audio_file_available?(e.asset_path)}
+
+    ~H"""
+    <div class="flex flex-col gap-3">
+      <div class="flex flex-wrap gap-2 items-center">
+        <span class="badge badge-ghost">{@e.category}</span>
+      </div>
+      <%= if @e.asset_path && @e.asset_path != "" do %>
+        <div class="flex flex-wrap gap-2 items-center">
+          {kv("File", @e.asset_path)}
+        </div>
+      <% end %>
+      <%= if @e.asset_path && @e.asset_path != "" && not @file_available? do %>
+        <div class="text-warning text-sm font-medium">
+          Audio file missing
+        </div>
+      <% end %>
+    </div>
+    """
+  end
+
   defp render_metadata(_, e, _assigns) do
     assigns = %{e: e}
+
     ~H"""
     <div class="flex flex-wrap gap-2">
-      <%= if Map.get(@e, :status), do: kv("Status", @e.status) %>
+      {if Map.get(@e, :status), do: kv("Status", @e.status)}
     </div>
     """
   end
 
   defp kv(label, value) do
     assigns = %{label: label, value: value}
+
     ~H"""
     <div class="flex items-center gap-1">
-      <span class="text-xs text-base-content/50"><%= @label %>:</span>
-      <span class="text-sm font-medium"><%= @value %></span>
+      <span class="text-xs text-base-content/50">{@label}:</span>
+      <span class="text-sm font-medium">{@value}</span>
     </div>
     """
   end

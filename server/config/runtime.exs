@@ -24,14 +24,11 @@ config :dungeon_caster, DungeonCasterWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
 if config_env() == :prod do
-  config :dungeon_caster, DungeonCaster.Repo,
-    database: System.fetch_env!("DATABASE_PATH")
+  config :dungeon_caster, DungeonCaster.Repo, database: System.fetch_env!("DATABASE_PATH")
 
-  config :dungeon_caster, :campaign_dir,
-    System.fetch_env!("CAMPAIGN_DIR")
+  config :dungeon_caster, :campaign_dir, System.fetch_env!("CAMPAIGN_DIR")
 
-  config :dungeon_caster, :ssh_key_path,
-    System.get_env("SSH_KEY_PATH")
+  config :dungeon_caster, :ssh_key_path, System.get_env("SSH_KEY_PATH")
 
   config :dungeon_caster, DungeonCasterWeb.Endpoint,
     url: [host: System.fetch_env!("PHX_HOST"), port: 443, scheme: "https"],

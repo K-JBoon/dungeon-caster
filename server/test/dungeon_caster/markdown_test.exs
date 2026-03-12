@@ -47,7 +47,9 @@ defmodule DungeonCaster.MarkdownTest do
 
   describe "extract_entity_refs/1" do
     test "extracts refs from markdown" do
-      refs = Markdown.extract_entity_refs("~[Elara]{npc:elara} went to ~[Ironveil]{location:ironveil}")
+      refs =
+        Markdown.extract_entity_refs("~[Elara]{npc:elara} went to ~[Ironveil]{location:ironveil}")
+
       assert length(refs) == 2
       assert %{type: "npc", id: "elara", display_name: "Elara"} in refs
       assert %{type: "location", id: "ironveil", display_name: "Ironveil"} in refs

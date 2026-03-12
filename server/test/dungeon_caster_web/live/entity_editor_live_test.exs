@@ -7,7 +7,12 @@ defmodule DungeonCasterWeb.EntityEditorLiveTest do
 
   setup do
     File.mkdir_p!(Path.dirname(@test_file))
-    File.write!(@test_file, "---\ntype: npc\nid: editor-test-npc\nname: Editor NPC\nstatus: alive\nrole: guard\ntags: []\nfaction_ids: []\n---\n\nOriginal body.")
+
+    File.write!(
+      @test_file,
+      "---\ntype: npc\nid: editor-test-npc\nname: Editor NPC\nstatus: alive\nrole: guard\ntags: []\nfaction_ids: []\n---\n\nOriginal body."
+    )
+
     Entities.upsert_entity("npc", %{
       "id" => "editor-test-npc",
       "name" => "Editor NPC",
@@ -19,6 +24,7 @@ defmodule DungeonCasterWeb.EntityEditorLiveTest do
       "body_html" => "<p>Original body.</p>",
       "file_path" => @test_file
     })
+
     on_exit(fn -> File.rm(@test_file) end)
     :ok
   end
@@ -31,7 +37,14 @@ defmodule DungeonCasterWeb.EntityEditorLiveTest do
 
   test "save event writes content to file", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/entities/npc/editor-test-npc/edit/raw")
-    view |> form("form", %{content: "---\ntype: npc\nid: editor-test-npc\nname: Editor NPC\nstatus: alive\nrole: guard\ntags: []\nfaction_ids: []\n---\n\nUpdated body."}) |> render_submit()
+
+    view
+    |> form("form", %{
+      content:
+        "---\ntype: npc\nid: editor-test-npc\nname: Editor NPC\nstatus: alive\nrole: guard\ntags: []\nfaction_ids: []\n---\n\nUpdated body."
+    })
+    |> render_submit()
+
     assert File.read!(@test_file) =~ "Updated body."
   end
 end

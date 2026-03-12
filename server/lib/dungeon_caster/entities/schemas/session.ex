@@ -27,17 +27,33 @@ defmodule DungeonCaster.Entities.Schemas.Session do
   end
 
   def changeset(session, attrs) do
-    attrs = case Map.get(attrs, "scenes") do
-      scenes when is_list(scenes) -> Map.put(attrs, "scenes", Jason.encode!(scenes))
-      _ -> attrs
-    end
+    attrs =
+      case Map.get(attrs, "scenes") do
+        scenes when is_list(scenes) -> Map.put(attrs, "scenes", Jason.encode!(scenes))
+        _ -> attrs
+      end
 
     session
     |> cast(attrs, [
-      :id, :title, :session_number, :status, :scheduled_date, :actual_date,
-      :duration_hours, :location_ids, :npc_ids, :map_ids, :stat_block_ids,
-      :faction_ids, :xp_awarded, :loot_summary, :scenes, :tags,
-      :body_raw, :body_html, :file_path
+      :id,
+      :title,
+      :session_number,
+      :status,
+      :scheduled_date,
+      :actual_date,
+      :duration_hours,
+      :location_ids,
+      :npc_ids,
+      :map_ids,
+      :stat_block_ids,
+      :faction_ids,
+      :xp_awarded,
+      :loot_summary,
+      :scenes,
+      :tags,
+      :body_raw,
+      :body_html,
+      :file_path
     ])
     |> validate_required([:id, :title, :session_number, :status])
   end

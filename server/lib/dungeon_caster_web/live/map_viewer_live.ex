@@ -13,13 +13,13 @@ defmodule DungeonCasterWeb.MapViewerLive do
   def render(assigns) do
     ~H"""
     <div class="max-w-5xl mx-auto p-6">
-      <.link navigate={"/entities/map"} class="text-sm text-gray-500">← Maps</.link>
-      <h2 class="text-2xl font-bold mt-2 mb-4"><%= @map.name %></h2>
+      <.link navigate="/entities/map" class="text-sm text-gray-500">← Maps</.link>
+      <h2 class="text-2xl font-bold mt-2 mb-4">{@map.name}</h2>
       <div class="bg-gray-900 rounded p-2">
         <img src={@image_url} alt={@map.name} class="max-w-full rounded" />
       </div>
       <p class="mt-2 text-sm text-gray-500">
-        Type: <%= @map.map_type %> · Asset: <%= @map.asset_path %>
+        Type: {@map.map_type} · Asset: {@map.asset_path}
       </p>
     </div>
     """
