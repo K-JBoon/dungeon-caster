@@ -1,6 +1,7 @@
 defmodule DungeonCasterWeb.SessionRunnerLive do
   use DungeonCasterWeb, :live_view
   alias DungeonCaster.{Entities, Session.Server, Audio}
+  alias DungeonCaster.Maps.ImageGrid
   alias DungeonCaster.Markdown
   alias DungeonCasterWeb.EntityHelpers
 
@@ -203,21 +204,13 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
   # ── Helpers ─────────────────────────────────────────────────────────────────
 
   # Read width/height from PNG file header (bytes 16-23) and compute grid dimensions.
-  # Falls back to a sensible default for non-PNG or missing files.
+  # Falls back to a sensible default for missing or unreadable files.
   defp image_grid_dims(nil), do: {96, 54}
   defp image_grid_dims(""), do: {96, 54}
   defp image_grid_dims(asset_path) do
     campaign_dir = Application.get_env(:dungeon_caster, :campaign_dir) |> Path.expand()
     path = Path.join([campaign_dir, "maps", asset_path])
-    try do
-      {:ok, fd} = :file.open(String.to_charlist(path), [:read, :binary])
-      {:ok, _} = :file.position(fd, 16)
-      {:ok, <<w::32-big, h::32-big>>} = :file.read(fd, 8)
-      :file.close(fd)
-      {ceil(w / 20), ceil(h / 20)}
-    rescue
-      _ -> {96, 54}
-    end
+    ImageGrid.grid_dims(path)
   end
 
   defp collect_maps(session, scenes) do
