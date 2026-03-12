@@ -1,15 +1,31 @@
 defmodule DungeonCasterWeb.EntityBrowserLive do
   use DungeonCasterWeb, :live_view
   alias DungeonCaster.Entities
+  alias DungeonCaster.Repo
+
+  @type_copy %{
+    "audio" => %{
+      singular: "Audio",
+      plural: "Audio",
+      search: "Search audio entities...",
+      empty: "No audio entities yet.",
+      cta: "Create the first audio entity"
+    }
+  }
 
   def mount(%{"type" => type}, _session, socket) do
     Phoenix.PubSub.subscribe(DungeonCaster.PubSub, "entities:#{type}")
     entities = Entities.list_entities(type)
-    {:ok, assign(socket, type: type, entities: entities, q: "", page_title: "#{type}s")}
+    {:ok, assign(socket, type: type, entities: entities, q: "", page_title: type_copy(type).plural)}
   end
 
   def handle_params(%{"q" => q}, _uri, socket) when byte_size(q) > 0 do
-    results = Entities.search(q)
+    results =
+      case socket.assigns.type do
+        "audio" -> load_audio_search_results(q)
+        _ -> Entities.search(q)
+      end
+
     {:noreply, assign(socket, entities: results, q: q)}
   end
   def handle_params(_params, _uri, socket) do
@@ -18,7 +34,12 @@ defmodule DungeonCasterWeb.EntityBrowserLive do
   end
 
   def handle_info({:updated, _id}, socket) do
-    entities = Entities.list_entities(socket.assigns.type)
+    entities =
+      case socket.assigns.q do
+        "" -> Entities.list_entities(socket.assigns.type)
+        q -> search_entities(socket.assigns.type, q)
+      end
+
     {:noreply, assign(socket, entities: entities)}
   end
 
@@ -30,12 +51,10 @@ defmodule DungeonCasterWeb.EntityBrowserLive do
     ~H"""
     <div class="p-6">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-bold capitalize">
-          <%= String.replace(@type, "-", " ") %>s
-        </h2>
+        <h2 class="text-xl font-bold"><%= type_copy(@type).plural %></h2>
         <.link navigate={"/entities/#{@type}/new"} class="btn btn-primary btn-sm">
           <.icon name="hero-plus" class="size-4" />
-          New <%= String.replace(@type, "-", " ") |> String.capitalize() %>
+          New <%= type_copy(@type).singular %>
         </.link>
       </div>
 
@@ -43,7 +62,7 @@ defmodule DungeonCasterWeb.EntityBrowserLive do
         <label class="input input-bordered flex items-center gap-2 w-full max-w-md">
           <.icon name="hero-magnifying-glass" class="size-4 opacity-50" />
           <input name="q" value={@q} phx-debounce="300"
-                 placeholder={"Search #{String.replace(@type, "-", " ")}s..."}
+                 placeholder={type_copy(@type).search}
                  class="grow" />
         </label>
       </form>
@@ -51,9 +70,9 @@ defmodule DungeonCasterWeb.EntityBrowserLive do
       <%= if @entities == [] do %>
         <div class="text-center py-16 text-base-content/50">
           <.icon name="hero-inbox" class="size-12 mx-auto mb-3 opacity-30" />
-          <p>No <%= String.replace(@type, "-", " ") %>s yet.</p>
+          <p><%= type_copy(@type).empty %></p>
           <.link navigate={"/entities/#{@type}/new"} class="btn btn-primary btn-sm mt-4">
-            Create the first one
+            <%= type_copy(@type).cta %>
           </.link>
         </div>
       <% else %>
@@ -181,6 +200,42 @@ defmodule DungeonCasterWeb.EntityBrowserLive do
   defp render_card(_, e, _assigns) do
     assigns = %{e: e}
     ~H"<p class='font-medium text-sm truncate'><%= @e.name %></p>"
+  end
+
+  defp load_audio_search_results(query) do
+    safe_query =
+      query
+      |> String.replace(~r/[^a-zA-Z0-9\s]/, " ")
+      |> String.split()
+      |> Enum.map_join(" ", &"#{&1}*")
+
+    if safe_query == "" do
+      []
+    else
+      Repo.query!(
+        "SELECT entity_id FROM entities_fts WHERE entity_type = ? AND entities_fts MATCH ? ORDER BY rank LIMIT 50",
+        ["audio", safe_query]
+      ).rows
+      |> Enum.map(fn [id] -> Entities.get_entity("audio", id) end)
+      |> Enum.reject(&is_nil/1)
+    end
+  end
+
+  defp search_entities("audio", q), do: load_audio_search_results(q)
+  defp search_entities(_type, q), do: Entities.search(q)
+
+  defp type_copy(type) do
+    Map.get_lazy(@type_copy, type, fn ->
+      label = type |> String.replace("-", " ") |> String.capitalize()
+
+      %{
+        singular: label,
+        plural: "#{label}s",
+        search: "Search #{String.downcase(label)}s...",
+        empty: "No #{String.downcase(label)}s yet.",
+        cta: "Create the first one"
+      }
+    end)
   end
 
   defp status_badge_class("alive"), do: "badge-success"

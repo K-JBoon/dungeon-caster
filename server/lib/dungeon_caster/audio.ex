@@ -33,26 +33,13 @@ defmodule DungeonCaster.Audio do
     match?({:ok, _path}, resolve_audio_file(relative_path))
   end
 
-  @doc "List ambient music tracks from audio/music/"
+  @doc "List ambient music tracks from audio/music/ for legacy planner callers."
   def list_music do
     list_audio_files("music")
     |> Enum.map(fn relative_path ->
       %{path: relative_path, name: relative_path |> Path.basename() |> Path.rootname()}
     end)
   end
-
-  @doc "List SFX files from audio/sfx/{section}/ subfolders."
-  def list_sfx do
-    list_audio_files("sfx")
-    |> Enum.map(fn relative_path ->
-      [_, section, file_name] = String.split(relative_path, "/", parts: 3)
-
-      %{path: relative_path, name: Path.rootname(file_name), section: section}
-    end)
-  end
-
-  @doc "Return the absolute filesystem path for a relative audio path like 'music/foo.mp3'"
-  def file_path(relative_path), do: managed_asset_path(relative_path)
 
   defp list_audio_files(subdir) do
     dir = Path.join(asset_root(), subdir)

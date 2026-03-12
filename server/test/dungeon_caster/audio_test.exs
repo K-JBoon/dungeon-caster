@@ -29,6 +29,18 @@ defmodule DungeonCaster.AudioTest do
     assert Audio.asset_url("music/tavern.mp3") == "/audio/music/tavern.mp3"
   end
 
+  test "exports only the intentional audio helper surface" do
+    assert function_exported?(Audio, :asset_root, 0)
+    assert function_exported?(Audio, :managed_asset_path, 1)
+    assert function_exported?(Audio, :asset_url, 1)
+    assert function_exported?(Audio, :resolve_audio_file, 1)
+    assert function_exported?(Audio, :audio_file_available?, 1)
+    assert function_exported?(Audio, :list_music, 0)
+
+    refute function_exported?(Audio, :list_sfx, 0)
+    refute function_exported?(Audio, :file_path, 1)
+  end
+
   test "audio_file_available?/1 accepts supported files within the managed root", %{
     mp3_path: mp3_path,
     ogg_path: ogg_path

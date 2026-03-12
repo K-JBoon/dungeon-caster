@@ -26,4 +26,20 @@ defmodule DungeonCasterWeb.DashboardLiveTest do
     assert html =~ "Audio"
     assert html =~ "/entities/audio"
   end
+
+  test "renders entity-backed audio browser copy without legacy folder-scan wording", %{conn: conn} do
+    Entities.delete_entity("audio", "dashboard-test-audio")
+
+    {:ok, _view, html} = live(conn, "/entities/audio")
+
+    assert html =~ "Audio"
+    assert html =~ "New Audio"
+    assert html =~ "Search audio entities..."
+    assert html =~ "No audio entities yet."
+    assert html =~ "Create the first audio entity"
+
+    refute html =~ "Audios"
+    refute html =~ "No audios yet."
+    refute html =~ "Create the first one"
+  end
 end
