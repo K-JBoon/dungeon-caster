@@ -35,6 +35,13 @@ defmodule DungeonCasterWeb.EntityBrowserLiveTest do
     assert html =~ "Browser Test NPC"
   end
 
+  test "shared sidebar includes audio navigation", %{conn: conn} do
+    {:ok, _view, html} = live(conn, "/entities/npc")
+
+    assert html =~ "/entities/audio"
+    assert html =~ "Audio"
+  end
+
   test "live-updates when entity is upserted via PubSub", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/entities/npc")
 

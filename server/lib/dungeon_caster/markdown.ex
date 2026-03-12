@@ -1,4 +1,6 @@
 defmodule DungeonCaster.Markdown do
+  alias DungeonCaster.Entities.TypeMeta
+
   @badge_re ~r/~\[([^\]]+)\]\{([^}]+)\}/
 
   @doc """
@@ -40,9 +42,13 @@ defmodule DungeonCaster.Markdown do
     Regex.replace(@badge_re, html, fn _, name, ref ->
       safe_name = escape_html(name)
       safe_ref = escape_html(ref)
+      type = ref |> String.split(":", parts: 2) |> List.first()
+      icon = type |> TypeMeta.icon() |> escape_html()
 
       ~s(<span class="entity-badge" data-ref="#{safe_ref}" data-display="#{safe_name}" ) <>
-        ~s(phx-click="open_entity_popover" phx-value-ref="#{safe_ref}">#{safe_name}</span>)
+        ~s(phx-click="open_entity_popover" phx-value-ref="#{safe_ref}">) <>
+        ~s(<span class="entity-badge__icon #{icon} size-3" aria-hidden="true"></span>) <>
+        ~s(<span class="entity-badge__label">#{safe_name}</span></span>)
     end)
   end
 end

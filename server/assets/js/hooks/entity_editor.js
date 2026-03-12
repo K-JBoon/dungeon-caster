@@ -1,5 +1,15 @@
 const BADGE_RE = /~\[([^\]]+)\]\{([^}]+)\}/g
 
+const ENTITY_TYPE_ICONS = {
+  npc: 'hero-user-group',
+  location: 'hero-map-pin',
+  faction: 'hero-shield-check',
+  session: 'hero-calendar-days',
+  'stat-block': 'hero-book-open',
+  map: 'hero-map',
+  audio: 'hero-speaker-wave'
+}
+
 export const EntityEditor = {
   mounted() {
     const textarea = this.el.querySelector('textarea')
@@ -67,12 +77,24 @@ export const EntityEditor = {
   },
 
   _makeBadge(name, ref) {
+    const [type] = ref.split(':', 1)
     const span = document.createElement('span')
     span.className = 'entity-badge'
     span.dataset.ref = ref
     span.dataset.display = name
+    span.dataset.type = type || ''
     span.contentEditable = 'false'
-    span.textContent = name
+
+    const icon = document.createElement('span')
+    icon.className = `entity-badge__icon ${ENTITY_TYPE_ICONS[type] || 'hero-link'} size-3`
+    icon.setAttribute('aria-hidden', 'true')
+
+    const label = document.createElement('span')
+    label.className = 'entity-badge__label'
+    label.textContent = name
+
+    span.appendChild(icon)
+    span.appendChild(label)
     return span
   },
 

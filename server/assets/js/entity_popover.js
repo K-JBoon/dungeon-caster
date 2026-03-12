@@ -14,8 +14,6 @@ const EntityPopover = {
   open({ ref, name, type, html, playable, category, asset_path }) {
     const offset = (this._offsetIndex % 6) * 24
     this._offsetIndex++
-    const canPlay = Boolean(playable && category && asset_path && this._audioTarget())
-    const playLabel = category === 'sfx' ? 'Play SFX' : 'Play'
 
     const win = document.createElement('div')
     win.className = 'entity-popover'
@@ -32,7 +30,6 @@ const EntityPopover = {
       <div class="entity-popover-header">
         <span class="entity-popover-type">${this._esc(type)}</span>
         <span class="entity-popover-name">${this._esc(name)}</span>
-        ${canPlay ? `<button class="entity-popover-play" title="${this._esc(playLabel)}">${this._esc(playLabel)}</button>` : ''}
         <button class="entity-popover-fullscreen" title="Fullscreen">⛶</button>
         <button class="entity-popover-close" title="Close">✕</button>
       </div>
@@ -42,21 +39,12 @@ const EntityPopover = {
       <div class="entity-popover-resize" aria-hidden="true"></div>
     `
 
-    document.body.appendChild(win)
+    this._mountTarget().appendChild(win)
     this._windows.push(win)
 
     win.addEventListener('pointerdown', () => this._raise(win))
     this._makeDraggable(win, win.querySelector('.entity-popover-header'))
     this._makeResizable(win, win.querySelector('.entity-popover-resize'))
-    if (canPlay) {
-      win.querySelector('.entity-popover-play').addEventListener('click', () => {
-        this._pushAudioEvent({
-          ref,
-          category,
-          asset_path,
-        })
-      })
-    }
     win.querySelector('.entity-popover-fullscreen').addEventListener('click', () => this._toggleFullscreen(win))
     win.querySelector('.entity-popover-close').addEventListener('click', () => this._close(win))
   },
@@ -163,15 +151,8 @@ const EntityPopover = {
     }
   },
 
-  _audioTarget() {
-    return document.querySelector('[data-entity-audio-popover-target]')
-  },
-
-  _pushAudioEvent(payload) {
-    const target = this._audioTarget()
-    if (!target || !window.liveSocket) return
-
-    window.liveSocket.owner(target, (view) => view.pushEvent('play_audio_entity', payload))
+  _mountTarget() {
+    return document.querySelector('[data-entity-audio-popover-target]') || document.body
   },
 
   _esc(text) {

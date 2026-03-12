@@ -27,7 +27,8 @@ defmodule DungeonCasterWeb.Layouts do
           {"location", "Locations", "hero-map-pin"},
           {"faction", "Factions", "hero-shield-check"},
           {"stat-block", "Stat Blocks", "hero-book-open"},
-          {"map", "Maps", "hero-map"}
+          {"map", "Maps", "hero-map"},
+          {"audio", "Audio", "hero-speaker-wave"}
         ] do %>
           <.link
             navigate={"/entities/#{type}"}

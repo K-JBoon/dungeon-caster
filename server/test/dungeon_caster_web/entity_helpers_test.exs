@@ -83,8 +83,30 @@ defmodule DungeonCasterWeb.EntityHelpersTest do
                 type: "audio",
                 playable: true,
                 category: "music",
-                asset_path: "music/tavern-theme.mp3"
+                asset_path: "music/tavern-theme.mp3",
+                html: html
               }} = EntityHelpers.entity_popover_data("audio:#{audio.id}")
+
+      assert html =~ ~s(entity-popover-audio-action)
+      assert html =~ ~s(entity-popover-audio-play)
+      assert html =~ ~s(phx-click="play_audio_entity")
+      assert html =~ ~s(phx-value-asset_path="music/tavern-theme.mp3")
+      assert html =~ ~s(phx-value-category="music")
+    end
+  end
+
+  describe "entity_type_icon/1" do
+    test "returns the sidebar icon for known entity types" do
+      assert EntityHelpers.entity_type_icon("npc") == "hero-user-group"
+      assert EntityHelpers.entity_type_icon("location") == "hero-map-pin"
+      assert EntityHelpers.entity_type_icon("faction") == "hero-shield-check"
+      assert EntityHelpers.entity_type_icon("stat-block") == "hero-book-open"
+      assert EntityHelpers.entity_type_icon("map") == "hero-map"
+      assert EntityHelpers.entity_type_icon("audio") == "hero-speaker-wave"
+    end
+
+    test "falls back to a neutral icon for unknown types" do
+      assert EntityHelpers.entity_type_icon("mystery") == "hero-link"
     end
   end
 end

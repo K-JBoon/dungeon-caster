@@ -15,6 +15,7 @@ defmodule DungeonCaster.MarkdownTest do
       assert html =~ ~s(data-display="Elara")
       assert html =~ ~s(phx-click="open_entity_popover")
       assert html =~ ~s(phx-value-ref="npc:elara-moonwhisper")
+      assert html =~ ~s(hero-user-group)
       assert html =~ "Elara"
     end
 

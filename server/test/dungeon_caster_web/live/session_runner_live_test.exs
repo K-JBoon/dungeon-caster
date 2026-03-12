@@ -217,6 +217,10 @@ defmodule DungeonCasterWeb.SessionRunnerLiveTest do
     Phoenix.PubSub.subscribe(DungeonCaster.PubSub, "session:live:run-session-01")
     {:ok, view, _html} = live(conn, "/sessions/run-session-01/run")
 
+    view
+    |> element("button[phx-value-mode='audio']")
+    |> render_click()
+
     render_hook(view, "play_audio_entity", %{
       "asset_path" => "audio/music/prefixed-echo.mp3",
       "category" => "music"
@@ -224,6 +228,10 @@ defmodule DungeonCasterWeb.SessionRunnerLiveTest do
 
     assert Server.get_state("run-session-01").audio_state.ambient == "music/prefixed-echo.mp3"
     assert_receive {"audio_play", %{path: "music/prefixed-echo.mp3", type: "ambient"}}
+
+    html = render(view)
+    assert html =~ ~s(phx-click="stop_ambient")
+    assert html =~ ~s(phx-value-path="music/prefixed-echo.mp3")
 
     render_hook(view, "play_audio_entity", %{
       "asset_path" => "audio/sfx/storm-bell.mp3",

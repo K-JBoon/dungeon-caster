@@ -1,5 +1,7 @@
 defmodule DungeonCasterWeb.EntityHelpers do
   alias DungeonCaster.{Audio, Entities}
+  alias DungeonCaster.Entities.TypeMeta
+  alias Phoenix.HTML
 
   @doc """
   Parses "type:id" ref string and loads entity from DB.
@@ -32,6 +34,8 @@ defmodule DungeonCasterWeb.EntityHelpers do
 
   def search_entities(_), do: []
 
+  def entity_type_icon(type), do: TypeMeta.icon(type)
+
   @doc """
   Builds popover data map for a given "type:id" ref.
   Returns {:ok, %{ref, name, type, html}} or :error.
@@ -41,19 +45,23 @@ defmodule DungeonCasterWeb.EntityHelpers do
       {type, entity} ->
         name = Map.get(entity, :name) || Map.get(entity, :title) || entity.id
 
-        html =
+        body_html =
           if entity.body_html && entity.body_html != "",
             do: entity.body_html,
             else: ""
 
-        payload = %{ref: ref, name: name, type: type, html: html}
+        payload = %{ref: ref, name: name, type: type, html: body_html}
 
         payload =
           if type == "audio" do
+            asset_path = normalized_audio_asset_path(entity.asset_path)
+            playable = audio_playable?(entity)
+
             Map.merge(payload, %{
-              playable: audio_playable?(entity),
+              html: audio_popover_html(body_html, asset_path, entity.category, playable),
+              playable: playable,
               category: entity.category,
-              asset_path: normalized_audio_asset_path(entity.asset_path)
+              asset_path: asset_path
             })
           else
             payload
@@ -78,4 +86,37 @@ defmodule DungeonCasterWeb.EntityHelpers do
   end
 
   defp normalized_audio_asset_path(_), do: nil
+
+  defp audio_popover_html(body_html, asset_path, category, true) do
+    label = if category == "sfx", do: "Play SFX", else: "Play"
+    escaped_path = html_escape(asset_path)
+    escaped_category = html_escape(category)
+    escaped_label = html_escape(label)
+
+    """
+    <div class="entity-popover-audio-action not-prose mb-4">
+      <button
+        type="button"
+        class="entity-popover-audio-play"
+        phx-click="play_audio_entity"
+        phx-value-asset_path="#{escaped_path}"
+        phx-value-category="#{escaped_category}"
+        title="#{escaped_label}"
+      >
+        <span class="entity-popover-audio-play-icon" aria-hidden="true">▶</span>
+        <span>#{escaped_label}</span>
+      </button>
+    </div>
+    #{body_html}
+    """
+  end
+
+  defp audio_popover_html(body_html, _asset_path, _category, false), do: body_html
+
+  defp html_escape(value) do
+    value
+    |> to_string()
+    |> HTML.html_escape()
+    |> HTML.safe_to_string()
+  end
 end

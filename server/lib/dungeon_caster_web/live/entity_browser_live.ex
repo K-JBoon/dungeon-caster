@@ -216,7 +216,7 @@ defmodule DungeonCasterWeb.EntityBrowserLive do
 
   defp render_card(_, e, _assigns) do
     assigns = %{e: e}
-    ~H"<p class=\"font-medium text-sm truncate\">{@e.name}</p>"
+    ~H'<p class="font-medium text-sm truncate">{@e.name}</p>'
   end
 
   defp load_audio_search_results(query) do
