@@ -12,9 +12,12 @@ defmodule DungeonCasterWeb.EntityHelpers do
           nil -> nil
           entity -> {type, entity}
         end
-      _ -> nil
+
+      _ ->
+        nil
     end
   end
+
   def load_entity_from_ref(_), do: nil
 
   @doc """
@@ -26,6 +29,7 @@ defmodule DungeonCasterWeb.EntityHelpers do
     |> Enum.reject(&(&1.type == "session"))
     |> Enum.take(8)
   end
+
   def search_entities(_), do: []
 
   @doc """
@@ -36,6 +40,7 @@ defmodule DungeonCasterWeb.EntityHelpers do
     case load_entity_from_ref(ref) do
       {type, entity} ->
         name = Map.get(entity, :name) || Map.get(entity, :title) || entity.id
+
         html =
           if entity.body_html && entity.body_html != "",
             do: entity.body_html,
@@ -55,12 +60,14 @@ defmodule DungeonCasterWeb.EntityHelpers do
           end
 
         {:ok, payload}
+
       nil ->
         :error
     end
   end
 
-  defp audio_playable?(%{asset_path: asset_path}) when is_binary(asset_path) and asset_path != "" do
+  defp audio_playable?(%{asset_path: asset_path})
+       when is_binary(asset_path) and asset_path != "" do
     Audio.audio_file_available?(asset_path)
   end
 

@@ -1,387 +1,388 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-  <title>Draw on Map</title>
-  <script src="/assets/phoenix.js"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100vw; height: 100dvh; overflow: hidden; background: #111; }
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <title>Draw on Map</title>
+    <script src="/assets/phoenix.js">
+    </script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 100vw; height: 100dvh; overflow: hidden; background: #111; }
 
-    #map-container {
-      position: absolute;
-      inset: 0;
-      bottom: 60px;
-    }
-    #map-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
-    #fog-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-    #draw-canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+      #map-container {
+        position: absolute;
+        inset: 0;
+        bottom: 60px;
+      }
+      #map-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+      #fog-canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+      #draw-canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
 
-    #toolbar {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      height: 60px;
-      background: rgba(20,20,20,0.95);
-      border-top: 1px solid #333;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 0 12px;
-      overflow-x: auto;
-    }
+      #toolbar {
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: 60px;
+        background: rgba(20,20,20,0.95);
+        border-top: 1px solid #333;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 12px;
+        overflow-x: auto;
+      }
 
-    .color-swatch {
-      width: 28px; height: 28px;
-      border-radius: 50%;
-      border: 2px solid transparent;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .color-swatch.active { border-color: #fff; }
+      .color-swatch {
+        width: 28px; height: 28px;
+        border-radius: 50%;
+        border: 2px solid transparent;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .color-swatch.active { border-color: #fff; }
 
-    .tool-btn {
-      background: #333;
-      color: #fff;
-      border: 2px solid transparent;
-      border-radius: 6px;
-      padding: 4px 10px;
-      font-size: 13px;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-    .tool-btn.active { border-color: #fff; }
+      .tool-btn {
+        background: #333;
+        color: #fff;
+        border: 2px solid transparent;
+        border-radius: 6px;
+        padding: 4px 10px;
+        font-size: 13px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .tool-btn.active { border-color: #fff; }
 
-    #size-slider { width: 60px; flex-shrink: 0; }
+      #size-slider { width: 60px; flex-shrink: 0; }
 
-    #clear-btn {
-      margin-left: auto;
-      background: #8b2020;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      padding: 5px 10px;
-      font-size: 12px;
-      cursor: pointer;
-      flex-shrink: 0;
-    }
-  </style>
-</head>
-<body data-session-id={@session_id}>
-  <div id="map-container">
-    <img id="map-img" src="" alt="" />
-    <canvas id="fog-canvas"></canvas>
-    <canvas id="draw-canvas"></canvas>
-  </div>
+      #clear-btn {
+        margin-left: auto;
+        background: #8b2020;
+        color: #fff;
+        border: none;
+        border-radius: 6px;
+        padding: 5px 10px;
+        font-size: 12px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+    </style>
+  </head>
+  <body data-session-id={@session_id}>
+    <div id="map-container">
+      <img id="map-img" src="" alt="" />
+      <canvas id="fog-canvas"></canvas>
+      <canvas id="draw-canvas"></canvas>
+    </div>
 
-  <div id="toolbar">
-    <div id="color-swatches" style="display:flex;gap:6px;align-items:center;"></div>
-    <button class="tool-btn active" id="btn-brush">🖌</button>
-    <button class="tool-btn" id="btn-eraser">⬜</button>
-    <input type="range" id="size-slider" min="2" max="24" value="6" />
-    <button id="clear-btn">Clear Mine</button>
-  </div>
+    <div id="toolbar">
+      <div id="color-swatches" style="display:flex;gap:6px;align-items:center;"></div>
+      <button class="tool-btn active" id="btn-brush">🖌</button>
+      <button class="tool-btn" id="btn-eraser">⬜</button>
+      <input type="range" id="size-slider" min="2" max="24" value="6" />
+      <button id="clear-btn">Clear Mine</button>
+    </div>
 
-  <script>
-    const SESSION_ID = document.body.dataset.sessionId;
-    const COLORS = ['#e74c3c','#e67e22','#2ecc71','#3498db','#9b59b6'];
-    const CELL_SIZE = 20;
+    <script>
+      const SESSION_ID = document.body.dataset.sessionId;
+      const COLORS = ['#e74c3c','#e67e22','#2ecc71','#3498db','#9b59b6'];
+      const CELL_SIZE = 20;
 
-    function genUUID() {
-      if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
-        return crypto.randomUUID();
-      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-        const r = Math.random() * 16 | 0;
-        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      function genUUID() {
+        if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function')
+          return crypto.randomUUID();
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+          const r = Math.random() * 16 | 0;
+          return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+      }
+      let playerId;
+      try {
+        playerId = localStorage.getItem('draw_player_id');
+        if (!playerId) { playerId = genUUID(); localStorage.setItem('draw_player_id', playerId); }
+      } catch(_) { playerId = genUUID(); }
+
+      const mapImg   = document.getElementById('map-img');
+      const fogCv    = document.getElementById('fog-canvas');
+      const fogCtx   = fogCv.getContext('2d');
+      const drawCv   = document.getElementById('draw-canvas');
+      const drawCtx  = drawCv.getContext('2d');
+      const container = document.getElementById('map-container');
+
+      let fogGrid = {}, fogAll = true, fogPartial = false;
+      let gridCols = 0, gridRows = 0;
+      let strokes   = [];
+      let curColor  = COLORS[0];
+      let curSize   = 6;
+      let curErase  = false;
+      let painting  = false;
+      let curPoints = [];
+      let channel   = null;
+
+      // Color toolbar
+      const swatchContainer = document.getElementById('color-swatches');
+      COLORS.forEach(color => {
+        const el = document.createElement('div');
+        el.className = 'color-swatch' + (color === curColor ? ' active' : '');
+        el.style.background = color;
+        el.addEventListener('click', () => {
+          curColor = color;
+          curErase = false;
+          document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+          el.classList.add('active');
+          document.getElementById('btn-brush').classList.add('active');
+          document.getElementById('btn-eraser').classList.remove('active');
+        });
+        swatchContainer.appendChild(el);
       });
-    }
-    let playerId;
-    try {
-      playerId = localStorage.getItem('draw_player_id');
-      if (!playerId) { playerId = genUUID(); localStorage.setItem('draw_player_id', playerId); }
-    } catch(_) { playerId = genUUID(); }
 
-    const mapImg   = document.getElementById('map-img');
-    const fogCv    = document.getElementById('fog-canvas');
-    const fogCtx   = fogCv.getContext('2d');
-    const drawCv   = document.getElementById('draw-canvas');
-    const drawCtx  = drawCv.getContext('2d');
-    const container = document.getElementById('map-container');
-
-    let fogGrid = {}, fogAll = true, fogPartial = false;
-    let gridCols = 0, gridRows = 0;
-    let strokes   = [];
-    let curColor  = COLORS[0];
-    let curSize   = 6;
-    let curErase  = false;
-    let painting  = false;
-    let curPoints = [];
-    let channel   = null;
-
-    // Color toolbar
-    const swatchContainer = document.getElementById('color-swatches');
-    COLORS.forEach(color => {
-      const el = document.createElement('div');
-      el.className = 'color-swatch' + (color === curColor ? ' active' : '');
-      el.style.background = color;
-      el.addEventListener('click', () => {
-        curColor = color;
+      document.getElementById('btn-brush').addEventListener('click', () => {
         curErase = false;
-        document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-        el.classList.add('active');
         document.getElementById('btn-brush').classList.add('active');
         document.getElementById('btn-eraser').classList.remove('active');
       });
-      swatchContainer.appendChild(el);
-    });
-
-    document.getElementById('btn-brush').addEventListener('click', () => {
-      curErase = false;
-      document.getElementById('btn-brush').classList.add('active');
-      document.getElementById('btn-eraser').classList.remove('active');
-    });
-    document.getElementById('btn-eraser').addEventListener('click', () => {
-      curErase = true;
-      document.getElementById('btn-eraser').classList.add('active');
-      document.getElementById('btn-brush').classList.remove('active');
-    });
-    document.getElementById('size-slider').addEventListener('input', e => {
-      curSize = parseInt(e.target.value);
-    });
-    document.getElementById('clear-btn').addEventListener('click', () => {
-      if (channel) channel.push('clear_my_drawings', {player_id: playerId});
-    });
-
-    // Canvas sizing
-    function resizeCanvases() {
-      const r = container.getBoundingClientRect();
-      fogCv.width = drawCv.width = Math.round(r.width);
-      fogCv.height = drawCv.height = Math.round(r.height);
-      redrawAll();
-    }
-    new ResizeObserver(resizeCanvases).observe(container);
-    mapImg.addEventListener('load', resizeCanvases);
-
-    function getMapRect() {
-      const cw = drawCv.width;
-      const ch = drawCv.height;
-
-      const iw = mapImg.naturalWidth;
-      const ih = mapImg.naturalHeight;
-
-      if (!iw || !ih) return null;
-
-      const scale = Math.min(cw / iw, ch / ih);
-
-      const w = iw * scale;
-      const h = ih * scale;
-
-      const x = (cw - w) / 2;
-      const y = (ch - h) / 2;
-
-      return {x, y, w, h};
-    }
-    // Grid metrics for fog/rendering — uses canvas buffer dimensions (image area only).
-    function getGridMetrics(cvs) {
-      const w = cvs.width, h = cvs.height;
-      if (!gridCols || !gridRows) return {ox: 0, oy: 0, iw: w, ih: h};
-      const cellW = Math.min(w / gridCols, h / gridRows);
-      const iw = gridCols * cellW, ih = gridRows * cellW;
-      return {ox: (w - iw) / 2, oy: (h - ih) / 2, iw, ih};
-    }
-
-    // Fog rendering
-    function applyFogState(fg) {
-      if (fg === 'all_fogged')          { fogAll = true;  fogPartial = false; fogGrid = {}; }
-      else if (fg === 'all_revealed' || fg == null) { fogAll = false; fogPartial = false; fogGrid = {}; }
-      else if (fg && fg.type === 'partial_reveal')  { fogAll = false; fogPartial = true; fogGrid = fg.revealed || {}; }
-      else                              { fogAll = false; fogPartial = false; fogGrid = fg || {}; }
-    }
-
-    function applyFogDelta(fg) {
-      const m = getGridMetrics(fogCv);
-      if (!m || m.iw === 0) { applyFogState(fg); drawFog(); return; }
-      const cs = m.iw / (gridCols || 1);
-      if (fg.type === 'delta_reveal') {
-        if (fogAll) { fogAll = false; fogPartial = true; fogGrid = {}; }
-        for (const key of fg.cells) {
-          if (fogPartial) fogGrid[key] = true; else delete fogGrid[key];
-          const [r, c] = key.split(',').map(Number);
-          fogCtx.clearRect(m.ox + c * cs, m.oy + r * cs, cs, cs);
-        }
-      } else {
-        fogCtx.fillStyle = 'rgba(0,0,0,1)';
-        for (const key of fg.cells) {
-          if (fogPartial) delete fogGrid[key]; else fogGrid[key] = true;
-          const [r, c] = key.split(',').map(Number);
-          fogCtx.fillRect(m.ox + c * cs, m.oy + r * cs, cs, cs);
-        }
-      }
-    }
-
-    function drawFog() {
-      fogCtx.clearRect(0, 0, fogCv.width, fogCv.height);
-      fogCtx.fillStyle = 'rgba(0,0,0,1)';
-      if (fogAll) { fogCtx.fillRect(0, 0, fogCv.width, fogCv.height); return; }
-      const m = getGridMetrics(fogCv);
-      if (!m || m.iw === 0) return;
-      const cs = m.iw / (gridCols || 1);
-      if (fogPartial) {
-        fogCtx.fillRect(0, 0, fogCv.width, fogCv.height);
-        for (const key of Object.keys(fogGrid)) {
-          const [r, c] = key.split(',').map(Number);
-          fogCtx.clearRect(m.ox + c * cs, m.oy + r * cs, cs, cs);
-        }
-      } else {
-        for (const key of Object.keys(fogGrid)) {
-          const [r, c] = key.split(',').map(Number);
-          fogCtx.fillRect(m.ox + c * cs, m.oy + r * cs, cs, cs);
-        }
-      }
-    }
-
-    // Drawing rendering — coordinates are fractions of the full canvas (0–1), so render
-    // directly relative to the canvas buffer size with no letterbox offset.
-    function renderStrokes(strokeList) {
-      const map = getMapRect();
-      if (!map) return;
-
-      drawCtx.clearRect(0, 0, drawCv.width, drawCv.height);
-      for (const s of strokeList) {
-        if (!s.points || s.points.length < 2) continue;
-        drawCtx.save();
-        if (s.erase) {
-          drawCtx.globalCompositeOperation = 'destination-out';
-          drawCtx.strokeStyle = 'rgba(0,0,0,1)';
-        } else {
-          drawCtx.globalCompositeOperation = 'source-over';
-          drawCtx.strokeStyle = s.color;
-        }
-        drawCtx.lineWidth  = s.size;
-        drawCtx.lineCap    = 'round';
-        drawCtx.lineJoin   = 'round';
-        drawCtx.beginPath();
-        const p0 = s.points[0];
-        drawCtx.moveTo(map.x + p0.x * map.w, map.y + p0.y * map.h);
-        for (let i = 1; i < s.points.length; i++) {
-          const p = s.points[i];
-          drawCtx.lineTo(map.x + p.x * map.w, map.y + p.y * map.h);
-        }
-        drawCtx.stroke();
-        drawCtx.restore();
-      }
-    }
-
-    function redrawAll() { drawFog(); renderStrokes(strokes); }
-
-    // Normalise pointer position as a fraction of the full canvas (0–1 each axis).
-    // Using the full canvas — not just the letterboxed image area — means the entire
-    // phone screen maps onto the receiver's image area, so corner-to-corner draws
-    // appear corner-to-corner on the projector.
-    function normalizePoint(clientX, clientY) {
-      const rect = drawCv.getBoundingClientRect();
-      const map = getMapRect();
-      if (!map) return null;
-
-      const px = (clientX - rect.left) * (drawCv.width / rect.width);
-      const py = (clientY - rect.top)  * (drawCv.height / rect.height);
-
-      if (px < map.x || px > map.x + map.w || py < map.y || py > map.y + map.h)
-        return null;
-
-      return {
-        x: (px - map.x) / map.w,
-        y: (py - map.y) / map.h
-      };
-    }
-
-    drawCv.addEventListener('pointerdown', e => {
-      painting = true;
-      drawCv.setPointerCapture(e.pointerId);
-      curPoints = [];
-      const pt = normalizePoint(e.clientX, e.clientY);
-      if (pt) curPoints.push(pt);
-    });
-
-    drawCv.addEventListener('pointermove', e => {
-      if (!painting) return;
-      const pt = normalizePoint(e.clientX, e.clientY);
-      if (!pt) return;
-      curPoints.push(pt);
-      const preview = [...strokes, {player_id: playerId, color: curColor, size: curSize, erase: curErase, points: curPoints}];
-      renderStrokes(preview);
-    });
-
-    drawCv.addEventListener('pointerup', () => {
-      if (!painting) return;
-      painting = false;
-      // Single-point tap: duplicate the point to form a minimal stroke (renders as a dot)
-      if (curPoints.length === 1) curPoints.push(curPoints[0]);
-      if (curPoints.length < 2) { curPoints = []; renderStrokes(strokes); return; }
-      const stroke = {player_id: playerId, color: curColor, size: curSize, erase: curErase, points: curPoints};
-      if (channel) channel.push('drawing_stroke', stroke);
-      curPoints = [];
-    });
-
-    drawCv.addEventListener('pointercancel', () => {
-      painting = false;
-      curPoints = [];
-      renderStrokes(strokes);
-    });
-
-    // Phoenix Channel
-    const {Socket} = window.Phoenix;
-    const socket = new Socket('/socket', {});
-    socket.connect();
-    channel = socket.channel('session:live:' + SESSION_ID, {});
-
-    channel.on('map_update', ({asset, map_id, grid_cols, grid_rows}) => {
-      if (grid_cols) gridCols = grid_cols;
-      if (grid_rows) gridRows = grid_rows;
-      mapImg.src = '/maps/assets/' + (asset || map_id + '.png');
-      applyFogState('all_fogged');
-      strokes = [];
-      redrawAll();
-    });
-
-    channel.on('fog_update', ({fog_grid}) => {
-      if (fog_grid && (fog_grid.type === 'delta_reveal' || fog_grid.type === 'delta_cover')) {
-        applyFogDelta(fog_grid);
-      } else {
-        applyFogState(fog_grid);
-        drawFog();
-      }
-    });
-
-    channel.on('drawing_stroke', stroke => {
-      strokes.push(stroke);
-      renderStrokes(strokes);
-    });
-
-    channel.on('drawing_update', ({strokes: updated}) => {
-      strokes = updated;
-      renderStrokes(strokes);
-    });
-
-    channel.join()
-      .receive('ok', state => {
-        if (state.grid_cols) gridCols = state.grid_cols;
-        if (state.grid_rows) gridRows = state.grid_rows;
-        if (state.current_map_asset) {
-          mapImg.src = '/maps/assets/' + state.current_map_asset;
-        } else if (state.current_map) {
-          mapImg.src = '/maps/assets/' + state.current_map + '.png';
-        }
-        applyFogState(state.fog_grid);
-        strokes = state.drawings || [];
-        redrawAll();
-      })
-      .receive('error', err => {
-        document.body.innerHTML = '<p style="color:#f88;font-family:sans-serif;padding:2rem">Could not join session: ' + JSON.stringify(err) + '</p>';
-      })
-      .receive('timeout', () => {
-        document.body.innerHTML = '<p style="color:#f88;font-family:sans-serif;padding:2rem">Connection timed out. Is the session active?</p>';
+      document.getElementById('btn-eraser').addEventListener('click', () => {
+        curErase = true;
+        document.getElementById('btn-eraser').classList.add('active');
+        document.getElementById('btn-brush').classList.remove('active');
       });
-  </script>
-</body>
+      document.getElementById('size-slider').addEventListener('input', e => {
+        curSize = parseInt(e.target.value);
+      });
+      document.getElementById('clear-btn').addEventListener('click', () => {
+        if (channel) channel.push('clear_my_drawings', {player_id: playerId});
+      });
+
+      // Canvas sizing
+      function resizeCanvases() {
+        const r = container.getBoundingClientRect();
+        fogCv.width = drawCv.width = Math.round(r.width);
+        fogCv.height = drawCv.height = Math.round(r.height);
+        redrawAll();
+      }
+      new ResizeObserver(resizeCanvases).observe(container);
+      mapImg.addEventListener('load', resizeCanvases);
+
+      function getMapRect() {
+        const cw = drawCv.width;
+        const ch = drawCv.height;
+
+        const iw = mapImg.naturalWidth;
+        const ih = mapImg.naturalHeight;
+
+        if (!iw || !ih) return null;
+
+        const scale = Math.min(cw / iw, ch / ih);
+
+        const w = iw * scale;
+        const h = ih * scale;
+
+        const x = (cw - w) / 2;
+        const y = (ch - h) / 2;
+
+        return {x, y, w, h};
+      }
+      // Grid metrics for fog/rendering — uses canvas buffer dimensions (image area only).
+      function getGridMetrics(cvs) {
+        const w = cvs.width, h = cvs.height;
+        if (!gridCols || !gridRows) return {ox: 0, oy: 0, iw: w, ih: h};
+        const cellW = Math.min(w / gridCols, h / gridRows);
+        const iw = gridCols * cellW, ih = gridRows * cellW;
+        return {ox: (w - iw) / 2, oy: (h - ih) / 2, iw, ih};
+      }
+
+      // Fog rendering
+      function applyFogState(fg) {
+        if (fg === 'all_fogged')          { fogAll = true;  fogPartial = false; fogGrid = {}; }
+        else if (fg === 'all_revealed' || fg == null) { fogAll = false; fogPartial = false; fogGrid = {}; }
+        else if (fg && fg.type === 'partial_reveal')  { fogAll = false; fogPartial = true; fogGrid = fg.revealed || {}; }
+        else                              { fogAll = false; fogPartial = false; fogGrid = fg || {}; }
+      }
+
+      function applyFogDelta(fg) {
+        const m = getGridMetrics(fogCv);
+        if (!m || m.iw === 0) { applyFogState(fg); drawFog(); return; }
+        const cs = m.iw / (gridCols || 1);
+        if (fg.type === 'delta_reveal') {
+          if (fogAll) { fogAll = false; fogPartial = true; fogGrid = {}; }
+          for (const key of fg.cells) {
+            if (fogPartial) fogGrid[key] = true; else delete fogGrid[key];
+            const [r, c] = key.split(',').map(Number);
+            fogCtx.clearRect(m.ox + c * cs, m.oy + r * cs, cs, cs);
+          }
+        } else {
+          fogCtx.fillStyle = 'rgba(0,0,0,1)';
+          for (const key of fg.cells) {
+            if (fogPartial) delete fogGrid[key]; else fogGrid[key] = true;
+            const [r, c] = key.split(',').map(Number);
+            fogCtx.fillRect(m.ox + c * cs, m.oy + r * cs, cs, cs);
+          }
+        }
+      }
+
+      function drawFog() {
+        fogCtx.clearRect(0, 0, fogCv.width, fogCv.height);
+        fogCtx.fillStyle = 'rgba(0,0,0,1)';
+        if (fogAll) { fogCtx.fillRect(0, 0, fogCv.width, fogCv.height); return; }
+        const m = getGridMetrics(fogCv);
+        if (!m || m.iw === 0) return;
+        const cs = m.iw / (gridCols || 1);
+        if (fogPartial) {
+          fogCtx.fillRect(0, 0, fogCv.width, fogCv.height);
+          for (const key of Object.keys(fogGrid)) {
+            const [r, c] = key.split(',').map(Number);
+            fogCtx.clearRect(m.ox + c * cs, m.oy + r * cs, cs, cs);
+          }
+        } else {
+          for (const key of Object.keys(fogGrid)) {
+            const [r, c] = key.split(',').map(Number);
+            fogCtx.fillRect(m.ox + c * cs, m.oy + r * cs, cs, cs);
+          }
+        }
+      }
+
+      // Drawing rendering — coordinates are fractions of the full canvas (0–1), so render
+      // directly relative to the canvas buffer size with no letterbox offset.
+      function renderStrokes(strokeList) {
+        const map = getMapRect();
+        if (!map) return;
+
+        drawCtx.clearRect(0, 0, drawCv.width, drawCv.height);
+        for (const s of strokeList) {
+          if (!s.points || s.points.length < 2) continue;
+          drawCtx.save();
+          if (s.erase) {
+            drawCtx.globalCompositeOperation = 'destination-out';
+            drawCtx.strokeStyle = 'rgba(0,0,0,1)';
+          } else {
+            drawCtx.globalCompositeOperation = 'source-over';
+            drawCtx.strokeStyle = s.color;
+          }
+          drawCtx.lineWidth  = s.size;
+          drawCtx.lineCap    = 'round';
+          drawCtx.lineJoin   = 'round';
+          drawCtx.beginPath();
+          const p0 = s.points[0];
+          drawCtx.moveTo(map.x + p0.x * map.w, map.y + p0.y * map.h);
+          for (let i = 1; i < s.points.length; i++) {
+            const p = s.points[i];
+            drawCtx.lineTo(map.x + p.x * map.w, map.y + p.y * map.h);
+          }
+          drawCtx.stroke();
+          drawCtx.restore();
+        }
+      }
+
+      function redrawAll() { drawFog(); renderStrokes(strokes); }
+
+      // Normalise pointer position as a fraction of the full canvas (0–1 each axis).
+      // Using the full canvas — not just the letterboxed image area — means the entire
+      // phone screen maps onto the receiver's image area, so corner-to-corner draws
+      // appear corner-to-corner on the projector.
+      function normalizePoint(clientX, clientY) {
+        const rect = drawCv.getBoundingClientRect();
+        const map = getMapRect();
+        if (!map) return null;
+
+        const px = (clientX - rect.left) * (drawCv.width / rect.width);
+        const py = (clientY - rect.top)  * (drawCv.height / rect.height);
+
+        if (px < map.x || px > map.x + map.w || py < map.y || py > map.y + map.h)
+          return null;
+
+        return {
+          x: (px - map.x) / map.w,
+          y: (py - map.y) / map.h
+        };
+      }
+
+      drawCv.addEventListener('pointerdown', e => {
+        painting = true;
+        drawCv.setPointerCapture(e.pointerId);
+        curPoints = [];
+        const pt = normalizePoint(e.clientX, e.clientY);
+        if (pt) curPoints.push(pt);
+      });
+
+      drawCv.addEventListener('pointermove', e => {
+        if (!painting) return;
+        const pt = normalizePoint(e.clientX, e.clientY);
+        if (!pt) return;
+        curPoints.push(pt);
+        const preview = [...strokes, {player_id: playerId, color: curColor, size: curSize, erase: curErase, points: curPoints}];
+        renderStrokes(preview);
+      });
+
+      drawCv.addEventListener('pointerup', () => {
+        if (!painting) return;
+        painting = false;
+        // Single-point tap: duplicate the point to form a minimal stroke (renders as a dot)
+        if (curPoints.length === 1) curPoints.push(curPoints[0]);
+        if (curPoints.length < 2) { curPoints = []; renderStrokes(strokes); return; }
+        const stroke = {player_id: playerId, color: curColor, size: curSize, erase: curErase, points: curPoints};
+        if (channel) channel.push('drawing_stroke', stroke);
+        curPoints = [];
+      });
+
+      drawCv.addEventListener('pointercancel', () => {
+        painting = false;
+        curPoints = [];
+        renderStrokes(strokes);
+      });
+
+      // Phoenix Channel
+      const {Socket} = window.Phoenix;
+      const socket = new Socket('/socket', {});
+      socket.connect();
+      channel = socket.channel('session:live:' + SESSION_ID, {});
+
+      channel.on('map_update', ({asset, map_id, grid_cols, grid_rows}) => {
+        if (grid_cols) gridCols = grid_cols;
+        if (grid_rows) gridRows = grid_rows;
+        mapImg.src = '/maps/assets/' + (asset || map_id + '.png');
+        applyFogState('all_fogged');
+        strokes = [];
+        redrawAll();
+      });
+
+      channel.on('fog_update', ({fog_grid}) => {
+        if (fog_grid && (fog_grid.type === 'delta_reveal' || fog_grid.type === 'delta_cover')) {
+          applyFogDelta(fog_grid);
+        } else {
+          applyFogState(fog_grid);
+          drawFog();
+        }
+      });
+
+      channel.on('drawing_stroke', stroke => {
+        strokes.push(stroke);
+        renderStrokes(strokes);
+      });
+
+      channel.on('drawing_update', ({strokes: updated}) => {
+        strokes = updated;
+        renderStrokes(strokes);
+      });
+
+      channel.join()
+        .receive('ok', state => {
+          if (state.grid_cols) gridCols = state.grid_cols;
+          if (state.grid_rows) gridRows = state.grid_rows;
+          if (state.current_map_asset) {
+            mapImg.src = '/maps/assets/' + state.current_map_asset;
+          } else if (state.current_map) {
+            mapImg.src = '/maps/assets/' + state.current_map + '.png';
+          }
+          applyFogState(state.fog_grid);
+          strokes = state.drawings || [];
+          redrawAll();
+        })
+        .receive('error', err => {
+          document.body.innerHTML = '<p style="color:#f88;font-family:sans-serif;padding:2rem">Could not join session: ' + JSON.stringify(err) + '</p>';
+        })
+        .receive('timeout', () => {
+          document.body.innerHTML = '<p style="color:#f88;font-family:sans-serif;padding:2rem">Connection timed out. Is the session active?</p>';
+        });
+    </script>
+  </body>
 </html>

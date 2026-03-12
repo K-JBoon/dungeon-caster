@@ -9,16 +9,25 @@ defmodule DungeonCaster.Sync.FileWatcher do
   def init(_) do
     campaign_dir = Application.get_env(:dungeon_caster, :campaign_dir)
     File.mkdir_p!(campaign_dir)
+
     case FileSystem.start_link(dirs: [campaign_dir]) do
       {:ok, pid} ->
         FileSystem.subscribe(pid)
         Logger.info("FileWatcher: watching #{campaign_dir}")
         {:ok, %{fs_pid: pid}}
+
       :ignore ->
-        Logger.warning("FileWatcher: file_system backend unavailable (inotify-tools missing?), watching disabled")
+        Logger.warning(
+          "FileWatcher: file_system backend unavailable (inotify-tools missing?), watching disabled"
+        )
+
         {:ok, %{fs_pid: nil}}
+
       {:error, reason} ->
-        Logger.warning("FileWatcher: could not start file_system: #{inspect(reason)}, watching disabled")
+        Logger.warning(
+          "FileWatcher: could not start file_system: #{inspect(reason)}, watching disabled"
+        )
+
         {:ok, %{fs_pid: nil}}
     end
   end
@@ -28,6 +37,7 @@ defmodule DungeonCaster.Sync.FileWatcher do
       DungeonCaster.Sync.IndexWorker.schedule(path)
       DungeonCaster.Sync.GitWorker.schedule()
     end
+
     {:noreply, state}
   end
 

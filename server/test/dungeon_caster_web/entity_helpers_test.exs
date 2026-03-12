@@ -16,7 +16,9 @@ defmodule DungeonCasterWeb.EntityHelpersTest do
 
   setup do
     previous_campaign_dir = Application.get_env(:dungeon_caster, :campaign_dir)
-    campaign_dir = Path.join(System.tmp_dir!(), "entity-helpers-#{System.unique_integer([:positive])}")
+
+    campaign_dir =
+      Path.join(System.tmp_dir!(), "entity-helpers-#{System.unique_integer([:positive])}")
 
     File.rm_rf!(campaign_dir)
     File.mkdir_p!(Path.join(campaign_dir, "audio/music"))

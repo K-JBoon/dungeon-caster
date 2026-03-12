@@ -16,9 +16,9 @@ defmodule DungeonCasterWeb.AudioController do
     if relative_path =~ ~r/^[a-zA-Z0-9_\-\.\/]+$/ do
       case Audio.resolve_audio_file(relative_path) do
         {:ok, path} ->
-        conn
-        |> put_resp_content_type(content_type_for(path))
-        |> send_file(200, path)
+          conn
+          |> put_resp_content_type(content_type_for(path))
+          |> send_file(200, path)
 
         :error ->
           send_resp(conn, 404, "not found")

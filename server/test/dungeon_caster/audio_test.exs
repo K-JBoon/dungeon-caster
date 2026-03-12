@@ -25,7 +25,10 @@ defmodule DungeonCaster.AudioTest do
   test "managed helpers resolve campaign audio assets", %{campaign_dir: campaign_dir} do
     assert Audio.upload_accept() == ".mp3,.ogg,.wav,.m4a,.aac,.flac"
     assert Audio.asset_root() == Path.join(campaign_dir, "audio")
-    assert Audio.managed_asset_path("music/tavern.mp3") == Path.join(campaign_dir, "audio/music/tavern.mp3")
+
+    assert Audio.managed_asset_path("music/tavern.mp3") ==
+             Path.join(campaign_dir, "audio/music/tavern.mp3")
+
     assert Audio.asset_url("music/tavern.mp3") == "/audio/music/tavern.mp3"
   end
 

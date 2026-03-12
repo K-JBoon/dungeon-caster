@@ -5,7 +5,9 @@ defmodule DungeonCasterWeb.EntityDetailLiveTest do
 
   setup do
     previous_campaign_dir = Application.get_env(:dungeon_caster, :campaign_dir)
-    campaign_dir = Path.join(System.tmp_dir!(), "entity-detail-live-#{System.unique_integer([:positive])}")
+
+    campaign_dir =
+      Path.join(System.tmp_dir!(), "entity-detail-live-#{System.unique_integer([:positive])}")
 
     File.rm_rf!(campaign_dir)
     File.mkdir_p!(Path.join(campaign_dir, "audio/assets"))
@@ -79,6 +81,7 @@ defmodule DungeonCasterWeb.EntityDetailLiveTest do
       "body_html" => "<p>Updated body.</p>",
       "file_path" => "/tmp/detail-test-npc.md"
     })
+
     Phoenix.PubSub.broadcast(DungeonCaster.PubSub, "entities:npc", {:updated, "detail-test-npc"})
     assert render(view) =~ "Updated NPC Name"
   end

@@ -21,11 +21,13 @@ defmodule DungeonCaster.Sync.Parser do
          {:ok, data} <- parse_yaml(fm_str),
          {:ok, type} <- validate_type(data, path),
          {:ok, html} <- render_markdown(body) do
-      enriched = Map.merge(data, %{
-        "body_raw" => body,
-        "body_html" => html,
-        "file_path" => path
-      })
+      enriched =
+        Map.merge(data, %{
+          "body_raw" => body,
+          "body_html" => html,
+          "file_path" => path
+        })
+
       {:ok, type, enriched}
     end
   end
@@ -36,6 +38,7 @@ defmodule DungeonCaster.Sync.Parser do
       _ -> {:error, :no_closing_frontmatter}
     end
   end
+
   defp split_frontmatter(_), do: {:error, :no_frontmatter}
 
   defp parse_yaml(fm_str) do
@@ -48,15 +51,19 @@ defmodule DungeonCaster.Sync.Parser do
 
   defp validate_type(%{"type" => type}, path) do
     dir = path |> Path.dirname() |> Path.basename()
+
     case Map.get(@type_to_dir, type) do
       nil ->
         {:error, "unknown entity type: #{type}"}
+
       expected_dir when expected_dir == dir ->
         {:ok, type}
+
       expected_dir ->
         {:error, "type '#{type}' expects directory '#{expected_dir}', got '#{dir}'"}
     end
   end
+
   defp validate_type(_, _), do: {:error, :missing_type_field}
 
   defp render_markdown(body) do

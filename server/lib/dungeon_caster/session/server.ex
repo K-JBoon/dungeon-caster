@@ -34,16 +34,25 @@ defmodule DungeonCaster.Session.Server do
   def get_state(sid), do: GenServer.call(via(sid), :get_state)
   def reveal_cells(sid, cells), do: GenServer.call(via(sid), {:reveal_cells, cells})
   def hide_cells(sid, cells), do: GenServer.call(via(sid), {:hide_cells, cells})
-  def set_map(sid, map_id, asset, grid_cols, grid_rows), do: GenServer.call(via(sid), {:set_map, map_id, asset, grid_cols, grid_rows})
+
+  def set_map(sid, map_id, asset, grid_cols, grid_rows),
+    do: GenServer.call(via(sid), {:set_map, map_id, asset, grid_cols, grid_rows})
+
   def reveal_all(sid), do: GenServer.call(via(sid), :reveal_all)
   def hide_all(sid), do: GenServer.call(via(sid), :hide_all)
   def play_audio(sid, path, type), do: GenServer.call(via(sid), {:play_audio, path, type})
   def stop_audio(sid, type), do: GenServer.call(via(sid), {:stop_audio, type})
   def set_volume(sid, vol), do: GenServer.call(via(sid), {:set_volume, vol})
   def set_initiative(sid, list), do: GenServer.call(via(sid), {:set_initiative, list})
-  def update_hp(sid, combatant_id, hp), do: GenServer.call(via(sid), {:update_hp, combatant_id, hp})
+
+  def update_hp(sid, combatant_id, hp),
+    do: GenServer.call(via(sid), {:update_hp, combatant_id, hp})
+
   def add_stroke(sid, stroke), do: GenServer.call(via(sid), {:add_stroke, stroke})
-  def clear_player_drawings(sid, player_id), do: GenServer.call(via(sid), {:clear_player_drawings, player_id})
+
+  def clear_player_drawings(sid, player_id),
+    do: GenServer.call(via(sid), {:clear_player_drawings, player_id})
+
   def clear_all_drawings(sid), do: GenServer.call(via(sid), :clear_all_drawings)
   def toggle_player_qr(sid), do: GenServer.call(via(sid), :toggle_player_qr)
 
@@ -89,6 +98,7 @@ defmodule DungeonCaster.Session.Server do
           do: {[cell | acc], Map.delete(grid, cell)},
           else: {acc, grid}
       end)
+
     new_state = %{state | fog_grid: new_fog}
     broadcast(state.session_id, "fog_update", {:delta_reveal, newly_revealed})
     {:reply, :ok, new_state}
@@ -105,6 +115,7 @@ defmodule DungeonCaster.Session.Server do
           do: {[cell | acc], Map.delete(grid, cell)},
           else: {acc, grid}
       end)
+
     new_state = %{state | fog_grid: {:partial_reveal, new_revealed}}
     broadcast(state.session_id, "fog_update", {:delta_cover, newly_covered})
     {:reply, :ok, new_state}
@@ -117,14 +128,31 @@ defmodule DungeonCaster.Session.Server do
           do: {[cell | acc], Map.put(grid, cell, true)},
           else: {acc, grid}
       end)
+
     new_state = %{state | fog_grid: new_fog}
     broadcast(state.session_id, "fog_update", {:delta_cover, newly_covered})
     {:reply, :ok, new_state}
   end
 
   def handle_call({:set_map, map_id, asset, grid_cols, grid_rows}, _from, state) do
-    new_state = %{state | current_map: map_id, current_map_asset: asset, grid_cols: grid_cols, grid_rows: grid_rows, fog_grid: :all_fogged, drawings: [], show_player_qr: false}
-    broadcast(state.session_id, "map_update", %{map_id: map_id, asset: asset, grid_cols: grid_cols, grid_rows: grid_rows})
+    new_state = %{
+      state
+      | current_map: map_id,
+        current_map_asset: asset,
+        grid_cols: grid_cols,
+        grid_rows: grid_rows,
+        fog_grid: :all_fogged,
+        drawings: [],
+        show_player_qr: false
+    }
+
+    broadcast(state.session_id, "map_update", %{
+      map_id: map_id,
+      asset: asset,
+      grid_cols: grid_cols,
+      grid_rows: grid_rows
+    })
+
     broadcast(state.session_id, "fog_update", :all_fogged)
     broadcast(state.session_id, "drawing_update", %{strokes: []})
     broadcast(state.session_id, "qr_toggle", %{visible: false})
@@ -146,11 +174,13 @@ defmodule DungeonCaster.Session.Server do
   def handle_call({:play_audio, path, :ambient}, _from, state) do
     audio = %{state.audio_state | ambient: path}
     new_state = %{state | audio_state: audio}
+
     broadcast(state.session_id, "audio_play", %{
       path: path,
       type: "ambient",
       volume: state.audio_state.volume
     })
+
     {:reply, :ok, new_state}
   end
 
@@ -160,6 +190,7 @@ defmodule DungeonCaster.Session.Server do
       type: "sfx",
       volume: state.audio_state.volume
     })
+
     {:reply, :ok, state}
   end
 
@@ -172,9 +203,13 @@ defmodule DungeonCaster.Session.Server do
 
   def handle_call({:set_volume, vol}, _from, state) do
     current = state.audio_state.volume
-    new_vol = %{master: Map.get(vol, :master, current.master),
-                ambient: Map.get(vol, :ambient, current.ambient),
-                sfx: Map.get(vol, :sfx, current.sfx)}
+
+    new_vol = %{
+      master: Map.get(vol, :master, current.master),
+      ambient: Map.get(vol, :ambient, current.ambient),
+      sfx: Map.get(vol, :sfx, current.sfx)
+    }
+
     audio = %{state.audio_state | volume: new_vol}
     new_state = %{state | audio_state: audio}
     broadcast(state.session_id, "volume_update", %{volume: new_vol})
@@ -187,9 +222,11 @@ defmodule DungeonCaster.Session.Server do
   end
 
   def handle_call({:update_hp, combatant_id, hp}, _from, state) do
-    initiative = Enum.map(state.initiative, fn c ->
-      if c.id == combatant_id, do: %{c | hp: hp}, else: c
-    end)
+    initiative =
+      Enum.map(state.initiative, fn c ->
+        if c.id == combatant_id, do: %{c | hp: hp}, else: c
+      end)
+
     broadcast(state.session_id, "initiative_update", %{initiative: initiative})
     {:reply, :ok, %{state | initiative: initiative}}
   end

@@ -4,7 +4,14 @@ defmodule DungeonCasterWeb.SessionRunnerLiveTest do
   alias DungeonCaster.{Entities, Session.Server}
 
   @test_file "/tmp/run-session-01.md"
-  @scenes_json Jason.encode!([%{"id" => "s1", "title" => "Opening", "notes" => "They arrive.", "entity_ids" => []}])
+  @scenes_json Jason.encode!([
+                 %{
+                   "id" => "s1",
+                   "title" => "Opening",
+                   "notes" => "They arrive.",
+                   "entity_ids" => []
+                 }
+               ])
 
   setup do
     campaign_dir = Application.fetch_env!(:dungeon_caster, :campaign_dir)
@@ -21,14 +28,26 @@ defmodule DungeonCasterWeb.SessionRunnerLiveTest do
     File.write!(Path.join(audio_root, "sfx/creak-door.mp3"), "sfx-c")
     File.write!(Path.join(audio_root, "sfx/storm-bell.mp3"), "sfx-s")
 
-    File.write!(@test_file, "---\ntype: session\nid: run-session-01\ntitle: The Heist\nsession_number: 1\nstatus: planned\n---\n")
+    File.write!(
+      @test_file,
+      "---\ntype: session\nid: run-session-01\ntitle: The Heist\nsession_number: 1\nstatus: planned\n---\n"
+    )
+
     Entities.upsert_entity("session", %{
-      "id" => "run-session-01", "title" => "The Heist",
-      "session_number" => 1, "status" => "planned",
+      "id" => "run-session-01",
+      "title" => "The Heist",
+      "session_number" => 1,
+      "status" => "planned",
       "scenes" => @scenes_json,
-      "tags" => [], "npc_ids" => [], "location_ids" => [], "map_ids" => [],
-      "stat_block_ids" => [], "faction_ids" => [],
-      "body_raw" => "", "body_html" => "", "file_path" => @test_file
+      "tags" => [],
+      "npc_ids" => [],
+      "location_ids" => [],
+      "map_ids" => [],
+      "stat_block_ids" => [],
+      "faction_ids" => [],
+      "body_raw" => "",
+      "body_html" => "",
+      "file_path" => @test_file
     })
 
     Entities.upsert_entity("audio", %{
@@ -112,6 +131,7 @@ defmodule DungeonCasterWeb.SessionRunnerLiveTest do
     })
 
     {:ok, _} = Server.start_link("run-session-01")
+
     on_exit(fn ->
       File.rm_rf!(audio_root)
 
@@ -121,6 +141,7 @@ defmodule DungeonCasterWeb.SessionRunnerLiveTest do
         :exit, _ -> :ok
       end
     end)
+
     :ok
   end
 
@@ -169,6 +190,7 @@ defmodule DungeonCasterWeb.SessionRunnerLiveTest do
 
     assert html =~ ~s(phx-value-path="music/twin-echo-a.mp3")
     assert html =~ ~s(phx-value-path="music/twin-echo-z.mp3")
+
     assert html_index(html, ~s(phx-value-path="music/twin-echo-a.mp3")) <
              html_index(html, ~s(phx-value-path="music/twin-echo-z.mp3"))
   end

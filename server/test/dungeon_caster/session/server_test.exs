@@ -4,6 +4,7 @@ defmodule DungeonCaster.Session.ServerTest do
   setup do
     sid = "test-session-#{:rand.uniform(999_999)}"
     {:ok, _pid} = DungeonCaster.Session.Server.start_link(sid)
+
     on_exit(fn ->
       try do
         DungeonCaster.Session.Server.stop(sid)
@@ -11,6 +12,7 @@ defmodule DungeonCaster.Session.ServerTest do
         :exit, _ -> :ok
       end
     end)
+
     {:ok, sid: sid}
   end
 
@@ -87,6 +89,7 @@ defmodule DungeonCaster.Session.ServerTest do
       %{id: "c1", name: "Goblin", hp: 7, max_hp: 7, ac: 13, conditions: []},
       %{id: "c2", name: "Fighter", hp: 20, max_hp: 20, ac: 16, conditions: []}
     ]
+
     :ok = DungeonCaster.Session.Server.set_initiative(sid, combatants)
     state = DungeonCaster.Session.Server.get_state(sid)
     assert length(state.initiative) == 2
@@ -144,14 +147,26 @@ defmodule DungeonCaster.Session.ServerTest do
   end
 
   test "clear_all_drawings empties the drawings list", %{sid: sid} do
-    DungeonCaster.Session.Server.add_stroke(sid, %{player_id: "p1", color: "#fff", size: 2, points: []})
+    DungeonCaster.Session.Server.add_stroke(sid, %{
+      player_id: "p1",
+      color: "#fff",
+      size: 2,
+      points: []
+    })
+
     :ok = DungeonCaster.Session.Server.clear_all_drawings(sid)
     state = DungeonCaster.Session.Server.get_state(sid)
     assert state.drawings == []
   end
 
   test "set_map resets drawings and show_player_qr", %{sid: sid} do
-    DungeonCaster.Session.Server.add_stroke(sid, %{player_id: "p1", color: "#fff", size: 2, points: []})
+    DungeonCaster.Session.Server.add_stroke(sid, %{
+      player_id: "p1",
+      color: "#fff",
+      size: 2,
+      points: []
+    })
+
     DungeonCaster.Session.Server.toggle_player_qr(sid)
     :ok = DungeonCaster.Session.Server.set_map(sid, "new-map", nil, 20, 20)
     state = DungeonCaster.Session.Server.get_state(sid)

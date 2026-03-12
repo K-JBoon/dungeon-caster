@@ -9,6 +9,7 @@ defmodule DungeonCasterWeb.SessionChannel do
         # Subscribe to PubSub so we can forward events to this socket
         Phoenix.PubSub.subscribe(DungeonCaster.PubSub, topic)
         state = Server.get_state(session_id)
+
         initial = %{
           current_map: state.current_map,
           current_map_asset: state.current_map_asset,
@@ -19,6 +20,7 @@ defmodule DungeonCasterWeb.SessionChannel do
           drawings: Enum.reverse(state.drawings),
           show_player_qr: state.show_player_qr
         }
+
         {:ok, initial, assign(socket, :session_id, session_id)}
 
       [] ->
@@ -72,7 +74,10 @@ defmodule DungeonCasterWeb.SessionChannel do
 
   defp serialize_fog(:all_fogged), do: "all_fogged"
   defp serialize_fog(:all_revealed), do: "all_revealed"
-  defp serialize_fog({:partial_reveal, revealed}), do: %{type: "partial_reveal", revealed: revealed}
+
+  defp serialize_fog({:partial_reveal, revealed}),
+    do: %{type: "partial_reveal", revealed: revealed}
+
   defp serialize_fog({:delta_reveal, cells}), do: %{type: "delta_reveal", cells: cells}
   defp serialize_fog({:delta_cover, cells}), do: %{type: "delta_cover", cells: cells}
   defp serialize_fog(grid) when is_map(grid), do: grid

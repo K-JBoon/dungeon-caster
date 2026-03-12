@@ -22,8 +22,18 @@ defmodule DungeonCaster.Entities.Schemas.MapEntity do
   def changeset(map_entity, attrs) do
     map_entity
     |> cast(attrs, [
-      :id, :name, :map_type, :asset_path, :width_px, :height_px, :scale,
-      :location_id, :tags, :body_raw, :body_html, :file_path
+      :id,
+      :name,
+      :map_type,
+      :asset_path,
+      :width_px,
+      :height_px,
+      :scale,
+      :location_id,
+      :tags,
+      :body_raw,
+      :body_html,
+      :file_path
     ])
     |> validate_required([:id, :name, :map_type, :asset_path])
   end

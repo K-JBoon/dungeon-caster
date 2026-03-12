@@ -1,392 +1,395 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Campaign Receiver</title>
-  <!-- Cast Receiver SDK (must load before any cast.framework usage) -->
-  <script src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
-  <!-- Phoenix UMD build — exposes window.Phoenix = {Socket, Channel, ...} -->
-  <script src="/assets/phoenix.js"></script>
-  <script src="/assets/qrcode.min.js"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100vw; height: 100vh; overflow: hidden; background: #000; }
-    #map-container {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    #map-img {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      object-fit: contain;
-    }
-    #fog-canvas {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-    }
-    #drawing-canvas {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      pointer-events: none;
-    }
-    #qr-overlay {
-      display: none;
-      position: absolute;
-      inset: 0;
-      background: rgba(0,0,0,0.75);
-      align-items: center;
-      justify-content: center;
-      z-index: 20;
-    }
-    #qr-overlay.visible {
-      display: flex;
-    }
-    #qr-box {
-      background: #fff;
-      padding: 24px;
-      border-radius: 12px;
-      text-align: center;
-    }
-    #qr-box p {
-      font-size: 1.1rem;
-      margin-bottom: 12px;
-      color: #111;
-      font-family: sans-serif;
-    }
-    #status {
-      position: absolute;
-      top: 1rem; right: 1rem;
-      color: rgba(255,255,255,0.4);
-      font-family: monospace;
-      font-size: 0.75rem;
-      z-index: 10;
-    }
-  </style>
-</head>
-<body>
-  <div id="map-container">
-    <img id="map-img" src="" alt="" />
-    <canvas id="fog-canvas"></canvas>
-    <canvas id="drawing-canvas"></canvas>
-    <div id="qr-overlay">
-      <div id="qr-box">
-        <p>Scan to draw on the map</p>
-        <div id="qr-code"></div>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Campaign Receiver</title>
+    <!-- Cast Receiver SDK (must load before any cast.framework usage) -->
+    <script src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js">
+    </script>
+    <!-- Phoenix UMD build — exposes window.Phoenix = {Socket, Channel, ...} -->
+    <script src="/assets/phoenix.js">
+    </script>
+    <script src="/assets/qrcode.min.js">
+    </script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { width: 100vw; height: 100vh; overflow: hidden; background: #000; }
+      #map-container {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #map-img {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        object-fit: contain;
+      }
+      #fog-canvas {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        pointer-events: none;
+      }
+      #drawing-canvas {
+        position: absolute;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        pointer-events: none;
+      }
+      #qr-overlay {
+        display: none;
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.75);
+        align-items: center;
+        justify-content: center;
+        z-index: 20;
+      }
+      #qr-overlay.visible {
+        display: flex;
+      }
+      #qr-box {
+        background: #fff;
+        padding: 24px;
+        border-radius: 12px;
+        text-align: center;
+      }
+      #qr-box p {
+        font-size: 1.1rem;
+        margin-bottom: 12px;
+        color: #111;
+        font-family: sans-serif;
+      }
+      #status {
+        position: absolute;
+        top: 1rem; right: 1rem;
+        color: rgba(255,255,255,0.4);
+        font-family: monospace;
+        font-size: 0.75rem;
+        z-index: 10;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map-container">
+      <img id="map-img" src="" alt="" />
+      <canvas id="fog-canvas"></canvas>
+      <canvas id="drawing-canvas"></canvas>
+      <div id="qr-overlay">
+        <div id="qr-box">
+          <p>Scan to draw on the map</p>
+          <div id="qr-code"></div>
+        </div>
       </div>
+      <div id="status">connecting...</div>
     </div>
-    <div id="status">connecting...</div>
-  </div>
 
-  <script>
-    // ── Configuration ──────────────────────────────────────────────────────────
-    const CAST_NAMESPACE = 'urn:x-cast:com.dungeoncaster';
+    <script>
+      // ── Configuration ──────────────────────────────────────────────────────────
+      const CAST_NAMESPACE = 'urn:x-cast:com.dungeoncaster';
 
-    // ── DOM refs ────────────────────────────────────────────────────────────────
-    const mapImg = document.getElementById('map-img');
-    const canvas = document.getElementById('fog-canvas');
-    const ctx = canvas.getContext('2d');
-    const statusEl = document.getElementById('status');
-    const drawCanvas = document.getElementById('drawing-canvas');
-    const drawCtx    = drawCanvas.getContext('2d');
-    const qrOverlay  = document.getElementById('qr-overlay');
+      // ── DOM refs ────────────────────────────────────────────────────────────────
+      const mapImg = document.getElementById('map-img');
+      const canvas = document.getElementById('fog-canvas');
+      const ctx = canvas.getContext('2d');
+      const statusEl = document.getElementById('status');
+      const drawCanvas = document.getElementById('drawing-canvas');
+      const drawCtx    = drawCanvas.getContext('2d');
+      const qrOverlay  = document.getElementById('qr-overlay');
 
-    // ── State ───────────────────────────────────────────────────────────────────
-    let fogGrid = {};      // cell map; meaning depends on fogPartial
-    let fogAll = true;     // start fully fogged; server state overrides on join
-    let fogPartial = false;// true → fogGrid is whitelist (revealed), rest is black
-    let gridCols = 0, gridRows = 0; // server-supplied grid layout
-    let ambientAudio = null;
-    let volume = { master: 80, ambient: 80, sfx: 80 };
-    let drawStrokes = [];
+      // ── State ───────────────────────────────────────────────────────────────────
+      let fogGrid = {};      // cell map; meaning depends on fogPartial
+      let fogAll = true;     // start fully fogged; server state overrides on join
+      let fogPartial = false;// true → fogGrid is whitelist (revealed), rest is black
+      let gridCols = 0, gridRows = 0; // server-supplied grid layout
+      let ambientAudio = null;
+      let volume = { master: 80, ambient: 80, sfx: 80 };
+      let drawStrokes = [];
 
-    // ── Canvas sizing ───────────────────────────────────────────────────────────
-    function resizeCanvas() {
-      canvas.width  = window.innerWidth;
-      canvas.height = window.innerHeight;
-      drawFog();
-      drawCanvas.width  = window.innerWidth;
-      drawCanvas.height = window.innerHeight;
-      renderDrawings();
-    }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    // ── Grid metrics — mirrors fog_editor.js getMetrics(), no naturalWidth needed ──
-    function getGridMetrics(cvs) {
-      if (!gridCols || !gridRows) return null;
-      const cw = cvs.width, ch = cvs.height;
-      const cellW = Math.min(cw / gridCols, ch / gridRows); // px per cell (square)
-      const rendW = gridCols * cellW, rendH = gridRows * cellW;
-      return { ox: (cw - rendW) / 2, oy: (ch - rendH) / 2, cellW };
-    }
-
-    // ── Drawing rendering ────────────────────────────────────────────────────────
-    function renderDrawings() {
-      const rect = mapImg.getBoundingClientRect();
-
-      const ox = rect.left;
-      const oy = rect.top;
-      const iw = rect.width;
-      const ih = rect.height;
-
-      drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
-
-      for (const s of drawStrokes) {
-        if (!s.points || s.points.length < 2) continue;
-        drawCtx.save();
-        if (s.erase) {
-          drawCtx.globalCompositeOperation = 'destination-out';
-          drawCtx.strokeStyle = 'rgba(0,0,0,1)';
-        } else {
-          drawCtx.globalCompositeOperation = 'source-over';
-          drawCtx.strokeStyle = s.color;
-        }
-        drawCtx.lineWidth = s.size;
-        drawCtx.lineCap   = 'round';
-        drawCtx.lineJoin  = 'round';
-        drawCtx.beginPath();
-        const p0 = s.points[0];
-        drawCtx.moveTo(
-          (ox - mapImg.offsetLeft) + p0.x * iw,
-          (oy - mapImg.offsetTop) + p0.y * ih
-        );
-        for (let i = 1; i < s.points.length; i++) {
-          drawCtx.lineTo(
-            (ox - mapImg.offsetLeft) + s.points[i].x * iw,
-            (oy - mapImg.offsetTop) + s.points[i].y * ih
-          );
-        }
-        drawCtx.stroke();
-        drawCtx.restore();
-      }
-    }
-
-    // ── Fog rendering ────────────────────────────────────────────────────────────
-    function drawFog() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = 'rgba(0,0,0,1)';
-
-      if (fogAll) {
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        return;
-      }
-
-      const m = getGridMetrics(canvas);
-      if (!m) return;
-      const { ox, oy, cellW: cs } = m;
-
-      if (fogPartial) {
-        // Whitelist: fill everything, then clear revealed cells
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        for (const key of Object.keys(fogGrid)) {
-          const [r, c] = key.split(',').map(Number);
-          ctx.clearRect(ox + c * cs, oy + r * cs, cs, cs);
-        }
-      } else {
-        // Blacklist: fill only listed (fogged) cells
-        for (const key of Object.keys(fogGrid)) {
-          const [r, c] = key.split(',').map(Number);
-          ctx.fillRect(ox + c * cs, oy + r * cs, cs, cs);
-        }
-      }
-    }
-
-    // ── Audio helpers ────────────────────────────────────────────────────────────
-    function ambientVolume() {
-      return (volume.master / 100) * (volume.ambient / 100);
-    }
-
-    function sfxVolume() {
-      return (volume.master / 100) * (volume.sfx / 100);
-    }
-
-    function playAmbient(path) {
-      if (ambientAudio) { ambientAudio.pause(); ambientAudio = null; }
-      ambientAudio = new Audio('/audio/' + path);
-      ambientAudio.loop = true;
-      ambientAudio.volume = ambientVolume();
-      ambientAudio.play().catch(e => console.warn('Ambient play blocked:', e));
-    }
-
-    function playSfx(path) {
-      const sfx = new Audio('/audio/' + path);
-      sfx.volume = sfxVolume();
-      sfx.play().catch(e => console.warn('SFX play blocked:', e));
-    }
-
-    // ── Incremental fog update (O(delta) instead of O(total cells)) ──────────────
-    function applyFogDelta(fg) {
-      const m = getGridMetrics(canvas);
-      if (!m) { applyFogState(fg); drawFog(); return; } // fallback if grid unknown
-      const { ox, oy, cellW: cs } = m;
-
-      if (fg.type === 'delta_reveal') {
-        if (fogAll) {
-          // Transition all_fogged → partial_reveal; canvas is already black
-          fogAll = false; fogPartial = true; fogGrid = {};
-        }
-        ctx.clearRect(0, 0, 0, 0); // no-op to start (cells cleared below)
-        for (const key of fg.cells) {
-          if (fogPartial) fogGrid[key] = true; else delete fogGrid[key];
-          const [r, c] = key.split(',').map(Number);
-          ctx.clearRect(ox + c * cs, oy + r * cs, cs, cs);
-        }
-      } else { // delta_cover
-        ctx.fillStyle = 'rgba(0,0,0,1)';
-        for (const key of fg.cells) {
-          if (fogPartial) delete fogGrid[key]; else fogGrid[key] = true;
-          const [r, c] = key.split(',').map(Number);
-          ctx.fillRect(ox + c * cs, oy + r * cs, cs, cs);
-        }
-      }
-    }
-
-    // ── Fog state helpers ────────────────────────────────────────────────────────
-    // fog_grid from server can be:
-    //   "all_fogged"                          → entire map black
-    //   "all_revealed"                        → no fog
-    //   {type: "partial_reveal", revealed: {}} → all fogged except revealed cells
-    //   {"row,col": true, ...}                → blacklist (fogged cells)
-    function applyFogState(fg) {
-      if (fg === 'all_fogged') {
-        fogAll = true; fogPartial = false; fogGrid = {};
-      } else if (fg === 'all_revealed' || fg == null) {
-        fogAll = false; fogPartial = false; fogGrid = {};
-      } else if (fg && fg.type === 'partial_reveal') {
-        fogAll = false; fogPartial = true; fogGrid = fg.revealed || {};
-      } else {
-        fogAll = false; fogPartial = false; fogGrid = fg || {};
-      }
-    }
-
-    // ── Phoenix Channel connection ───────────────────────────────────────────────
-    function connectToPhoenix(sessionId) {
-      const { Socket } = window.Phoenix;
-      const socket = new Socket('/socket', {});
-      socket.connect();
-
-      const channel = socket.channel('session:live:' + sessionId, {});
-
-      channel.on('map_update', ({ asset, map_id, grid_cols, grid_rows }) => {
-        if (grid_cols) gridCols = grid_cols;
-        if (grid_rows) gridRows = grid_rows;
-        mapImg.src = '/maps/assets/' + (asset || map_id + '.png');
-        applyFogState('all_fogged');
+      // ── Canvas sizing ───────────────────────────────────────────────────────────
+      function resizeCanvas() {
+        canvas.width  = window.innerWidth;
+        canvas.height = window.innerHeight;
         drawFog();
-        drawStrokes = [];
+        drawCanvas.width  = window.innerWidth;
+        drawCanvas.height = window.innerHeight;
         renderDrawings();
-      });
+      }
+      window.addEventListener('resize', resizeCanvas);
+      resizeCanvas();
 
-      channel.on('fog_update', ({ fog_grid }) => {
-        if (fog_grid && (fog_grid.type === 'delta_reveal' || fog_grid.type === 'delta_cover')) {
-          applyFogDelta(fog_grid);
-        } else {
-          applyFogState(fog_grid);
-          drawFog();
-        }
-      });
+      // ── Grid metrics — mirrors fog_editor.js getMetrics(), no naturalWidth needed ──
+      function getGridMetrics(cvs) {
+        if (!gridCols || !gridRows) return null;
+        const cw = cvs.width, ch = cvs.height;
+        const cellW = Math.min(cw / gridCols, ch / gridRows); // px per cell (square)
+        const rendW = gridCols * cellW, rendH = gridRows * cellW;
+        return { ox: (cw - rendW) / 2, oy: (ch - rendH) / 2, cellW };
+      }
 
-      channel.on('drawing_stroke', stroke => {
-        drawStrokes.push(stroke);
-        renderDrawings();
-      });
+      // ── Drawing rendering ────────────────────────────────────────────────────────
+      function renderDrawings() {
+        const rect = mapImg.getBoundingClientRect();
 
-      channel.on('drawing_update', ({strokes}) => {
-        drawStrokes = strokes || [];
-        renderDrawings();
-      });
+        const ox = rect.left;
+        const oy = rect.top;
+        const iw = rect.width;
+        const ih = rect.height;
 
-      channel.on('qr_toggle', ({visible}) => {
-        if (visible) {
-          qrOverlay.classList.add('visible');
-          const qrEl = document.getElementById('qr-code');
-          qrEl.innerHTML = '';
-          const drawUrl = window.location.origin + '/sessions/' + sessionId + '/draw';
-          new QRCode(qrEl, {text: drawUrl, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L});
-        } else {
-          qrOverlay.classList.remove('visible');
-        }
-      });
+        drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
 
-      channel.on('audio_play', ({ path, type, volume: vol }) => {
-        if (vol) volume = vol;
-        if (type === 'ambient') {
-          playAmbient(path);
-        } else {
-          playSfx(path);
-        }
-      });
-
-      channel.on('audio_stop', ({ type }) => {
-        if (type === 'ambient' && ambientAudio) {
-          ambientAudio.pause();
-          ambientAudio = null;
-        }
-      });
-
-      channel.on('volume_update', ({ volume: vol }) => {
-        volume = vol;
-        if (ambientAudio) ambientAudio.volume = ambientVolume();
-      });
-
-      channel.join()
-        .receive('ok', (initialState) => {
-          statusEl.textContent = 'connected';
-          setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
-
-          if (initialState.grid_cols) gridCols = initialState.grid_cols;
-          if (initialState.grid_rows) gridRows = initialState.grid_rows;
-
-          if (initialState.current_map_asset) {
-            mapImg.src = '/maps/assets/' + initialState.current_map_asset;
-          } else if (initialState.current_map) {
-            mapImg.src = '/maps/assets/' + initialState.current_map + '.png';
+        for (const s of drawStrokes) {
+          if (!s.points || s.points.length < 2) continue;
+          drawCtx.save();
+          if (s.erase) {
+            drawCtx.globalCompositeOperation = 'destination-out';
+            drawCtx.strokeStyle = 'rgba(0,0,0,1)';
+          } else {
+            drawCtx.globalCompositeOperation = 'source-over';
+            drawCtx.strokeStyle = s.color;
           }
-
-          applyFogState(initialState.fog_grid);
-
-          if (initialState.audio_state && initialState.audio_state.volume) {
-            volume = initialState.audio_state.volume;
+          drawCtx.lineWidth = s.size;
+          drawCtx.lineCap   = 'round';
+          drawCtx.lineJoin  = 'round';
+          drawCtx.beginPath();
+          const p0 = s.points[0];
+          drawCtx.moveTo(
+            (ox - mapImg.offsetLeft) + p0.x * iw,
+            (oy - mapImg.offsetTop) + p0.y * ih
+          );
+          for (let i = 1; i < s.points.length; i++) {
+            drawCtx.lineTo(
+              (ox - mapImg.offsetLeft) + s.points[i].x * iw,
+              (oy - mapImg.offsetTop) + s.points[i].y * ih
+            );
           }
+          drawCtx.stroke();
+          drawCtx.restore();
+        }
+      }
 
+      // ── Fog rendering ────────────────────────────────────────────────────────────
+      function drawFog() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = 'rgba(0,0,0,1)';
+
+        if (fogAll) {
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          return;
+        }
+
+        const m = getGridMetrics(canvas);
+        if (!m) return;
+        const { ox, oy, cellW: cs } = m;
+
+        if (fogPartial) {
+          // Whitelist: fill everything, then clear revealed cells
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          for (const key of Object.keys(fogGrid)) {
+            const [r, c] = key.split(',').map(Number);
+            ctx.clearRect(ox + c * cs, oy + r * cs, cs, cs);
+          }
+        } else {
+          // Blacklist: fill only listed (fogged) cells
+          for (const key of Object.keys(fogGrid)) {
+            const [r, c] = key.split(',').map(Number);
+            ctx.fillRect(ox + c * cs, oy + r * cs, cs, cs);
+          }
+        }
+      }
+
+      // ── Audio helpers ────────────────────────────────────────────────────────────
+      function ambientVolume() {
+        return (volume.master / 100) * (volume.ambient / 100);
+      }
+
+      function sfxVolume() {
+        return (volume.master / 100) * (volume.sfx / 100);
+      }
+
+      function playAmbient(path) {
+        if (ambientAudio) { ambientAudio.pause(); ambientAudio = null; }
+        ambientAudio = new Audio('/audio/' + path);
+        ambientAudio.loop = true;
+        ambientAudio.volume = ambientVolume();
+        ambientAudio.play().catch(e => console.warn('Ambient play blocked:', e));
+      }
+
+      function playSfx(path) {
+        const sfx = new Audio('/audio/' + path);
+        sfx.volume = sfxVolume();
+        sfx.play().catch(e => console.warn('SFX play blocked:', e));
+      }
+
+      // ── Incremental fog update (O(delta) instead of O(total cells)) ──────────────
+      function applyFogDelta(fg) {
+        const m = getGridMetrics(canvas);
+        if (!m) { applyFogState(fg); drawFog(); return; } // fallback if grid unknown
+        const { ox, oy, cellW: cs } = m;
+
+        if (fg.type === 'delta_reveal') {
+          if (fogAll) {
+            // Transition all_fogged → partial_reveal; canvas is already black
+            fogAll = false; fogPartial = true; fogGrid = {};
+          }
+          ctx.clearRect(0, 0, 0, 0); // no-op to start (cells cleared below)
+          for (const key of fg.cells) {
+            if (fogPartial) fogGrid[key] = true; else delete fogGrid[key];
+            const [r, c] = key.split(',').map(Number);
+            ctx.clearRect(ox + c * cs, oy + r * cs, cs, cs);
+          }
+        } else { // delta_cover
+          ctx.fillStyle = 'rgba(0,0,0,1)';
+          for (const key of fg.cells) {
+            if (fogPartial) delete fogGrid[key]; else fogGrid[key] = true;
+            const [r, c] = key.split(',').map(Number);
+            ctx.fillRect(ox + c * cs, oy + r * cs, cs, cs);
+          }
+        }
+      }
+
+      // ── Fog state helpers ────────────────────────────────────────────────────────
+      // fog_grid from server can be:
+      //   "all_fogged"                          → entire map black
+      //   "all_revealed"                        → no fog
+      //   {type: "partial_reveal", revealed: {}} → all fogged except revealed cells
+      //   {"row,col": true, ...}                → blacklist (fogged cells)
+      function applyFogState(fg) {
+        if (fg === 'all_fogged') {
+          fogAll = true; fogPartial = false; fogGrid = {};
+        } else if (fg === 'all_revealed' || fg == null) {
+          fogAll = false; fogPartial = false; fogGrid = {};
+        } else if (fg && fg.type === 'partial_reveal') {
+          fogAll = false; fogPartial = true; fogGrid = fg.revealed || {};
+        } else {
+          fogAll = false; fogPartial = false; fogGrid = fg || {};
+        }
+      }
+
+      // ── Phoenix Channel connection ───────────────────────────────────────────────
+      function connectToPhoenix(sessionId) {
+        const { Socket } = window.Phoenix;
+        const socket = new Socket('/socket', {});
+        socket.connect();
+
+        const channel = socket.channel('session:live:' + sessionId, {});
+
+        channel.on('map_update', ({ asset, map_id, grid_cols, grid_rows }) => {
+          if (grid_cols) gridCols = grid_cols;
+          if (grid_rows) gridRows = grid_rows;
+          mapImg.src = '/maps/assets/' + (asset || map_id + '.png');
+          applyFogState('all_fogged');
           drawFog();
-          drawStrokes = initialState.drawings || [];
+          drawStrokes = [];
           renderDrawings();
-        })
-        .receive('error', (err) => {
-          statusEl.textContent = 'Error: ' + JSON.stringify(err);
-          console.error('Channel join error:', err);
-        })
-        .receive('timeout', () => {
-          statusEl.textContent = 'Timeout connecting to session';
         });
-    }
 
-    // ── Startup: URL param (direct/testing) or Cast message ─────────────────────
-    const urlSessionId = new URLSearchParams(location.search).get('session_id');
+        channel.on('fog_update', ({ fog_grid }) => {
+          if (fog_grid && (fog_grid.type === 'delta_reveal' || fog_grid.type === 'delta_cover')) {
+            applyFogDelta(fog_grid);
+          } else {
+            applyFogState(fog_grid);
+            drawFog();
+          }
+        });
 
-    if (urlSessionId) {
-      connectToPhoenix(urlSessionId);
-    } else if (typeof cast !== 'undefined' && cast.framework) {
-      statusEl.textContent = 'waiting for session...';
-      const castContext = cast.framework.CastReceiverContext.getInstance();
-      castContext.addCustomMessageListener(CAST_NAMESPACE, (event) => {
-        const sid = event.data && event.data.session_id;
-        if (sid) connectToPhoenix(sid);
-      });
-      castContext.start();
-    } else {
-      statusEl.textContent = 'Error: no session_id';
-    }
-  </script>
-</body>
+        channel.on('drawing_stroke', stroke => {
+          drawStrokes.push(stroke);
+          renderDrawings();
+        });
+
+        channel.on('drawing_update', ({strokes}) => {
+          drawStrokes = strokes || [];
+          renderDrawings();
+        });
+
+        channel.on('qr_toggle', ({visible}) => {
+          if (visible) {
+            qrOverlay.classList.add('visible');
+            const qrEl = document.getElementById('qr-code');
+            qrEl.innerHTML = '';
+            const drawUrl = window.location.origin + '/sessions/' + sessionId + '/draw';
+            new QRCode(qrEl, {text: drawUrl, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.L});
+          } else {
+            qrOverlay.classList.remove('visible');
+          }
+        });
+
+        channel.on('audio_play', ({ path, type, volume: vol }) => {
+          if (vol) volume = vol;
+          if (type === 'ambient') {
+            playAmbient(path);
+          } else {
+            playSfx(path);
+          }
+        });
+
+        channel.on('audio_stop', ({ type }) => {
+          if (type === 'ambient' && ambientAudio) {
+            ambientAudio.pause();
+            ambientAudio = null;
+          }
+        });
+
+        channel.on('volume_update', ({ volume: vol }) => {
+          volume = vol;
+          if (ambientAudio) ambientAudio.volume = ambientVolume();
+        });
+
+        channel.join()
+          .receive('ok', (initialState) => {
+            statusEl.textContent = 'connected';
+            setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+
+            if (initialState.grid_cols) gridCols = initialState.grid_cols;
+            if (initialState.grid_rows) gridRows = initialState.grid_rows;
+
+            if (initialState.current_map_asset) {
+              mapImg.src = '/maps/assets/' + initialState.current_map_asset;
+            } else if (initialState.current_map) {
+              mapImg.src = '/maps/assets/' + initialState.current_map + '.png';
+            }
+
+            applyFogState(initialState.fog_grid);
+
+            if (initialState.audio_state && initialState.audio_state.volume) {
+              volume = initialState.audio_state.volume;
+            }
+
+            drawFog();
+            drawStrokes = initialState.drawings || [];
+            renderDrawings();
+          })
+          .receive('error', (err) => {
+            statusEl.textContent = 'Error: ' + JSON.stringify(err);
+            console.error('Channel join error:', err);
+          })
+          .receive('timeout', () => {
+            statusEl.textContent = 'Timeout connecting to session';
+          });
+      }
+
+      // ── Startup: URL param (direct/testing) or Cast message ─────────────────────
+      const urlSessionId = new URLSearchParams(location.search).get('session_id');
+
+      if (urlSessionId) {
+        connectToPhoenix(urlSessionId);
+      } else if (typeof cast !== 'undefined' && cast.framework) {
+        statusEl.textContent = 'waiting for session...';
+        const castContext = cast.framework.CastReceiverContext.getInstance();
+        castContext.addCustomMessageListener(CAST_NAMESPACE, (event) => {
+          const sid = event.data && event.data.session_id;
+          if (sid) connectToPhoenix(sid);
+        });
+        castContext.start();
+      } else {
+        statusEl.textContent = 'Error: no session_id';
+      }
+    </script>
+  </body>
 </html>

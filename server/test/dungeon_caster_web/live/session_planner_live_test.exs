@@ -7,7 +7,12 @@ defmodule DungeonCasterWeb.SessionPlannerLiveTest do
 
   setup do
     File.mkdir_p!("/tmp/campaign_test")
-    File.write!(@test_file, "---\ntype: session\nid: session-planner-01\ntitle: The Heist\nsession_number: 1\nstatus: planned\nscenes: \"[]\"\ntags: []\nnpc_ids: []\nlocation_ids: []\nmap_ids: []\nstat_block_ids: []\nfaction_ids: []\n---\n\nSession notes.")
+
+    File.write!(
+      @test_file,
+      "---\ntype: session\nid: session-planner-01\ntitle: The Heist\nsession_number: 1\nstatus: planned\nscenes: \"[]\"\ntags: []\nnpc_ids: []\nlocation_ids: []\nmap_ids: []\nstat_block_ids: []\nfaction_ids: []\n---\n\nSession notes."
+    )
+
     Entities.upsert_entity("session", %{
       "id" => "session-planner-01",
       "title" => "The Heist",
@@ -24,6 +29,7 @@ defmodule DungeonCasterWeb.SessionPlannerLiveTest do
       "body_html" => "<p>Session notes.</p>",
       "file_path" => @test_file
     })
+
     on_exit(fn -> File.rm(@test_file) end)
     :ok
   end
@@ -41,8 +47,10 @@ defmodule DungeonCasterWeb.SessionPlannerLiveTest do
 
   test "Go Live button starts session and redirects to runner", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/sessions/session-planner-01/plan")
+
     assert {:error, {:live_redirect, %{to: path}}} =
-      view |> element("button", "▶ Live") |> render_click()
+             view |> element("button", "▶ Live") |> render_click()
+
     assert path == "/sessions/session-planner-01/run"
     # Clean up
     try do
@@ -54,33 +62,35 @@ defmodule DungeonCasterWeb.SessionPlannerLiveTest do
 
   test "linked entities sidebar shows entity from body_raw ref", %{conn: conn} do
     # Create a location entity
-    {:ok, _} = Entities.upsert_entity("location", %{
-      "id" => "test-city",
-      "name" => "Test City",
-      "location_type" => "city",
-      "body_raw" => "",
-      "body_html" => "",
-      "file_path" => "/tmp/test-city.md",
-      "tags" => [],
-      "faction_ids" => []
-    })
+    {:ok, _} =
+      Entities.upsert_entity("location", %{
+        "id" => "test-city",
+        "name" => "Test City",
+        "location_type" => "city",
+        "body_raw" => "",
+        "body_html" => "",
+        "file_path" => "/tmp/test-city.md",
+        "tags" => [],
+        "faction_ids" => []
+      })
 
     # Create session with a body ref to that location
-    {:ok, _} = Entities.upsert_entity("session", %{
-      "id" => "test-sess",
-      "title" => "Test Session",
-      "session_number" => 1,
-      "status" => "planned",
-      "body_raw" => "Visit ~[Test City]{location:test-city} tonight.",
-      "body_html" => "",
-      "file_path" => "/tmp/test-sess.md",
-      "tags" => [],
-      "npc_ids" => [],
-      "location_ids" => [],
-      "map_ids" => [],
-      "stat_block_ids" => [],
-      "faction_ids" => []
-    })
+    {:ok, _} =
+      Entities.upsert_entity("session", %{
+        "id" => "test-sess",
+        "title" => "Test Session",
+        "session_number" => 1,
+        "status" => "planned",
+        "body_raw" => "Visit ~[Test City]{location:test-city} tonight.",
+        "body_html" => "",
+        "file_path" => "/tmp/test-sess.md",
+        "tags" => [],
+        "npc_ids" => [],
+        "location_ids" => [],
+        "map_ids" => [],
+        "stat_block_ids" => [],
+        "faction_ids" => []
+      })
 
     {:ok, _view, html} = live(conn, "/sessions/test-sess/plan")
     assert html =~ "Test City"

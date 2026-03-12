@@ -37,6 +37,7 @@ defmodule DungeonCasterWeb.EntityBrowserLiveTest do
 
   test "live-updates when entity is upserted via PubSub", %{conn: conn} do
     {:ok, view, _html} = live(conn, "/entities/npc")
+
     Entities.upsert_entity("npc", %{
       "id" => "pubsub-test-npc",
       "name" => "PubSub NPC",
@@ -48,6 +49,7 @@ defmodule DungeonCasterWeb.EntityBrowserLiveTest do
       "body_html" => "",
       "file_path" => "/tmp/pubsub-test-npc.md"
     })
+
     Phoenix.PubSub.broadcast(DungeonCaster.PubSub, "entities:npc", {:updated, "pubsub-test-npc"})
     assert render(view) =~ "PubSub NPC"
   end
@@ -205,7 +207,11 @@ defmodule DungeonCasterWeb.EntityBrowserLiveTest do
       "file_path" => "/tmp/unrelated-audio.md"
     })
 
-    Phoenix.PubSub.broadcast(DungeonCaster.PubSub, "entities:audio", {:updated, "unrelated-audio"})
+    Phoenix.PubSub.broadcast(
+      DungeonCaster.PubSub,
+      "entities:audio",
+      {:updated, "unrelated-audio"}
+    )
 
     html = render(view)
 

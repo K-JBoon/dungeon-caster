@@ -87,7 +87,8 @@ defmodule DungeonCasterWeb.EntityFormLive do
   end
 
   def handle_event("play_audio_entity", _params, socket) do
-    {:noreply, put_flash(socket, :info, "Audio previews are only available in the session runner")}
+    {:noreply,
+     put_flash(socket, :info, "Audio previews are only available in the session runner")}
   end
 
   def handle_event("open_revision_history", _, %{assigns: %{mode: :new}} = socket) do

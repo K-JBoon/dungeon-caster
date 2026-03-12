@@ -21,12 +21,15 @@ defmodule DungeonCaster.Sync.IndexWorker do
         case Entities.upsert_entity(type, data) do
           {:ok, _entity} ->
             update_fts(type, data)
+
             Phoenix.PubSub.broadcast(
               DungeonCaster.PubSub,
               "entities:#{type}",
               {:updated, data["id"]}
             )
+
             :ok
+
           {:error, reason} ->
             Logger.warning("IndexWorker: failed to upsert #{data["id"]}: #{inspect(reason)}")
             :ok
@@ -59,10 +62,12 @@ defmodule DungeonCaster.Sync.IndexWorker do
 
   defp update_fts(type, data) do
     id = data["id"]
+
     Repo.query!(
       "DELETE FROM entities_fts WHERE entity_type = ? AND entity_id = ?",
       [type, id]
     )
+
     Repo.query!(
       "INSERT INTO entities_fts(entity_type, entity_id, name, tags, body_raw) VALUES (?,?,?,?,?)",
       [

@@ -21,8 +21,17 @@ defmodule DungeonCaster.Entities.Schemas.Location do
   def changeset(location, attrs) do
     location
     |> cast(attrs, [
-      :id, :name, :location_type, :region, :parent_location_id, :map_id,
-      :faction_ids, :tags, :body_raw, :body_html, :file_path
+      :id,
+      :name,
+      :location_type,
+      :region,
+      :parent_location_id,
+      :map_id,
+      :faction_ids,
+      :tags,
+      :body_raw,
+      :body_html,
+      :file_path
     ])
     |> validate_required([:id, :name, :location_type])
   end

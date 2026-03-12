@@ -6,6 +6,7 @@ defmodule DungeonCaster.Markdown do
   """
   def render(nil), do: ""
   def render(""), do: ""
+
   def render(raw) when is_binary(raw) do
     raw
     # escape: false is required — without it, Earmark escapes the ~[...]{} syntax
@@ -30,6 +31,7 @@ defmodule DungeonCaster.Markdown do
     |> Enum.reject(&is_nil/1)
     |> Enum.uniq_by(fn %{type: t, id: id} -> {t, id} end)
   end
+
   def extract_entity_refs(_), do: []
 
   defp escape_html(text), do: text |> Phoenix.HTML.html_escape() |> Phoenix.HTML.safe_to_string()
@@ -38,8 +40,9 @@ defmodule DungeonCaster.Markdown do
     Regex.replace(@badge_re, html, fn _, name, ref ->
       safe_name = escape_html(name)
       safe_ref = escape_html(ref)
+
       ~s(<span class="entity-badge" data-ref="#{safe_ref}" data-display="#{safe_name}" ) <>
-      ~s(phx-click="open_entity_popover" phx-value-ref="#{safe_ref}">#{safe_name}</span>)
+        ~s(phx-click="open_entity_popover" phx-value-ref="#{safe_ref}">#{safe_name}</span>)
     end)
   end
 end

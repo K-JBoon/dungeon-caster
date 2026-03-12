@@ -4,7 +4,9 @@ defmodule DungeonCaster.Maps.ImageGridTest do
   alias DungeonCaster.Maps.ImageGrid
 
   setup do
-    tmp_dir = Path.join(System.tmp_dir!(), "image_grid_test_#{System.unique_integer([:positive])}")
+    tmp_dir =
+      Path.join(System.tmp_dir!(), "image_grid_test_#{System.unique_integer([:positive])}")
+
     File.mkdir_p!(tmp_dir)
     on_exit(fn -> File.rm_rf!(tmp_dir) end)
     %{tmp_dir: tmp_dir}
@@ -56,9 +58,8 @@ defmodule DungeonCaster.Maps.ImageGridTest do
   end
 
   defp jpeg(width, height) do
-    <<0xFF, 0xD8, 0xFF, 0xE0, 0, 16, "JFIF\0", 1, 1, 0, 0, 1, 0, 1, 0, 0,
-      0xFF, 0xC0, 0, 17, 8, height::16-big, width::16-big, 3, 1, 17, 0, 2, 17, 1, 3, 17, 1,
-      0xFF, 0xD9>>
+    <<0xFF, 0xD8, 0xFF, 0xE0, 0, 16, "JFIF\0", 1, 1, 0, 0, 1, 0, 1, 0, 0, 0xFF, 0xC0, 0, 17, 8,
+      height::16-big, width::16-big, 3, 1, 17, 0, 2, 17, 1, 3, 17, 1, 0xFF, 0xD9>>
   end
 
   defp webp_vp8x(width, height) do
@@ -66,8 +67,8 @@ defmodule DungeonCaster.Maps.ImageGridTest do
     height_minus_one = height - 1
 
     chunk =
-      <<"VP8X", 10::32-little, 0, 0, 0, 0,
-        width_minus_one::24-little, height_minus_one::24-little>>
+      <<"VP8X", 10::32-little, 0, 0, 0, 0, width_minus_one::24-little,
+        height_minus_one::24-little>>
 
     <<"RIFF", byte_size(chunk)::32-little, "WEBP", chunk::binary>>
   end
