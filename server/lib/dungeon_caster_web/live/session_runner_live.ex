@@ -1,6 +1,6 @@
 defmodule DungeonCasterWeb.SessionRunnerLive do
   use DungeonCasterWeb, :live_view
-  alias DungeonCaster.{Entities, Session.Server, Audio}
+  alias DungeonCaster.{Audio, Entities, Session.Server}
   alias DungeonCaster.Maps.ImageGrid
   alias DungeonCaster.Markdown
   alias DungeonCasterWeb.EntityHelpers
@@ -13,8 +13,7 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
       _ -> :ok
     end
     server_state = Server.get_state(session_id)
-    music = Audio.list_music()
-    sfx = Audio.list_sfx()
+    {ambient_audio, sfx_audio} = load_audio_entities()
     scenes = parse_scenes(session)
     session_maps = collect_maps(session, scenes)
 
@@ -31,8 +30,8 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
        server_state: server_state,
        fog_mode: :eraser,
        session_maps: session_maps,
-       music: music,
-       sfx: sfx
+       ambient_audio: ambient_audio,
+       sfx_audio: sfx_audio
      )}
   end
 
@@ -250,6 +249,41 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
         end
       list when is_list(list) -> list
     end
+  end
+
+  defp load_audio_entities do
+    Entities.list_entities("audio")
+    |> Enum.filter(&audio_playable?/1)
+    |> Enum.map(&with_playback_path/1)
+    |> Enum.reduce({[], []}, fn entity, {ambient, sfx} ->
+      case entity.category do
+        category when category in ["ambient", "music"] -> {[entity | ambient], sfx}
+        "sfx" -> {ambient, [entity | sfx]}
+        _ -> {ambient, sfx}
+      end
+    end)
+    |> then(fn {ambient, sfx} -> {sort_audio_entities(ambient), sort_audio_entities(sfx)} end)
+  end
+
+  defp audio_playable?(%{asset_path: asset_path}) when is_binary(asset_path) and asset_path != "" do
+    Audio.audio_file_available?(asset_path)
+  end
+
+  defp audio_playable?(_), do: false
+
+  defp with_playback_path(%{asset_path: asset_path} = entity) do
+    Map.put(entity, :playback_path, Audio.asset_url(asset_path) |> String.trim_leading("/audio/"))
+  end
+
+  defp sort_audio_entities(entities) do
+    Enum.sort_by(entities, fn entity ->
+      {
+        entity
+        |> entity_display_name()
+        |> String.downcase(),
+        entity.playback_path
+      }
+    end)
   end
 
   defp entity_display_name(%{name: n}) when is_binary(n), do: n
@@ -522,12 +556,12 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
       <div>
         <h3 class="text-sm font-semibold uppercase tracking-wider text-base-content/50 mb-3">Ambient</h3>
         <ul class="space-y-1">
-          <%= for track <- @music do %>
-            <% playing = @server_state.audio_state.ambient == track.path %>
+          <%= for track <- @ambient_audio do %>
+            <% playing = @server_state.audio_state.ambient == track.playback_path %>
             <li class={["flex items-center gap-2 px-3 py-2 rounded-lg transition-colors",
                         if(playing, do: "bg-primary/10 text-primary", else: "hover:bg-base-200")]}>
               <button phx-click={if playing, do: "stop_ambient", else: "play_ambient"}
-                      phx-value-path={track.path}
+                      phx-value-path={track.playback_path}
                       class="flex-1 flex items-center gap-2 text-left text-sm">
                 <span class="text-base"><%= if playing, do: "■", else: "▶" %></span>
                 <span class="truncate"><%= track.name %></span>
@@ -537,9 +571,9 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
               <% end %>
             </li>
           <% end %>
-          <%= if @music == [] do %>
+          <%= if @ambient_audio == [] do %>
             <li class="text-base-content/40 text-sm px-3 py-2">
-              No audio files in ~/campaign/audio/music/
+              No ambient audio entities found.
             </li>
           <% end %>
         </ul>
@@ -547,21 +581,16 @@ defmodule DungeonCasterWeb.SessionRunnerLive do
 
       <div>
         <h3 class="text-sm font-semibold uppercase tracking-wider text-base-content/50 mb-3">SFX</h3>
-        <%= for {section, sfx_list} <- Enum.group_by(@sfx, & &1.section) do %>
-          <div class="mb-4">
-            <p class="text-xs text-base-content/40 uppercase tracking-wider mb-2"><%= section %></p>
-            <div class="flex flex-wrap gap-2">
-              <%= for sfx <- sfx_list do %>
-                <button phx-click="play_sfx" phx-value-path={sfx.path}
-                        class="btn btn-sm bg-base-300 hover:bg-primary hover:text-primary-content border-0 transition-colors">
-                  <%= sfx.name %>
-                </button>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-        <%= if @sfx == [] do %>
-          <p class="text-base-content/40 text-sm">No SFX in ~/campaign/audio/sfx/</p>
+        <div class="flex flex-wrap gap-2">
+          <%= for sfx <- @sfx_audio do %>
+            <button phx-click="play_sfx" phx-value-path={sfx.playback_path}
+                    class="btn btn-sm bg-base-300 hover:bg-primary hover:text-primary-content border-0 transition-colors">
+              <%= sfx.name %>
+            </button>
+          <% end %>
+        </div>
+        <%= if @sfx_audio == [] do %>
+          <p class="text-base-content/40 text-sm">No SFX audio entities found.</p>
         <% end %>
       </div>
     </div>
