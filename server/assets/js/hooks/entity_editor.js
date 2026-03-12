@@ -222,7 +222,8 @@ export const EntityEditor = {
     const triggerEnd = triggerStart + 1 + this._pendingQuery.length // ~query
 
     const before = document.createTextNode(node.textContent.slice(0, triggerStart))
-    const after = document.createTextNode('\u00A0') // non-breaking space as cursor anchor
+    const trailingText = node.textContent.slice(triggerEnd)
+    const after = document.createTextNode(trailingText.length > 0 ? trailingText : '\u00A0')
     const badge = this._makeBadge(name, `${type}:${id}`)
 
     const parent = node.parentNode
@@ -234,7 +235,7 @@ export const EntityEditor = {
     // Move cursor after the badge
     const sel = window.getSelection()
     const range = document.createRange()
-    range.setStart(after, 1)
+    range.setStart(after, trailingText.length > 0 ? 0 : 1)
     range.collapse(true)
     sel.removeAllRanges()
     sel.addRange(range)
