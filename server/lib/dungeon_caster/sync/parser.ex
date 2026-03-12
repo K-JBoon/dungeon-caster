@@ -7,7 +7,8 @@ defmodule DungeonCaster.Sync.Parser do
     "faction" => "factions",
     "session" => "sessions",
     "stat-block" => "stat-blocks",
-    "map" => "maps"
+    "map" => "maps",
+    "audio" => "audio"
   }
 
   @doc """

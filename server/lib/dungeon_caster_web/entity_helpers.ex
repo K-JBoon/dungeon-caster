@@ -36,10 +36,24 @@ defmodule DungeonCasterWeb.EntityHelpers do
     case load_entity_from_ref(ref) do
       {type, entity} ->
         name = Map.get(entity, :name) || Map.get(entity, :title) || entity.id
-        html = if entity.body_html && entity.body_html != "",
-          do: entity.body_html,
-          else: ""
-        {:ok, %{ref: ref, name: name, type: type, html: html}}
+        html =
+          if entity.body_html && entity.body_html != "",
+            do: entity.body_html,
+            else: ""
+
+        payload = %{ref: ref, name: name, type: type, html: html}
+
+        payload =
+          if type == "audio" do
+            Map.merge(payload, %{
+              category: entity.category,
+              asset_path: entity.asset_path
+            })
+          else
+            payload
+          end
+
+        {:ok, payload}
       nil ->
         :error
     end
